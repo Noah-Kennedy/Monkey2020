@@ -15,3 +15,4 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif ()
 
 add_subdirectory(visual-processing-cpp)
+add_subdirectory(zed)

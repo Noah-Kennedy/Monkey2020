@@ -22,4 +22,8 @@ if (zed_FOUND)
     )
 else ()
     message(WARNING "ZED SDK not found")
+    target_link_libraries(
+            zed-header-only
+            PRIVATE zed
+    )
 endif ()
