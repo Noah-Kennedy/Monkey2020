@@ -7,7 +7,7 @@ project(
 
 # if top level project
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_EXTENSIONS OFF)
 
     # support IDEs
