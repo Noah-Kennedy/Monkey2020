@@ -14,5 +14,5 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif ()
 
-add_subdirectory(visual-processing-cpp)
 add_subdirectory(zed)
+add_subdirectory(visual-processing-cpp)
