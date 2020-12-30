@@ -3,3 +3,7 @@
 [[package]]
 name = "libnav"
 version = "0.1.0"
+
+[[package]]
+name = "mdp"
+version = "0.1.0"
