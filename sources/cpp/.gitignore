@@ -1,3 +1,14 @@
-/cmake-build-debug
-/cmake-build-release
-/build
+# ignore everything by default
+**/*
+
+# keeplist
+!**/CMakeLists.txt
+
+!**/*.c
+!**/*.cpp
+!**/*.cc
+
+!**/*.hpp
+!**/*.h
+
+!**/.gitignore
