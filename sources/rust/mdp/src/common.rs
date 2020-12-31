@@ -1,7 +1,5 @@
 use std::hash::Hash;
 
-pub type Number = f32;
-
 pub trait State: Hash + Clone + Eq + Ord {}
 
 pub trait StateSpace<S> where S: State {
