@@ -1,0 +1,8 @@
+[package]
+name = "nav-mdp"
+version = "0.1.0"
+authors = ["noah <nomaxx117@gmail.com>"]
+edition = "2018"
+
+[dependencies.mdp]
+path = "../mdp"
