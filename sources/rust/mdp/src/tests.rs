@@ -131,23 +131,6 @@ impl TransitionTable<GridState, GridAction> for GridTransitionTable {
     }
 }
 
-fn states() -> [GridState; 11] {
-    let mut count = 0;
-
-    let mut out = [GridState::default(); 11];
-
-    for r in 0..2 {
-        for c in 0..3 {
-            if EXISTS[r][c] {
-                out[count] = (r, c);
-                count += 1;
-            }
-        }
-    }
-
-    out
-}
-
 #[test]
 fn test_epoch_1() {
     let params = ValueIterationParameters {
@@ -157,14 +140,14 @@ fn test_epoch_1() {
         living_reward: 0.0,
     };
 
-    const extrinsic: [[f32; 4]; 3] =
+    const EXTRINSIC: [[f32; 4]; 3] =
         [
             [0.00, 0.00, 0.72, 0.00],
             [0.00, 0.00, -0.09, 0.00],
             [0.00, 0.00, 0.00, -0.18]
         ];
 
-    run_test(&params, extrinsic)
+    run_test(&params, EXTRINSIC)
 }
 
 fn run_test(params: &ValueIterationParameters, extrinsic: [[f32; 4]; 3]) {
