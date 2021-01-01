@@ -1,6 +1,4 @@
-use std::hash::Hash;
-
-pub trait State: Hash + Clone + Eq + Ord {}
+pub trait State: Clone + PartialEq + PartialOrd {}
 
 pub trait StateSpace<S> where S: State {
     fn nonterminal_states(&self) -> Vec<S>;
@@ -10,7 +8,7 @@ pub trait TransitionTable<S, A> where S: State, A: Action {
     fn list_transitions(&self, state: &S) -> Vec<(A, S)>;
 }
 
-pub trait Action: Hash + Clone + Eq + Ord {}
+pub trait Action: Clone + PartialEq + PartialOrd {}
 
 pub trait TerminalTable<S> where S: State {
     fn terminal(&self, state: &S) -> bool;
