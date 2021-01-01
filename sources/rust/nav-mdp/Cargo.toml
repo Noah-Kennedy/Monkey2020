@@ -4,5 +4,8 @@ version = "0.1.0"
 authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
+[features]
+sim = []
+
 [dependencies.mdp]
 path = "../mdp"

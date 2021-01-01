@@ -15,7 +15,7 @@ pub trait ForecastTableReadView<S> where S: State {
 }
 
 pub trait ForecastTableWriteView<S> where S: State {
-    fn write_forecast(&mut self, state: &S, value: f32) -> f32;
+    fn write_forecast(&mut self, state: &S, value: f32);
 }
 
 pub struct ValueIterationParameters {

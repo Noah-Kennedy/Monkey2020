@@ -59,10 +59,8 @@ impl<'a> ForecastTableReadView<GridState> for GridForecastTableReadView<'a> {
 }
 
 impl<'a> ForecastTableWriteView<GridState> for GridForecastTableWriteView<'a> {
-    fn write_forecast(&mut self, state: &GridState, value: f32) -> f32 {
-        let r = self.inner[state.0][state.1];
+    fn write_forecast(&mut self, state: &GridState, value: f32) {
         self.inner[state.0][state.1] = value;
-        r
     }
 }
 
@@ -88,7 +86,7 @@ impl State for GridState {}
 impl Action for GridAction {}
 
 impl StateSpace<GridState> for GridStateSpace {
-    fn nonterminal_states(&self) -> Vec<(usize, usize)> {
+    fn nonterminal_states(&self) -> Arc<Vec<(usize, usize)>> {
         let mut out = Vec::new();
 
         for r in 0..3 {
@@ -99,7 +97,7 @@ impl StateSpace<GridState> for GridStateSpace {
             }
         }
 
-        out
+        Arc::new(out)
     }
 }
 

@@ -1,7 +1,9 @@
+use std::sync::Arc;
+
 pub trait State: Clone + PartialEq + PartialOrd {}
 
 pub trait StateSpace<S> where S: State {
-    fn nonterminal_states(&self) -> Vec<S>;
+    fn nonterminal_states(&self) -> Arc<Vec<S>>;
 }
 
 pub trait TransitionTable<S, A> where S: State, A: Action {
