@@ -3,7 +3,6 @@ use crate::RobotVector;
 #[derive(Default, Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct ContinuousState {
     pub position: RobotVector<f32>,
-    pub velocity: RobotVector<f32>,
 }
 
 #[derive(Default, Debug)]
@@ -21,5 +20,5 @@ pub struct ContinuousRobotParams {
 
 #[derive(Default, Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct ContinuousAction {
-    pub acceleration: RobotVector<f32>,
+    pub velocity: RobotVector<f32>,
 }

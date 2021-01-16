@@ -7,6 +7,12 @@ edition = "2018"
 [features]
 sim = []
 
+[dependencies]
+num = "0.3.1"
+rand = "0.8.2"
+plotters = "0.3.0"
+plotters-backend = "0.3.0"
+
 [dependencies.derive_more]
 version = "0.99.11"
 

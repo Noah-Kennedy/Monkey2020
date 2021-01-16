@@ -2,5 +2,6 @@
 
 members = [
     "mdp",
+    "astar",
     "nav-mdp"
 ]

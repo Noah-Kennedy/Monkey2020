@@ -1,21 +1,12 @@
 use std::sync::Arc;
 
-pub trait State: Clone + PartialEq + PartialOrd {}
-
-pub trait StateSpace<S> where S: State {
+pub trait StateSpace<S, A> {
     fn nonterminal_states(&self) -> Arc<Vec<S>>;
-}
-
-pub trait TransitionTable<S, A> where S: State, A: Action {
-    fn list_transitions(&self, state: &S) -> Vec<(A, S)>;
-}
-
-pub trait Action: Clone + PartialEq + PartialOrd {}
-
-pub trait TerminalTable<S> where S: State {
     fn terminal(&self, state: &S) -> bool;
+    fn actions(&self, state: &S) -> Vec<A>;
+    fn q_states(&self, state: &S, action: &A) -> Vec<(f32, S)>;
 }
 
-pub trait RewardTable<S, A> where S: State, A: Action {
-    fn reward(&self, start: &S, end: &S, action: &A) -> f32;
+pub trait RewardTable<S> {
+    fn reward(&self, state: &S) -> f32;
 }
