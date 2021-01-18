@@ -1,7 +1,6 @@
 [workspace]
 
 members = [
-    "mdp",
-    "astar",
-    "nav-mdp"
+    "nav-algo",
+    "nav-model"
 ]
