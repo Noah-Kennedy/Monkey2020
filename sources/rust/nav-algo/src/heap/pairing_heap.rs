@@ -1,10 +1,12 @@
 type PairingHeapNode<T> = Option<PairingTree<T>>;
 
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 struct PairingTree<T> {
     element: T,
     children: Vec<PairingHeapNode<T>>,
 }
 
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub struct PairingHeap<T> {
     root: PairingHeapNode<T>,
 }
