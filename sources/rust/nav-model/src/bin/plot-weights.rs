@@ -8,7 +8,7 @@ fn main() {
     let secondary = RobotForecastTable::new(SPACE.clone());
 
     let sys = ValueIterationMDPSystem {
-        reward_table: table.clone(),
+        reward_table: table,
         state_space: SPACE.clone(),
         _phantom: Default::default(),
     };
