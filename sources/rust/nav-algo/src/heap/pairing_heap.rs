@@ -1,11 +1,12 @@
 use std::mem::swap;
+use std::collections::LinkedList;
 
 type PairingHeapNode<T> = Option<PairingTree<T>>;
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 struct PairingTree<T> {
     element: T,
-    children: Vec<PairingHeapNode<T>>,
+    children: LinkedList<PairingHeapNode<T>>,
 }
 
 pub struct PairingHeap<T> {
@@ -35,7 +36,7 @@ impl<T> PairingHeap<T> where T: Ord + PartialOrd + PartialEq {
     }
 
     pub fn insert(&mut self, element: T) {
-        self.meld(PairingHeap { root: Some(PairingTree { element, children: Vec::new() }) })
+        self.meld(PairingHeap { root: Some(PairingTree { element, children: LinkedList::new() }) })
     }
 
     pub fn delete_min(&mut self) -> Option<T> {
@@ -49,9 +50,9 @@ impl<T> PairingHeap<T> where T: Ord + PartialOrd + PartialEq {
         }
     }
 
-    fn merge_pairs(list: &mut Vec<PairingHeapNode<T>>) -> Self {
-        if let Some(l0) = list.pop() {
-            if let Some(l1) = list.pop() {
+    fn merge_pairs(list: &mut LinkedList<PairingHeapNode<T>>) -> Self {
+        if let Some(l0) = list.pop_back() {
+            if let Some(l1) = list.pop_back() {
                 let mut h0 = Self { root: l0 };
                 let h1 = Self { root: l1 };
 
@@ -72,9 +73,9 @@ impl<T> PairingHeap<T> where T: Ord + PartialOrd + PartialEq {
         if let Some(root1) = &mut self.root {
             if let Some(root2) = other.root {
                 if root1.element < root2.element {
-                    root1.children.insert(0, Some(root2))
+                    root1.children.push_front(Some(root2))
                 } else {
-                    let mut c1 = Vec::new();
+                    let mut c1 = LinkedList::new();
 
                     let mut c2 = root2.children;
                     let mut e2 = root2.element;
@@ -87,7 +88,7 @@ impl<T> PairingHeap<T> where T: Ord + PartialOrd + PartialEq {
                         children: c1,
                     };
 
-                    c2.insert(0, Some(ins));
+                    c2.push_front(Some(ins));
 
                     root1.children = c2;
                 }
