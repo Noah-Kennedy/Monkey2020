@@ -138,7 +138,7 @@ impl StateSpace<GridState, GridAction> for GridStateSpace {
     }
 }
 
-impl RewardTable<GridState, GridAction> for GridRewardTable {
+impl RewardTable<GridState> for GridRewardTable {
     fn reward(&self, state: &GridState) -> f32 {
         REWARDS[state.0][state.1]
     }
