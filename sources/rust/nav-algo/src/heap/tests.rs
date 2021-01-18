@@ -8,13 +8,11 @@ fn test_pairing() {
     let mut heap = PairingHeap::new();
 
     for x in TEST_ARRAY.iter() {
-        heap = heap.insert(*x);
+        heap.insert(*x);
     }
 
     for x in TEST_ARRAY_SORTED.iter() {
-        let (v, h1) = heap.delete_min();
-        heap = h1;
-
+        let v = heap.delete_min();
         assert_eq!(*x, v.unwrap())
     }
 }

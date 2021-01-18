@@ -9,6 +9,6 @@ heap = []
 mdp = []
 a-star = ["heap"]
 
-default = ["mdp", "a-star", "heap"]
+default = ["mdp", "a-star"]
 
 [dependencies]
