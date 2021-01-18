@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::{RewardTable, StateSpace};
-use crate::value_iteration::{ForecastTable, ForecastTableReadView, ForecastTableWriteView, ValueIterationMDPSystem, ValueIterationParameters};
+use crate::mdp::value_iteration::{ForecastTable, ForecastTableReadView, ForecastTableWriteView, ValueIterationMDPSystem, ValueIterationParameters};
 
 type GridState = (usize, usize);
 type GridAction = (isize, isize);

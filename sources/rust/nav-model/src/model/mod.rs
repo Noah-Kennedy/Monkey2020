@@ -19,11 +19,9 @@
 //! Finally, this system makes it easier to reason about the actual size
 //! of the state and action space, and allows for more error-free and readable code.
 
-pub use continuous::*;
 pub use discrete::*;
 
 mod discrete;
-mod continuous;
 
 /// Vector container for robot state.
 #[derive(Default, Debug, Hash)]

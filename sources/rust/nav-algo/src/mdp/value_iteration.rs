@@ -47,6 +47,7 @@ ValueIterationMDPSystem<S, A, Ss, Re>
         let states = self.state_space.nonterminal_states();
 
         for i in 0..(params.epochs) {
+            println!("Epoch {}", i);
             let (input, mut output) =
                 if i % 2 == 0 {
                     (

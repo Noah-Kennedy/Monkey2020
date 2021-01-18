@@ -1,5 +1,5 @@
 [package]
-name = "nav-mdp"
+name = "nav-model"
 version = "0.1.0"
 authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
@@ -16,5 +16,5 @@ plotters-backend = "0.3.0"
 [dependencies.derive_more]
 version = "0.99.11"
 
-[dependencies.mdp]
-path = "../mdp"
+[dependencies.nav-algo]
+path = "../nav-algo"
