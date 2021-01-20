@@ -1,5 +1,5 @@
 use nav_algo::a_star::AStar;
-use nav_model::{DiscreteState, PerlinTable, RobotAStarStateSpace, SPACE};
+use nav_model::{DiscreteState, PerlinTable, RobotAStarStateSpace, SPACE, START};
 use std::time::Instant;
 
 fn main() {
@@ -15,7 +15,7 @@ fn main() {
     let timer = Instant::now();
 
     let path = astar.find_path(
-        &DiscreteState::default(),
+        &START,
         &DiscreteState { position: SPACE.goal },
     )
         .unwrap();

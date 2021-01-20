@@ -27,6 +27,8 @@ pub struct RobotStateSpace {
     pub max_omega: u16,
     pub min_speed: u16,
     pub max_speed: u16,
+    pub rev_min_speed: u16,
+    pub rev_max_speed: u16,
     pub noise: f32,
     pub goal: RobotVector<i32>,
 }
@@ -122,7 +124,7 @@ impl StateSpace<DiscreteState, DiscreteAction> for RobotStateSpace {
     fn actions(&self, state: &DiscreteState) -> Vec<DiscreteAction> {
         let mut actions = Vec::new();
 
-        for speed in (-(self.max_speed as i32)..=-(self.min_speed as i32))
+        for speed in (-(self.rev_max_speed as i32)..=-(self.rev_min_speed as i32))
             .chain((self.min_speed as i32)..=(self.max_speed as i32))
         {
             for omega in (-(self.max_omega as i32))..(self.max_omega as i32) {

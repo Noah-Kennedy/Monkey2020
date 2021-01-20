@@ -11,6 +11,7 @@ pub struct RobotAStarStateSpace<R> {
 impl<R> AStarStateSpace<DiscreteState> for RobotAStarStateSpace<R>
     where R: RewardTable<DiscreteState>
 {
+    #[inline(never)]
     fn actions(&self, state: &DiscreteState) -> Vec<(f32, DiscreteState)> {
         self.space.actions(state)
             .iter()
