@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+Velocity,,5,5,elements,3717089865.0,ns,1
+Velocity,,5,5,elements,3964591975.0,ns,1
+Velocity,,5,5,elements,4572577687.0,ns,1
+Velocity,,5,5,elements,3951283652.0,ns,1
+Velocity,,5,5,elements,3974354491.0,ns,1
+Velocity,,5,5,elements,4116637245.0,ns,1
+Velocity,,5,5,elements,4125695657.0,ns,1
+Velocity,,5,5,elements,3724958436.0,ns,1
+Velocity,,5,5,elements,4434982813.0,ns,1
+Velocity,,5,5,elements,4434562553.0,ns,1

@@ -60,7 +60,7 @@ pub struct MonkeyModel {
 }
 
 impl MonkeyModel {
-    pub(crate) fn validate_state(&self, state: &DiscreteState) -> bool {
+    fn validate_state(&self, state: &DiscreteState) -> bool {
         state.position.r >= 0
             && state.position.x >= 0
             && state.position.x < self.width as i32
@@ -78,6 +78,7 @@ impl MonkeyModel {
         }
     }
 
+    #[inline(never)]
     pub(crate) fn actions(&self, state: &DiscreteState) -> Vec<DiscreteAction> {
         let mut actions = Vec::new();
 

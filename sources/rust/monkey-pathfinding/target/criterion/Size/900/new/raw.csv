@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+Size,,900,900,elements,128999946.0,ns,1
+Size,,900,900,elements,237677919.0,ns,2
+Size,,900,900,elements,319080105.0,ns,3
+Size,,900,900,elements,461998012.0,ns,4
+Size,,900,900,elements,582556924.0,ns,5
+Size,,900,900,elements,670269949.0,ns,6
+Size,,900,900,elements,800643286.0,ns,7
+Size,,900,900,elements,891052849.0,ns,8
+Size,,900,900,elements,962878637.0,ns,9
+Size,,900,900,elements,1097213878.0,ns,10

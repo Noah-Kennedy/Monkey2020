@@ -52,6 +52,7 @@ impl<G, S> AStar<G, S> {
 }
 
 impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
+    #[inline(never)]
     pub fn find_path(&mut self, start: &S, end: &S) -> Option<Vec<S>> {
         self.actions.clear();
         self.current_cost.clear();
@@ -98,6 +99,7 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
         None
     }
 
+    #[inline(never)]
     fn reconstruct_path(&self, end: &S) -> Vec<S> {
         let mut total_path = Vec::new();
 
