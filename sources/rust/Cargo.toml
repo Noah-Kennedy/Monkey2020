@@ -4,3 +4,7 @@ members = [
     "nav-algo",
     "nav-model"
 ]
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
