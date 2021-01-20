@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::{RewardTable, StateSpace};
+use crate::{RewardTable};
+use crate::mdp::MDPStateSpace;
 
 pub trait ForecastTable<'a, S> {
     type ReadView: ForecastTableReadView<S>;
@@ -33,7 +34,7 @@ pub struct ValueIterationMDPSystem<S, A, Ss, Re> {
 impl<S, A, Ss, Re>
 ValueIterationMDPSystem<S, A, Ss, Re>
     where Re: RewardTable<S>,
-          Ss: StateSpace<S, A>,
+          Ss: MDPStateSpace<S, A>,
 {
     pub fn solve_forecasts<'a, Fo>(
         &self,

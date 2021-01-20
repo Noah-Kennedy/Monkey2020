@@ -2,6 +2,7 @@ use std::f32::consts::TAU;
 use std::sync::Arc;
 
 use nav_algo::{RewardTable, StateSpace};
+use nav_algo::mdp::MDPStateSpace;
 use nav_algo::mdp::value_iteration::{ForecastTable, ForecastTableReadView};
 
 use crate::{PerlinTable, RobotForecastTable, RobotVector};
@@ -50,7 +51,7 @@ impl RobotStateSpace {
     }
 }
 
-impl StateSpace<DiscreteState, DiscreteAction> for RobotStateSpace {
+impl MDPStateSpace<DiscreteState, DiscreteAction> for RobotStateSpace {
     fn nonterminal_states(&self) -> Arc<Vec<DiscreteState>> {
         let mut states = Vec::new();
 
@@ -79,37 +80,6 @@ impl StateSpace<DiscreteState, DiscreteAction> for RobotStateSpace {
         state.position.x == self.goal.x
             && state.position.y == self.goal.y
             && (self.goal.r < 0 || state.position.r == self.goal.r)
-    }
-
-    fn actions(&self, state: &DiscreteState) -> Vec<DiscreteAction> {
-        let mut actions = Vec::new();
-
-        for speed in (-(self.max_speed as i32)..-(self.min_speed as i32))
-            .chain((self.min_speed as i32)..(self.max_speed as i32))
-        {
-            for omega in (-(self.max_omega as i32))..(self.max_omega as i32) {
-                let theta = (state.position.r as f32 / self.ang_res as f32) * TAU;
-
-                let a = DiscreteAction {
-                    velocity: RobotVector {
-                        x: (speed as f32 * theta.cos()).round() as i32,
-                        y: (speed as f32 * theta.sin()).round() as i32,
-                        r: (omega + self.ang_res as i32) % self.ang_res as i32,
-                    }
-                };
-
-                let new_state = self.apply_state(&state, &a);
-
-                if self.validate_state(&new_state) {
-                    actions.push(a)
-                }
-            }
-        }
-
-        actions.sort();
-        actions.dedup();
-
-        actions
     }
 
     fn q_states(&self, state: &DiscreteState, action: &DiscreteAction) -> Vec<(f32, DiscreteState)> {
@@ -145,6 +115,39 @@ impl StateSpace<DiscreteState, DiscreteAction> for RobotStateSpace {
         q_states.push((1.0 - self.noise, self.apply_state(&state, &action)));
 
         q_states
+    }
+}
+
+impl StateSpace<DiscreteState, DiscreteAction> for RobotStateSpace {
+    fn actions(&self, state: &DiscreteState) -> Vec<DiscreteAction> {
+        let mut actions = Vec::new();
+
+        for speed in (-(self.max_speed as i32)..=-(self.min_speed as i32))
+            .chain((self.min_speed as i32)..=(self.max_speed as i32))
+        {
+            for omega in (-(self.max_omega as i32))..(self.max_omega as i32) {
+                let theta = (state.position.r as f32 / self.ang_res as f32) * TAU;
+
+                let a = DiscreteAction {
+                    velocity: RobotVector {
+                        x: (speed as f32 * theta.cos()).round() as i32,
+                        y: (speed as f32 * theta.sin()).round() as i32,
+                        r: (omega + self.ang_res as i32) % self.ang_res as i32,
+                    }
+                };
+
+                let new_state = self.apply_state(&state, &a);
+
+                if self.validate_state(&new_state) {
+                    actions.push(a)
+                }
+            }
+        }
+
+        actions.sort();
+        actions.dedup();
+
+        actions
     }
 }
 

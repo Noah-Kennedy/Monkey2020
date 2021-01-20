@@ -5,11 +5,11 @@ use plotters::element::Circle;
 use plotters::prelude::BitMapBackend;
 use plotters::style::{BLACK, HSLColor, ShapeStyle, WHITE};
 
-use nav_algo::{RewardTable, StateSpace};
+use nav_algo::mdp::MDPStateSpace;
+use nav_algo::RewardTable;
 
-use crate::{DiscreteState, index, RobotStateSpace, RobotVector, GOAL};
+use crate::{DiscreteState, GOAL, index, RobotStateSpace, RobotVector, PERLIN};
 
-const PERLIN: usize = 8;
 
 #[derive(Default, Debug, Clone, PartialOrd, PartialEq)]
 pub struct PerlinTable {
@@ -28,15 +28,17 @@ impl PerlinTable {
 
                 cell[0] = theta.cos();
                 cell[1] = theta.sin();
-
-
             }
         }
 
         let table = Box::new(table);
 
-        let mut r = Self { table, state_map: vec![GOAL; space.length as usize * space.ang_res as
-            usize * space.width as usize], space };
+        let mut r = Self {
+            table,
+            state_map: vec![GOAL; space.length as usize * space.ang_res as
+                usize * space.width as usize],
+            space,
+        };
         r.generate_map();
 
         r
@@ -126,11 +128,7 @@ impl PerlinTable {
             let x = s.position.x;
             let y = s.position.y;
 
-            root.draw(&Circle::new(
-                (x, y),
-                1,
-                Into::<ShapeStyle>::into(&BLACK).filled(),
-            )).unwrap();
+            root.draw_pixel((x, y),&BLACK).unwrap();
         }
     }
 }

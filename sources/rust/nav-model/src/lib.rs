@@ -1,22 +1,25 @@
 #[macro_use]
 extern crate derive_more;
 
+pub use astar::*;
 pub use forecast::*;
 pub use model::*;
-pub use perlin::*;
 use nav_algo::mdp::value_iteration::ValueIterationParameters;
+pub use perlin::*;
 
 mod model;
 mod forecast;
 mod perlin;
+mod astar;
 
-pub const LENGTH: u16 = 100;
-pub const WIDTH: u16 = 100;
-pub const ANGLE_RES: u16 = 8;
+pub const PERLIN: usize = 4;
+pub const LENGTH: u16 = 160;
+pub const WIDTH: u16 = 80;
+pub const ANGLE_RES: u16 = 64;
 pub const MAX_SPEED: u16 = 5;
-pub const MIN_SPEED: u16 = 2;
-pub const MAX_OMEGA: u16 = 2;
-pub const GOAL: f32 = 10.0;
+pub const MIN_SPEED: u16 = 1;
+pub const MAX_OMEGA: u16 = 16;
+pub const GOAL: f32 = 0.0;
 
 pub const SPACE: RobotStateSpace = RobotStateSpace {
     length: LENGTH,

@@ -1,6 +1,7 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::{RewardTable, StateSpace};
+use crate::mdp::MDPStateSpace;
 use crate::mdp::value_iteration::{ForecastTable, ForecastTableReadView, ForecastTableWriteView, ValueIterationMDPSystem, ValueIterationParameters};
 
 type GridState = (usize, usize);
@@ -77,7 +78,7 @@ impl<'a> ForecastTable<'a, GridState> for GridForecastTable {
     }
 }
 
-impl StateSpace<GridState, GridAction> for GridStateSpace {
+impl MDPStateSpace<GridState, GridAction> for GridStateSpace {
     fn nonterminal_states(&self) -> Arc<Vec<(usize, usize)>> {
         let mut out = Vec::new();
 
@@ -93,20 +94,6 @@ impl StateSpace<GridState, GridAction> for GridStateSpace {
     }
     fn terminal(&self, state: &(usize, usize)) -> bool {
         TERMINAL[state.0][state.1]
-    }
-
-    fn actions(&self, state: &GridState) -> Vec<GridAction> {
-        ACTIONS.iter()
-            .map(|(r, c)| ((*r, *c), (*r + state.0 as isize, *c + state.1 as isize)))
-            .filter(|(_, (r, c))|
-                *r >= 0
-                    && *c >= 0
-                    && *r < 3
-                    && *c < 4
-                    && EXISTS[*r as usize][*c as usize]
-            )
-            .map(|(a, _)| a)
-            .collect()
     }
 
     fn q_states(&self, state: &GridState, action: &GridAction) -> Vec<(f32, GridState)> {
@@ -135,6 +122,22 @@ impl StateSpace<GridState, GridAction> for GridStateSpace {
         }
 
         q_states
+    }
+}
+
+impl StateSpace<GridState, GridAction> for GridStateSpace {
+    fn actions(&self, state: &GridState) -> Vec<GridAction> {
+        ACTIONS.iter()
+            .map(|(r, c)| ((*r, *c), (*r + state.0 as isize, *c + state.1 as isize)))
+            .filter(|(_, (r, c))|
+                *r >= 0
+                    && *c >= 0
+                    && *r < 3
+                    && *c < 4
+                    && EXISTS[*r as usize][*c as usize]
+            )
+            .map(|(a, _)| a)
+            .collect()
     }
 }
 

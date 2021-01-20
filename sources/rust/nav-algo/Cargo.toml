@@ -12,3 +12,4 @@ a-star = ["heap"]
 default = ["mdp", "a-star"]
 
 [dependencies]
+fasthash = "0.4.0"

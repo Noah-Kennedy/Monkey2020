@@ -27,7 +27,7 @@ impl<T> PairingHeap<T> {
     }
 }
 
-impl<T> PairingHeap<T> where T: Ord + PartialOrd + PartialEq {
+impl<T> PairingHeap<T> where T: PartialOrd + PartialEq {
     pub fn find_min(&self) -> Option<&T> {
         match &self.root {
             None => None,
