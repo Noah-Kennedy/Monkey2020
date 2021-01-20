@@ -9,5 +9,5 @@ codegen-units = 1
 lto = "fat"
 
 [profile.bench]
-#codegen-units = 1
-#lto = "fat"
+codegen-units = 1
+lto = "fat"

@@ -20,14 +20,14 @@ pub const MODEL: MonkeyModel = MonkeyModel {
 };
 
 fn by_cartesian_size(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Cartesian Size");
+    let mut group = c.benchmark_group("Size");
 
     group.plot_config(PlotConfiguration::default()
         .summary_scale(AxisScale::Logarithmic));
 
     group.sample_size(10);
 
-    for size in (10..=10).step_by(10) {
+    for size in (10..=100).step_by(10) {
         let model = MonkeyModel {
             length: size,
             width: size,
@@ -77,7 +77,7 @@ fn by_velocity(c: &mut Criterion) {
     let mut group = c.benchmark_group("Velocity");
 
     group.plot_config(PlotConfiguration::default()
-        .summary_scale(AxisScale::Logarithmic));
+        .summary_scale(AxisScale::Linear));
 
     group.sample_size(10);
 
@@ -91,7 +91,7 @@ fn by_velocity(c: &mut Criterion) {
         group.throughput(Throughput::Elements(speed as u64));
 
         group.bench_with_input(
-            BenchmarkId::from_parameter(speed * speed),
+            BenchmarkId::from_parameter(speed),
             &speed,
             |b, _| {
                 b.iter_batched(
