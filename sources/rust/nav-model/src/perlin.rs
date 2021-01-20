@@ -1,9 +1,8 @@
 use std::f32::consts::TAU;
 
 use plotters::drawing::IntoDrawingArea;
-use plotters::element::Circle;
 use plotters::prelude::BitMapBackend;
-use plotters::style::{BLACK, HSLColor, ShapeStyle, WHITE};
+use plotters::style::{BLACK, HSLColor, WHITE};
 
 use nav_algo::mdp::MDPStateSpace;
 use nav_algo::RewardTable;

@@ -26,6 +26,6 @@ impl<R> AStarStateSpace<DiscreteState> for RobotAStarStateSpace<R>
         ((state.position.x as f32 - goal.position.x as f32).powi(2)
             + (state.position.y as f32 - goal.position.y as f32).powi(2)
         ).sqrt()
-            * 0.005 as f32
+            * 0.005
     }
 }
