@@ -1,7 +1,8 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use crate::{Action, RewardTable, State, StateSpace, TerminalTable, TransitionTable};
-use crate::value_iteration::{ForecastTable, ForecastTableReadView, ForecastTableWriteView, ValueIterationMDPSystem, ValueIterationParameters};
+use crate::{RewardTable, StateSpace};
+use crate::mdp::MDPStateSpace;
+use crate::mdp::value_iteration::{ForecastTable, ForecastTableReadView, ForecastTableWriteView, ValueIterationMDPSystem, ValueIterationParameters};
 
 type GridState = (usize, usize);
 type GridAction = (isize, isize);
@@ -32,10 +33,6 @@ const ACTIONS: [GridAction; 4] = [
 ];
 
 struct GridStateSpace;
-
-struct GridTransitionTable;
-
-struct GridTerminalTable;
 
 struct GridRewardTable;
 
@@ -81,11 +78,7 @@ impl<'a> ForecastTable<'a, GridState> for GridForecastTable {
     }
 }
 
-impl State for GridState {}
-
-impl Action for GridAction {}
-
-impl StateSpace<GridState> for GridStateSpace {
+impl MDPStateSpace<GridState, GridAction> for GridStateSpace {
     fn nonterminal_states(&self) -> Arc<Vec<(usize, usize)>> {
         let mut out = Vec::new();
 
@@ -99,22 +92,41 @@ impl StateSpace<GridState> for GridStateSpace {
 
         Arc::new(out)
     }
-}
-
-impl RewardTable<GridState, GridAction> for GridRewardTable {
-    fn reward(&self, _: &GridState, end: &GridState, _: &GridAction) -> f32 {
-        REWARDS[end.0][end.1]
-    }
-}
-
-impl TerminalTable<GridState> for GridTerminalTable {
     fn terminal(&self, state: &(usize, usize)) -> bool {
         TERMINAL[state.0][state.1]
     }
+
+    fn q_states(&self, state: &GridState, action: &GridAction) -> Vec<(f32, GridState)> {
+        let mut q_states = Vec::new();
+
+        q_states.push((
+            0.8,
+            (
+                (state.0 as isize + action.0) as usize,
+                (state.1 as isize + action.1) as usize
+            ))
+        );
+
+        let actions = self.actions(state);
+
+        let action_states: Vec<GridState> = actions.iter()
+            .map(|(x, y)| ((state.0 as isize + *x) as usize,
+                           (state.1 as isize + *y) as usize))
+            .filter(|s| s != &q_states[0].1)
+            .collect();
+
+        let n = 0.2 / action_states.len() as f32;
+
+        for s in action_states {
+            q_states.push((n, s));
+        }
+
+        q_states
+    }
 }
 
-impl TransitionTable<GridState, GridAction> for GridTransitionTable {
-    fn list_transitions(&self, state: &GridState) -> Vec<(GridAction, GridState)> {
+impl StateSpace<GridState, GridAction> for GridStateSpace {
+    fn actions(&self, state: &GridState) -> Vec<GridAction> {
         ACTIONS.iter()
             .map(|(r, c)| ((*r, *c), (*r + state.0 as isize, *c + state.1 as isize)))
             .filter(|(_, (r, c))|
@@ -124,8 +136,14 @@ impl TransitionTable<GridState, GridAction> for GridTransitionTable {
                     && *c < 4
                     && EXISTS[*r as usize][*c as usize]
             )
-            .map(|(a, (r, c))| (a, (r as usize, c as usize)))
+            .map(|(a, _)| a)
             .collect()
+    }
+}
+
+impl RewardTable<GridState> for GridRewardTable {
+    fn reward(&self, state: &GridState) -> f32 {
+        REWARDS[state.0][state.1]
     }
 }
 
@@ -133,7 +151,6 @@ impl TransitionTable<GridState, GridAction> for GridTransitionTable {
 fn test_epoch_1() {
     let params = ValueIterationParameters {
         epochs: 1,
-        noise: 0.2,
         discount: 0.9,
         living_reward: 0.0,
     };
@@ -150,9 +167,7 @@ fn test_epoch_1() {
 
 fn run_test(params: &ValueIterationParameters, extrinsic: [[f32; 4]; 3]) {
     let sys = ValueIterationMDPSystem {
-        terminal_table: GridTerminalTable,
         reward_table: GridRewardTable,
-        transition_table: GridTransitionTable,
         state_space: GridStateSpace,
         _phantom: Default::default(),
     };
