@@ -3,22 +3,20 @@ use std::f32::consts::TAU;
 use plotters::drawing::IntoDrawingArea;
 use plotters::prelude::BitMapBackend;
 use plotters::style::{BLACK, HSLColor, WHITE};
+use crate::model::{MonkeyModel, DiscreteState, RobotVector};
+use crate::state_space::RewardTable;
 
-use nav_algo::mdp::MDPStateSpace;
-use nav_algo::RewardTable;
-
-use crate::{DiscreteState, GOAL, index, RobotStateSpace, RobotVector, PERLIN};
-
+const PERLIN: usize = 2;
 
 #[derive(Default, Debug, Clone, PartialOrd, PartialEq)]
 pub struct PerlinTable {
     table: Box<[[[f32; 2]; PERLIN + 1]; PERLIN + 1]>,
     state_map: Vec<f32>,
-    space: RobotStateSpace,
+    space: MonkeyModel,
 }
 
 impl PerlinTable {
-    pub fn new(space: RobotStateSpace) -> Self {
+    pub fn new(space: MonkeyModel) -> Self {
         let mut table = [[[0.0; 2]; PERLIN + 1]; PERLIN + 1];
 
         for row in table.iter_mut() {
@@ -34,7 +32,7 @@ impl PerlinTable {
 
         let mut r = Self {
             table,
-            state_map: vec![GOAL; space.length as usize * space.ang_res as
+            state_map: vec![0.0; space.length as usize * space.ang_res as
                 usize * space.width as usize],
             space,
         };
@@ -44,7 +42,7 @@ impl PerlinTable {
     }
 
     fn generate_map(&mut self) {
-        for state in self.space.nonterminal_states().iter() {
+        for state in self.space.states().iter() {
             let perlin_coords = [
                 state.position.x as f32 * PERLIN as f32 / self.space.width as f32,
                 state.position.y as f32 * PERLIN as f32 / self.space.length as f32,
@@ -130,6 +128,13 @@ impl PerlinTable {
             root.draw_pixel((x, y),&BLACK).unwrap();
         }
     }
+}
+
+pub fn index(space: &MonkeyModel, state: &DiscreteState) -> usize {
+    let theta_off = state.position.r as usize;
+    let y_off = state.position.y as usize * space.ang_res as usize;
+    let x_off = state.position.x as usize * space.length as usize * space.ang_res as usize;
+    theta_off + y_off + x_off
 }
 
 impl RewardTable<DiscreteState> for PerlinTable {

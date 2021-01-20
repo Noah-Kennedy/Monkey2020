@@ -7,8 +7,8 @@ use std::option::Option::Some;
 use crate::heap::PairingHeap;
 use fasthash::RandomState;
 
-pub trait AStarStateSpace<S> {
-    fn actions(&self, state: &S) -> Vec<(f32, S)>;
+pub trait StateSpace<S> {
+    fn neighbors(&self, state: &S) -> Vec<(f32, S)>;
     fn heuristic(&self, state: &S, goal: &S) -> f32;
 }
 
@@ -51,7 +51,7 @@ impl<G, S> AStar<G, S> {
     }
 }
 
-impl<G, S> AStar<G, S> where G: AStarStateSpace<S>, S: Hash + Eq + Clone {
+impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
     pub fn find_path(&mut self, start: &S, end: &S) -> Option<Vec<S>> {
         self.actions.clear();
         self.current_cost.clear();
@@ -73,7 +73,7 @@ impl<G, S> AStar<G, S> where G: AStarStateSpace<S>, S: Hash + Eq + Clone {
             if &current == end {
                 return Some(self.reconstruct_path(end));
             } else {
-                for (cost, neighbor) in self.space.actions(&current) {
+                for (cost, neighbor) in self.space.neighbors(&current) {
                     let tentative_cost = self.current_cost[&current] + cost;
 
                     if tentative_cost < *self.current_cost

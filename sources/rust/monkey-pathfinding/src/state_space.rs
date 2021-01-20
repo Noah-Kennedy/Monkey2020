@@ -1,22 +1,24 @@
-use nav_algo::{RewardTable, StateSpace};
-use nav_algo::a_star::AStarStateSpace;
+use crate::model::{MonkeyModel, DiscreteState};
+use crate::a_star::StateSpace;
 
-use crate::{DiscreteState, RobotStateSpace};
-
-pub struct RobotAStarStateSpace<R> {
-    pub cost: R,
-    pub space: RobotStateSpace,
+pub trait RewardTable<S> {
+    fn reward(&self, state: &S) -> f32;
 }
 
-impl<R> AStarStateSpace<DiscreteState> for RobotAStarStateSpace<R>
+pub struct MonkeyStateSpace<R> {
+    pub cost: R,
+    pub model: MonkeyModel,
+}
+
+impl<R> StateSpace<DiscreteState> for MonkeyStateSpace<R>
     where R: RewardTable<DiscreteState>
 {
     #[inline(never)]
-    fn actions(&self, state: &DiscreteState) -> Vec<(f32, DiscreteState)> {
-        self.space.actions(state)
+    fn neighbors(&self, state: &DiscreteState) -> Vec<(f32, DiscreteState)> {
+        self.model.actions(state)
             .iter()
             .map(|a| {
-                let s2 = self.space.apply_state(state, a);
+                let s2 = self.model.apply_state(state, a);
                 let g = self.cost.reward(&s2).abs();
                 (g + 0.005 * (a.velocity.x.pow(2) as f32 + a.velocity.y.pow(2) as f32).sqrt(), s2)
             })
