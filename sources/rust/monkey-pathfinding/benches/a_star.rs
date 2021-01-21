@@ -7,6 +7,7 @@ use monkey_pathfinding::a_star::AStar;
 use monkey_pathfinding::model::{DiscreteState, MonkeyModel, RobotVector};
 use monkey_pathfinding::perlin::PerlinTable;
 use monkey_pathfinding::state_space::MonkeyStateSpace;
+use monkey_pathfinding::Discrete;
 
 pub const MODEL: MonkeyModel = MonkeyModel {
     length: 160,
@@ -15,7 +16,7 @@ pub const MODEL: MonkeyModel = MonkeyModel {
     max_omega: 5,
     min_speed: 3,
     max_speed: 5,
-    rev_min_speed: 0,
+    rev_min_speed: 1,
     rev_max_speed: 0,
 };
 
@@ -52,8 +53,8 @@ fn by_cartesian_size(c: &mut Criterion) {
 
                         let end = DiscreteState {
                             position: RobotVector {
-                                x: space.model.width as i32 - 1,
-                                y: space.model.length as i32 - 1,
+                                x: space.model.width as Discrete - 1,
+                                y: space.model.length as Discrete - 1,
                                 ..Default::default()
                             }
                         };
@@ -106,8 +107,8 @@ fn by_velocity(c: &mut Criterion) {
 
                         let end = DiscreteState {
                             position: RobotVector {
-                                x: space.model.width as i32 - 1,
-                                y: space.model.length as i32 - 1,
+                                x: space.model.width as Discrete - 1,
+                                y: space.model.length as Discrete - 1,
                                 ..Default::default()
                             }
                         };

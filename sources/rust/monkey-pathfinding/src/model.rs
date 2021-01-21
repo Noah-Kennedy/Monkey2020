@@ -20,6 +20,7 @@
 //! of the state and action space, and allows for more error-free and readable code.
 
 use std::f32::consts::TAU;
+use crate::Discrete;
 
 /// Vector container for robot state.
 #[derive(Default, Debug, Hash)]
@@ -37,12 +38,12 @@ pub struct RobotVector<T> {
 
 #[derive(Default, Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct DiscreteState {
-    pub position: RobotVector<i32>,
+    pub position: RobotVector<Discrete>,
 }
 
 #[derive(Default, Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct DiscreteAction {
-    pub velocity: RobotVector<i32>,
+    pub velocity: RobotVector<Discrete>,
 }
 
 #[derive(Default, Debug)]
@@ -60,45 +61,47 @@ pub struct MonkeyModel {
 }
 
 impl MonkeyModel {
-    fn validate_state(&self, state: &DiscreteState) -> bool {
+    #[inline(always)]
+    fn validate_state(&self, state: DiscreteState) -> bool {
         state.position.r >= 0
             && state.position.x >= 0
-            && state.position.x < self.width as i32
+            && state.position.x < self.width as Discrete
             && state.position.y >= 0
-            && state.position.y < self.length as i32
+            && state.position.y < self.length as Discrete
     }
 
-    pub(crate) fn apply_state(&self, state: &DiscreteState, action: &DiscreteAction) -> DiscreteState {
+    #[inline(always)]
+    pub(crate) fn apply_state(&self, state: DiscreteState, action: DiscreteAction) -> DiscreteState {
         DiscreteState {
             position: RobotVector {
                 x: state.position.x + action.velocity.x,
                 y: state.position.y + action.velocity.y,
-                r: (state.position.r + action.velocity.r + self.ang_res as i32) % self.ang_res as i32,
+                r: (state.position.r + action.velocity.r + self.ang_res as Discrete) % self.ang_res as Discrete,
             }
         }
     }
 
-    #[inline(never)]
-    pub(crate) fn actions(&self, state: &DiscreteState) -> Vec<DiscreteAction> {
+    #[inline(always)]
+    pub(crate) fn actions(&self, state: DiscreteState) -> Vec<DiscreteAction> {
         let mut actions = Vec::new();
 
-        for speed in (-(self.rev_max_speed as i32)..=-(self.rev_min_speed as i32))
-            .chain((self.min_speed as i32)..=(self.max_speed as i32))
+        for speed in (-(self.rev_max_speed as Discrete)..=-(self.rev_min_speed as Discrete))
+            .chain((self.min_speed as Discrete)..=(self.max_speed as Discrete))
         {
-            for omega in (-(self.max_omega as i32))..(self.max_omega as i32) {
+            for omega in (-(self.max_omega as Discrete))..(self.max_omega as Discrete) {
                 let theta = (state.position.r as f32 / self.ang_res as f32) * TAU;
 
                 let a = DiscreteAction {
                     velocity: RobotVector {
-                        x: (speed as f32 * theta.cos()).round() as i32,
-                        y: (speed as f32 * theta.sin()).round() as i32,
-                        r: (omega + self.ang_res as i32) % self.ang_res as i32,
+                        x: (speed as f32 * theta.cos()).round() as Discrete,
+                        y: (speed as f32 * theta.sin()).round() as Discrete,
+                        r: (omega + self.ang_res as Discrete) % self.ang_res as Discrete,
                     }
                 };
 
-                let new_state = self.apply_state(&state, &a);
+                let new_state = self.apply_state(state, a);
 
-                if self.validate_state(&new_state) {
+                if self.validate_state(new_state) {
                     actions.push(a)
                 }
             }
@@ -110,6 +113,7 @@ impl MonkeyModel {
         actions
     }
 
+    #[inline(always)]
     pub fn states(&self) -> Vec<DiscreteState> {
         let mut states = Vec::new();
 
@@ -117,9 +121,9 @@ impl MonkeyModel {
             for y in 0..self.length {
                 for r in 0..self.ang_res {
                     let v = RobotVector {
-                        x: x as i32,
-                        y: y as i32,
-                        r: r as i32,
+                        x: x as Discrete,
+                        y: y as Discrete,
+                        r: r as Discrete,
                     };
 
                     let s = DiscreteState { position: v };

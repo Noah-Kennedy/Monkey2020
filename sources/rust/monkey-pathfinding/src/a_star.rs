@@ -8,8 +8,8 @@ use crate::heap::PairingHeap;
 use fasthash::RandomState;
 
 pub trait StateSpace<S> {
-    fn neighbors(&self, state: &S) -> Vec<(f32, S)>;
-    fn heuristic(&self, state: &S, goal: &S) -> f32;
+    fn neighbors(&self, state: S) -> Vec<(f32, S)>;
+    fn heuristic(&self, state: S, goal: S) -> f32;
 }
 
 struct Task<S> {
@@ -51,8 +51,7 @@ impl<G, S> AStar<G, S> {
     }
 }
 
-impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
-    #[inline(never)]
+impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone + Copy {
     pub fn find_path(&mut self, start: &S, end: &S) -> Option<Vec<S>> {
         self.actions.clear();
         self.current_cost.clear();
@@ -64,7 +63,7 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
 
         self.expandable.insert(start.clone());
 
-        let st = Task { priority: self.space.heuristic(start, end), state: start.clone() };
+        let st = Task { priority: self.space.heuristic(*start, *end), state: *start };
 
         queue.insert(st);
 
@@ -74,7 +73,7 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
             if &current == end {
                 return Some(self.reconstruct_path(end));
             } else {
-                for (cost, neighbor) in self.space.neighbors(&current) {
+                for (cost, neighbor) in self.space.neighbors(current) {
                     let tentative_cost = self.current_cost[&current] + cost;
 
                     if tentative_cost < *self.current_cost
@@ -84,13 +83,13 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
                         self.actions.insert(neighbor.clone(), current.clone());
                         self.current_cost.insert(neighbor.clone(), tentative_cost);
 
-                        let tc = tentative_cost + self.space.heuristic(&neighbor, end);
+                        let tc = tentative_cost + self.space.heuristic(neighbor, *end);
 
-                        if !self.expandable.contains(&neighbor) {
+                        // if !self.expandable.contains(&neighbor) {
                             self.expandable.insert(neighbor.clone());
                             let t = Task { priority: tc, state: neighbor };
                             queue.insert(t);
-                        }
+                        // }
                     }
                 }
             }
@@ -99,7 +98,6 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone {
         None
     }
 
-    #[inline(never)]
     fn reconstruct_path(&self, end: &S) -> Vec<S> {
         let mut total_path = Vec::new();
 

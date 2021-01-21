@@ -6,6 +6,13 @@ use monkey_pathfinding::perlin::PerlinTable;
 use monkey_pathfinding::state_space::MonkeyStateSpace;
 use criterion::black_box;
 
+#[cfg(not(target_env = "msvc"))]
+use jemallocator::Jemalloc;
+
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
+
 fn main() {
     let timer = Instant::now();
 

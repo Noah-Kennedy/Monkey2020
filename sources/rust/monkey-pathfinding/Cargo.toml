@@ -30,6 +30,9 @@ optional = true
 [dev-dependencies]
 criterion = "0.3.3"
 
+[target.'cfg(not(target_env = "msvc"))'.dev-dependencies]
+jemallocator = "0.3.2"
+
 [[example]]
 name = "demo"
 required-features = ["demo"]

@@ -28,6 +28,7 @@ impl<T> PairingHeap<T> {
 }
 
 impl<T> PairingHeap<T> where T: PartialOrd + PartialEq {
+    #[inline(always)]
     pub fn find_min(&self) -> Option<&T> {
         match &self.root {
             None => None,
@@ -35,10 +36,12 @@ impl<T> PairingHeap<T> where T: PartialOrd + PartialEq {
         }
     }
 
+    #[inline(always)]
     pub fn insert(&mut self, element: T) {
         self.meld(PairingHeap { root: Some(PairingTree { element, children: LinkedList::new() }) })
     }
 
+    #[inline(always)]
     pub fn delete_min(&mut self) -> Option<T> {
         if let Some(root) = &mut self.root {
             let mut new_one = Self::merge_pairs(&mut root.children);
@@ -50,6 +53,7 @@ impl<T> PairingHeap<T> where T: PartialOrd + PartialEq {
         }
     }
 
+    #[inline(always)]
     fn merge_pairs(list: &mut LinkedList<PairingHeapNode<T>>) -> Self {
         if let Some(l0) = list.pop_back() {
             if let Some(l1) = list.pop_back() {
@@ -57,6 +61,7 @@ impl<T> PairingHeap<T> where T: PartialOrd + PartialEq {
                 let h1 = Self { root: l1 };
 
                 h0.meld(h1);
+
                 let merged = Self::merge_pairs(list);
                 h0.meld(merged);
 
@@ -69,6 +74,7 @@ impl<T> PairingHeap<T> where T: PartialOrd + PartialEq {
         }
     }
 
+    #[inline(always)]
     fn meld(&mut self, other: Self) {
         if let Some(root1) = &mut self.root {
             if let Some(root2) = other.root {

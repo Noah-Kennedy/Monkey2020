@@ -5,8 +5,9 @@ use plotters::prelude::BitMapBackend;
 use plotters::style::{BLACK, HSLColor, WHITE};
 use crate::model::{MonkeyModel, DiscreteState, RobotVector};
 use crate::state_space::RewardTable;
+use crate::Discrete;
 
-const PERLIN: usize = 2;
+const PERLIN: usize = 8;
 
 #[derive(Default, Debug, Clone, PartialOrd, PartialEq)]
 pub struct PerlinTable {
@@ -42,7 +43,7 @@ impl PerlinTable {
     }
 
     fn generate_map(&mut self) {
-        for state in self.space.states().iter() {
+        for state in self.space.states() {
             let perlin_coords = [
                 state.position.x as f32 * PERLIN as f32 / self.space.width as f32,
                 state.position.y as f32 * PERLIN as f32 / self.space.length as f32,
@@ -95,8 +96,8 @@ impl PerlinTable {
 
         for x in 0..self.space.width {
             for y in 0..self.space.length {
-                let s = DiscreteState { position: RobotVector { x: x as i32, y: y as i32, r: 0 } };
-                let r = self.reward(&s);
+                let s = DiscreteState { position: RobotVector { x: x as Discrete, y: y as Discrete, r: 0 } };
+                let r = self.reward(s);
                 let c = HSLColor(r.abs() as f64, 1.0, 0.5);
 
                 root.draw_pixel((x as i32, y as i32), &c).unwrap();
@@ -113,8 +114,8 @@ impl PerlinTable {
 
         for x in 0..self.space.width {
             for y in 0..self.space.length {
-                let s = DiscreteState { position: RobotVector { x: x as i32, y: y as i32, r: 0 } };
-                let r = self.reward(&s);
+                let s = DiscreteState { position: RobotVector { x: x as Discrete, y: y as Discrete, r: 0 } };
+                let r = self.reward(s);
                 let c = HSLColor(r.abs() as f64, 1.0, 0.5);
 
                 root.draw_pixel((x as i32, y as i32), &c).unwrap();
@@ -125,24 +126,27 @@ impl PerlinTable {
             let x = s.position.x;
             let y = s.position.y;
 
-            root.draw_pixel((x, y),&BLACK).unwrap();
+            root.draw_pixel((x as i32, y as i32),&BLACK).unwrap();
         }
     }
 }
 
-pub fn index(space: &MonkeyModel, state: &DiscreteState) -> usize {
+#[inline(always)]
+pub fn index(space: &MonkeyModel, state: DiscreteState) -> usize {
     let theta_off = state.position.r as usize;
     let y_off = state.position.y as usize * space.ang_res as usize;
     let x_off = state.position.x as usize * space.length as usize * space.ang_res as usize;
     theta_off + y_off + x_off
 }
 
-impl RewardTable<DiscreteState> for PerlinTable {
-    fn reward(&self, state: &DiscreteState) -> f32 {
+impl RewardTable for PerlinTable {
+    #[inline(always)]
+    fn reward(&self, state: DiscreteState) -> f32 {
         self.state_map[index(&self.space, state)]
     }
 }
 
+#[inline(always)]
 fn smoothstep(x: f32, low: f32, high: f32) -> f32 {
     low + (x * x * x * (x * (x * 6.0 - 15.0) + 10.0)) * (high - low)
 }
