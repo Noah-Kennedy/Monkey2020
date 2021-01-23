@@ -53,10 +53,8 @@ pub struct MonkeyModel {
     pub length: u16,
     pub width: u16,
     pub ang_res: u16,
-    pub max_omega: u16,
-    pub min_speed: u16,
+    pub min_turn_rad: u16,
     pub max_speed: u16,
-    pub rev_min_speed: u16,
     pub rev_max_speed: u16,
 }
 
@@ -85,10 +83,9 @@ impl MonkeyModel {
     pub(crate) fn actions(&self, state: DiscreteState) -> Vec<DiscreteAction> {
         let mut actions = Vec::new();
 
-        for speed in (-(self.rev_max_speed as Discrete)..=-(self.rev_min_speed as Discrete))
-            .chain((self.min_speed as Discrete)..=(self.max_speed as Discrete))
-        {
-            for omega in (-(self.max_omega as Discrete))..(self.max_omega as Discrete) {
+        for speed in -(self.rev_max_speed as Discrete)..=(self.max_speed as Discrete) {
+            let max_omega = (speed.abs() as f32 * self.ang_res as f32 / (TAU * self.min_turn_rad as f32)) as Discrete;
+            for omega in -max_omega..=max_omega {
                 let theta = (state.position.r as f32 / self.ang_res as f32) * TAU;
 
                 let a = DiscreteAction {
