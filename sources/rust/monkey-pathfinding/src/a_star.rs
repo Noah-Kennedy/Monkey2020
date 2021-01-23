@@ -72,11 +72,11 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone + Copy {
         self.current_cost.clear();
         self.expandable.clear();
 
-        self.current_cost.insert(start.clone(), 0.0);
+        self.current_cost.insert(*start, 0.0);
 
         let mut queue = PairingHeap::new();
 
-        self.expandable.insert(start.clone());
+        self.expandable.insert(*start);
 
         let st = Task { priority: self.space.heuristic(*start, *end), state: *start };
 
@@ -95,13 +95,13 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone + Copy {
                         .get(&neighbor)
                         .unwrap_or(&f32::INFINITY)
                     {
-                        self.actions.insert(neighbor.clone(), current.clone());
-                        self.current_cost.insert(neighbor.clone(), tentative_cost);
+                        self.actions.insert(neighbor, current);
+                        self.current_cost.insert(neighbor, tentative_cost);
 
                         let tc = tentative_cost + self.space.heuristic(neighbor, *end);
 
                         // if !self.expandable.contains(&neighbor) {
-                            self.expandable.insert(neighbor.clone());
+                            self.expandable.insert(neighbor);
                             let t = Task { priority: tc, state: neighbor };
                             queue.insert(t);
                         // }
@@ -116,11 +116,11 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone + Copy {
     fn reconstruct_path(&self, end: &S) -> Vec<S> {
         let mut total_path = Vec::new();
 
-        let mut current = end.clone();
+        let mut current = *end;
 
         while let Some(previous) = self.actions.get(&current) {
-            total_path.push(current.clone());
-            current = previous.clone();
+            total_path.push(current);
+            current = *previous;
         }
 
         total_path.reverse();
