@@ -32,7 +32,7 @@ impl<S> PartialOrd for Task<S> {
 type Hasher = fasthash::RandomState<fasthash::sea::Hash64>;
 
 #[cfg(windows)]
-type Hasher = std::collections::hash_map::DefaultHasher;
+type Hasher = std::collections::hash_map::RandomState;
 
 pub struct AStar<G, S> {
     space: G,
@@ -58,9 +58,9 @@ impl<G, S> AStar<G, S> {
     pub fn new(space: G) -> Self {
         Self {
             space,
-            expandable: HashSet::new(),
-            actions: HashMap::new(),
-            current_cost: HashMap::new(),
+            expandable: HashSet::with_hasher(Hasher::new()),
+            actions: HashMap::with_hasher(Hasher::new()),
+            current_cost: HashMap::with_hasher(Hasher::new()),
             _phantom: PhantomData::default(),
         }
     }
