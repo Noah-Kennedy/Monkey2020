@@ -5,7 +5,6 @@ use std::marker::PhantomData;
 use std::option::Option::Some;
 
 use crate::heap::PairingHeap;
-use fasthash::RandomState;
 
 pub trait StateSpace<S> {
     fn neighbors(&self, state: S) -> Vec<(f32, S)>;
@@ -29,23 +28,39 @@ impl<S> PartialOrd for Task<S> {
     }
 }
 
-type Hasher = fasthash::sea::Hash64;
+#[cfg(unix)]
+type Hasher = fasthash::RandomState<fasthash::sea::Hash64>;
+
+#[cfg(windows)]
+type Hasher = std::collections::hash_map::DefaultHasher;
 
 pub struct AStar<G, S> {
     space: G,
-    expandable: HashSet<S, RandomState<Hasher>>,
-    actions: HashMap<S, S, RandomState<Hasher>>,
-    current_cost: HashMap<S, f32, RandomState<Hasher>>,
+    expandable: HashSet<S, Hasher>,
+    actions: HashMap<S, S, Hasher>,
+    current_cost: HashMap<S, f32, Hasher>,
     _phantom: PhantomData<S>,
 }
 
 impl<G, S> AStar<G, S> {
+    #[cfg(unix)]
     pub fn new(space: G) -> Self {
         Self {
             space,
-            expandable: HashSet::with_hasher(RandomState::<Hasher>::new()),
-            actions: HashMap::with_hasher(RandomState::<Hasher>::new()),
-            current_cost: HashMap::with_hasher(RandomState::<Hasher>::new()),
+            expandable: HashSet::with_hasher(Hasher::new()),
+            actions: HashMap::with_hasher(Hasher::new()),
+            current_cost: HashMap::with_hasher(Hasher::new()),
+            _phantom: PhantomData::default(),
+        }
+    }
+
+    #[cfg(windows)]
+    pub fn new(space: G) -> Self {
+        Self {
+            space,
+            expandable: HashSet::new(),
+            actions: HashMap::new(),
+            current_cost: HashMap::new(),
             _phantom: PhantomData::default(),
         }
     }
