@@ -1,10 +1,13 @@
 [workspace]
 
 members = [
-    "nav-algo",
-    "nav-model"
+    "monkey-pathfinding",
 ]
 
 [profile.release]
+codegen-units = 1
+lto = "fat"
+
+[profile.bench]
 codegen-units = 1
 lto = "fat"
