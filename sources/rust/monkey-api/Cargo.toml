@@ -1,0 +1,20 @@
+[package]
+name = "monkey-api"
+version = "0.1.0"
+authors = ["noah <nomaxx117@gmail.com>"]
+edition = "2018"
+
+[features]
+server = ["actix-web", "serde", "objects"]
+objects = []
+
+[dependencies]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+
+[dependencies.actix-web]
+version = "3.3"
+optional = true

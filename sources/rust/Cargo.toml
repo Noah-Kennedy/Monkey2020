@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "monkey-api",
     "monkey-pathfinding",
 ]
 
