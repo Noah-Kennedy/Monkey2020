@@ -5,8 +5,8 @@ on:
     - cron: '0 0 0 * *'
   push:
     paths:
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
+      - 'sources/rust/Cargo.toml'
+      - 'sources/rust/Cargo.lock'
   pull_request:
 
 jobs:
