@@ -1,4 +1,6 @@
 find_package(zed)
+find_package(OpenCV)
+find_package(apriltag)
 
 file(
         GLOB SOURCES_LIST CONFIGURE_DEPENDS
@@ -28,3 +30,22 @@ else ()
             PRIVATE zed
     )
 endif ()
+
+if (OpenCV_FOUND)
+    message(STATUS "Found OpenCV")
+
+    target_link_libraries(
+            visual-processing-cpp
+            PRIVATE OpenCV
+    )
+endif ()
+
+if (apriltag_FOUND)
+    message(STATUS "Found apriltag")
+
+    target_link_libraries(
+            visual-processing-cpp
+            PRIVATE apriltag
+    )
+endif ()
+
