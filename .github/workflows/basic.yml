@@ -8,12 +8,12 @@ on: [push, pull_request]
 
 name: Basic
 
-jobs:
-  defaults:
-    run:
-      shell: bash
-      working-directory: sources/rust
+defaults:
+  run:
+    shell: bash
+    working-directory: sources/rust
 
+jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
@@ -29,10 +29,11 @@ jobs:
           override: true
 
       - name: Run cargo check
-        uses: actions-rs/cargo@v1
+        uses: marcopolo/cargo@master
         continue-on-error: true  # WARNING: only for this example, remove it!
         with:
           command: check
+          working-directory: sources/rust
 
   test:
     name: Test Suite
@@ -49,11 +50,12 @@ jobs:
           override: true
 
       - name: Run cargo test
-        uses: actions-rs/cargo@v1
+        uses: marcopolo/cargo@master
         continue-on-error: true  # WARNING: only for this example, remove it!
         with:
           command: test
           args: --all-features
+          working-directory: sources/rust
 
   lints:
     name: Lints
@@ -71,15 +73,17 @@ jobs:
           components: rustfmt, clippy
 
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
+        uses: marcopolo/cargo@master
         continue-on-error: true  # WARNING: only for this example, remove it!
         with:
           command: fmt
           args: --all -- --check
+          working-directory: sources/rust
 
       - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
+        uses: marcopolo/cargo@master
         continue-on-error: true  # WARNING: only for this example, remove it!
         with:
           command: clippy
           args: -- -D warnings
+          working-directory: sources/rust
