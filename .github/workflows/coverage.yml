@@ -24,7 +24,7 @@ jobs:
         uses: marcopolo/cargo@master
         with:
           command: test
-          args: --all
+          args: --all --all-features
           working-directory: sources/rust
         env:
           CARGO_INCREMENTAL: 0
