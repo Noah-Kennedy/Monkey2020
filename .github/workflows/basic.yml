@@ -6,7 +6,7 @@
 
 on: [push, pull_request]
 
-name: Basic
+name: Basic Rust suite
 
 defaults:
   run:
