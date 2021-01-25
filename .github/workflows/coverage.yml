@@ -34,6 +34,7 @@ jobs:
         id: coverage
         uses: actions-rs/grcov@v0.1
         with:
+          args: --all-features --manifest-path sources/rust
           coveralls-token: ${{ secrets.COVERALLS_TOKEN }}
 
       - name: Coveralls upload
