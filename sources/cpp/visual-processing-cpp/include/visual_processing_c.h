@@ -8,7 +8,7 @@
  * using OpenCV and a ZED2 stereo camera system.
  */
 #pragma once
-//#include <s1/Camera.hpp>
+//#include <sl/Camera.hpp>
 #include <opencv2/opencv.hpp>
 #include <apriltag/apriltag.h>
 #include <apriltag/common/matd.h>
@@ -51,7 +51,7 @@ void draw_boundary(cv::Mat img, apriltag_detection_t *tag);
  * @param img ZED image capture where tag was detected
  * @return Structure containing position data 
  */
-tag_data process_tag(apriltag_detection_t *tag, s1::Mat img);
+tag_data process_tag(apriltag_detection_t *tag, sl::Mat img);
 
 /**
  * @brief Get point cloud distance to a single pixel of a ZED image capture
@@ -60,7 +60,7 @@ tag_data process_tag(apriltag_detection_t *tag, s1::Mat img);
  * @param img ZED SDK image matrix
  * @return Floating-point pixel depth value
  */
-float get_pixel_depth(int x, int y, s1::Mat img);
+float get_pixel_depth(int x, int y, sl::Mat img);
 
 /**
  * @brief Given the tag width, camera focal dimensions, and tag coordinates, generate a matrix for the estimated tag pose

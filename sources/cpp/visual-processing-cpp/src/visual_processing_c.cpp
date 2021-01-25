@@ -49,7 +49,7 @@ void draw_boundary(cv::Mat img, apriltag_detection_t *tag) {
     putText(img, id_text, cv::Point(tag->c[0]-textsize.width/2, tag->c[1]+textsize.height/2), fontface, fontscale, cv::Scalar(0xff, 0x99, 0), 2);
 }
 
-tag_data process_tag(apriltag_detection_t *tag, s1::Mat img) {
+tag_data process_tag(apriltag_detection_t *tag, sl::Mat img) {
     tag_data data;
     //Get image coordinates of AprilTag
     data.x = tag->c[0];
@@ -66,7 +66,7 @@ tag_data process_tag(apriltag_detection_t *tag, s1::Mat img) {
     return data; 
 }
 
-float get_pixel_depth(int x, int y, s1::Mat img) {
+float get_pixel_depth(int x, int y, sl::Mat img) {
     //Convert image pixel to point cloud point
     float4 3d_point;
     img.getValue(x, y, &3d_point);
@@ -88,7 +88,7 @@ matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float 
     apriltag_pose_t pose;
     estimate_tag_pose(&info, &pose);
     //Return rotation matrix
-    return pose->R;
+    return pose.R;
 }
 
 void visual_processing_dealloc() {
@@ -97,9 +97,9 @@ void visual_processing_dealloc() {
 }
 
 int main() {
-    s1::Camera zed;
-    s1::Mat zed_image(zed.getResolution(), MAT_TYPE::U8_C4);
-    cv::Mat opencv_image = s1Mat2cvMat(zed_image);
+    sl::Camera zed;
+    sl::Mat zed_image(zed.getResolution(), MAT_TYPE::U8_C4);
+    cv::Mat opencv_image = slMat2cvMat(zed_image);
     visual_processing_init();
     
     int frame_count = 0;
@@ -109,29 +109,27 @@ int main() {
             //Capture camera frame
             zed.retrieveImage(zed_image, VIEW::LEFT);
             //Find tags in image
-            zarray_t* detected_tags = detected_tags(opencv_image);
+            zarray_t* detected_tags = detect_tags(opencv_image);
             //Process all detected tags
+            printf("Frame: %d\r\n", frame_count);
+            if (zarray_size(detected_tags) == 0) {
+                printf("No AprilTags detected in frame #%d\r\n", frame_count);
+            }
             for (int i = 0; i < zarray_size(detected_tags); i++) {
                 apriltag_detection_t *tag;
                 zarray_get(detected_tags, i, &tag);
                 draw_boundary(opencv_image, tag);
                 tag_data tag_info = process_tag(tag, zed_image);
-                printf("Frame: %d\r\n
-                        AprilTag ID: %d\r\n
-                        Image coordinates: %d, %d\r\n
-                        Distance: %fm\r\n
-                        Pitch angle: %f\r\n
-                        Yaw angle: %f\r\n
-                        Roll angle: %f\r\n\r\n",
-                        frame_count,
-                        tag->id,
-                        tag_info.x, tag_info.y,
-                        tag_info.pitch,
-                        tag_info.yaw,
-                        tag_info.roll);
+                printf("AprilTag ID: %d\r\n", tag->id);
+                printf("Image coordinates: %d, %d\r\n", tag_info.x, tag_info.y);
+                printf("Distance: %fm\r\n", tag_info.distance);
+                printf("Pitch angle: %f\r\n", tag_info.pitch);
+                printf("Yaw angle: %f\r\n", tag_info.yaw);
+                printf("Roll angle: %f\r\n\r\n", tag_info.roll);
             }
+            printf("\r\n");
             cv::imshow("Image", opencv_image);
-            apriltag_detections_destroy();
+            apriltag_detections_destroy(detected_tags);
         } else {
             printf("Error: Could not retrieve image from ZED. Exiting...\r\n");
             return 0;
