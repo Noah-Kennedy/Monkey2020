@@ -5,7 +5,7 @@ name: Code coverage with grcov
 defaults:
   run:
     shell: bash
-    working-directory: scripts
+    working-directory: sources/rust
 
 jobs:
   grcov:
