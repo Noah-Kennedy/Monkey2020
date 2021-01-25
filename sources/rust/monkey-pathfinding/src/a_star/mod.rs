@@ -101,9 +101,9 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone + Copy {
                         let tc = tentative_cost + self.space.heuristic(neighbor, *end);
 
                         // if !self.expandable.contains(&neighbor) {
-                            self.expandable.insert(neighbor);
-                            let t = Task { priority: tc, state: neighbor };
-                            queue.insert(t);
+                        self.expandable.insert(neighbor);
+                        let t = Task { priority: tc, state: neighbor };
+                        queue.insert(t);
                         // }
                     }
                 }
@@ -128,3 +128,6 @@ impl<G, S> AStar<G, S> where G: StateSpace<S>, S: Hash + Eq + Clone + Copy {
         total_path
     }
 }
+
+#[cfg(test)]
+mod tests;
