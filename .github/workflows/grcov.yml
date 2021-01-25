@@ -2,12 +2,12 @@ on: [push, pull_request]
 
 name: Code coverage with grcov
 
-defaults:
-  run:
-    shell: bash
-    working-directory: sources/rust
-
 jobs:
+  defaults:
+    run:
+      shell: bash
+      working-directory: sources/rust
+
   grcov:
     runs-on: ${{ matrix.os }}
     strategy:
