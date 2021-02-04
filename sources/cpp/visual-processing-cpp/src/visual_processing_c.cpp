@@ -1,4 +1,5 @@
 #include "visual_processing_c.h"
+#include <sl/Camera.hpp>
 #include <apriltag/tag36h11.h>
 #include <apriltag/apriltag_pose.h>
 #include <iostream>
@@ -67,11 +68,11 @@ tag_data process_tag(apriltag_detection_t *tag, sl::Mat img) {
 }
 
 float get_pixel_depth(int x, int y, sl::Mat img) {
-    //Convert image pixel to point cloud point
-    float4 3d_point;
-    img.getValue(x, y, &3d_point);
+    //Convert image pixel to 3d point from point cloud
+    sl::float4 point3d;
+    img.getValue(x, y, &point3d);
     //Calculate absolute point depth from X,Y,Z
-    float depth = sqrt(3d_point.x*3d_point.x + 3d_point.y*3d_point.y + 3d_point.z*3d_point.z);
+    float depth = sqrt(point3d.x*point3d.x + point3d.y*point3d.y + point3d.z*point3d.z);
     return depth;
 }
 
@@ -91,6 +92,25 @@ matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float 
     return pose.R;
 }
 
+cv::Mat slMat2cvMat(sl::Mat& input) {\
+    int cv_type = -1;
+    switch (input.getDataType()) {
+        case sl::MAT_TYPE::F32_C1: cv_type = CV_32FC1; break;
+        case sl::MAT_TYPE::F32_C2: cv_type = CV_32FC2; break;
+        case sl::MAT_TYPE::F32_C3: cv_type = CV_32FC3; break;
+        case sl::MAT_TYPE::F32_C4: cv_type = CV_32FC4; break;
+        case sl::MAT_TYPE::U8_C1: cv_type = CV_8UC1; break;
+        case sl::MAT_TYPE::U8_C2: cv_type = CV_8UC2; break;
+        case sl::MAT_TYPE::U8_C3: cv_type = CV_8UC3; break;
+        case sl::MAT_TYPE::U8_C4: cv_type = CV_8UC4; break;
+        default: break;
+    }
+    cv::cuda::GpuMat gpu_image = cv::cuda::GpuMat(input.getHeight(), input.getWidth(), cv_type, input.getPtr<sl::uchar1>(sl::MEM::GPU), input.getStepBytes(sl::MEM::GPU));
+    cv::Mat ocv_image;
+    gpu_image.download(ocv_image);
+    return ocv_image;
+}
+
 void visual_processing_dealloc() {
     apriltag_detector_destroy(tag_detector);
     tag36h11_destroy(tag_family);
@@ -98,16 +118,17 @@ void visual_processing_dealloc() {
 
 int main() {
     sl::Camera zed;
-    sl::Mat zed_image(zed.getResolution(), MAT_TYPE::U8_C4);
+    sl::Resolution image_res = zed.getCameraInformation().camera_resolution;
+    sl::Mat zed_image(image_res.width/2, image_res.height/2, sl::MAT_TYPE::U8_C4, sl::MEM::GPU);
     cv::Mat opencv_image = slMat2cvMat(zed_image);
     visual_processing_init();
     
     int frame_count = 0;
     while (true) {
         frame_count++;
-        if (zed.grab() == ERROR_CODE::SUCCESS) {
+        if (zed.grab() == sl::ERROR_CODE::SUCCESS) {
             //Capture camera frame
-            zed.retrieveImage(zed_image, VIEW::LEFT);
+            zed.retrieveImage(zed_image, sl::VIEW::LEFT);
             //Find tags in image
             zarray_t* detected_tags = detect_tags(opencv_image);
             //Process all detected tags

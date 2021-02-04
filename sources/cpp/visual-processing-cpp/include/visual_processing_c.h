@@ -8,8 +8,9 @@
  * using OpenCV and a ZED2 stereo camera system.
  */
 #pragma once
-//#include <sl/Camera.hpp>
+#include <sl/Camera.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/mat.hpp>
 #include <apriltag/apriltag.h>
 #include <apriltag/common/matd.h>
 
@@ -73,6 +74,13 @@ float get_pixel_depth(int x, int y, sl::Mat img);
  * @return Rotation matrix
  */
 matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float fy, float cx, float cy);
+
+/**
+ * @brief Convert a ZED SDK matrix object to an OpenCV matrix
+ * @param input ZED matrix
+ * @return OpenCV matrix
+ */
+cv::Mat slMat2cvMat(sl::Mat& input);
 
 /**
  * @brief Deallocate dynamic memory used in the visual processing
