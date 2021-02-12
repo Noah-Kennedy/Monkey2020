@@ -1,0 +1,89 @@
+# Based on https://github.com/actions-rs/meta/blob/master/recipes/quickstart.md
+#
+# While our "example" application has the platform-specific code,
+# for simplicity we are compiling and testing everything on the Ubuntu environment only.
+# For multi-OS testing see the `cross.yml` workflow.
+
+on: [push, pull_request]
+
+name: Basic Rust suite
+
+defaults:
+  run:
+    shell: bash
+    working-directory: sources/rust
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run cargo check
+        uses: marcopolo/cargo@master
+        continue-on-error: true  # WARNING: only for this example, remove it!
+        with:
+          command: check
+          working-directory: sources/rust
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run cargo test
+        uses: marcopolo/cargo@master
+        continue-on-error: true  # WARNING: only for this example, remove it!
+        with:
+          command: test
+          args: --all-features
+          working-directory: sources/rust
+
+  lints:
+    name: Lints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Run cargo fmt
+        uses: marcopolo/cargo@master
+        continue-on-error: true  # WARNING: only for this example, remove it!
+        with:
+          command: fmt
+          args: --all -- --check
+          working-directory: sources/rust
+
+      - name: Run cargo clippy
+        uses: marcopolo/cargo@master
+        continue-on-error: true  # WARNING: only for this example, remove it!
+        with:
+          command: clippy
+          args: -- -D warnings
+          working-directory: sources/rust
