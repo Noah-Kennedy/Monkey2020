@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OO OO AA AA</title>
+    <script>
+        const delay = 1000 / 15.0;
+
+        function refreshImage(im_id) {
+            let elem = document.getElementById('monkey_portal_image');
+            fetch(
+                'https://localhost:8080/sensors/camera/image/' + im_id,
+                {
+                    method: 'GET',
+                    cache: 'no-cache',
+                    // mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // credentials: 'same-origin'
+                }
+            )
+                .then(response => response.blob())
+                .then(images => {
+                    // Then create a local URL for that image and print it
+                    let outside = URL.createObjectURL(images);
+                    console.log(outside);
+                    elem.src = outside;
+                })
+        }
+
+        let id = 0
+
+        setInterval(function () {
+            refreshImage(id % 8);
+            id += 1;
+        }, delay)
+
+    </script>
+</head>
+<body>
+<img src=""
+     alt="Nick Cage" id="monkey_portal_image">
+</body>
+</html>
