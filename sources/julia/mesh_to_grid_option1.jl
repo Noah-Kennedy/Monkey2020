@@ -28,7 +28,9 @@ function to_particles(vertices::Vector{Vertex}, tris::Vector{Tri})
         height = lerp(lerp(vertices[tri.v1].y, vertices[tri.v2].y, 0.5), vertices[tri.v3].y, 1 / 3)
         area = abs(wedge(t2 - t1, t3 - t1)) / 2
 
-        push!(particles, SmoothedParticle(pos, height, area))
+        if height <= 1
+            push!(particles, SmoothedParticle(pos, height, area))
+        end
     end
 
     particles
@@ -81,7 +83,7 @@ function main()
     Plots.plot!(-1:1, zeros(3), zeros(3), leg = false, seriescolor = :red)
     Plots.plot!(zeros(3), -1:1, zeros(3), leg = false, seriescolor = :green)
     Plots.plot!(zeros(3), zeros(3), -1:1, leg = false, seriescolor = :blue)
-    plot_2d = Plots.scatter(x, -z, leg = false, markersize = 1)
+    plot_2d = Plots.scatter([vertex.x for vertex in filter(v -> v.y <= 1, vertices)], [-vertex.z for vertex in filter(v -> v.y <= 1, vertices)], leg = false, markersize = 1)
     Plots.plot!(-1:1, zeros(3), leg = false, seriescolor = :red)
     Plots.plot!(zeros(3), -1:1, leg = false, seriescolor = :green)
     plot_terrain = Plots.plot(grid_x, grid_z, grid_y, seriestype = :confourf)
