@@ -13,7 +13,7 @@ were verified, and whether each one passed.
 Localization estimates are left untested until integration with the Visual Processing Software Subsystem since they
 require both subsystems to work together.
 
-\begin{table}[htbp]
+\begin{table}[htb]
     \caption{Navigation Software Subsystem Testing Suite}
     \centering
     \begin{tabular}{P{2cm} P{7cm} P{3.5cm} P{1.5cm}}
@@ -28,17 +28,6 @@ require both subsystems to work together.
     \label{table:testing-suite}
 \end{table}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[scale=0.5]{a-star0}
-    \includegraphics[scale=0.5]{a-star1}
-    \includegraphics[scale=0.5]{a-star2}
-    \caption{
-        Three runs of the Nav. Green areas are relatively flat. Blue areas are steeper slopes; traversal through these
-        areas is to be kept to a minimum.
-    }\label{fig:nav-tests}
-\end{figure}
-
 In verifying the Nav, the path generated was overlaid on the test terrain so that the qualities listed in
 Table~\ref{table:testing-suite} could be observed. Examples are shown in Figure~\ref{fig:nav-tests}.
 
@@ -48,24 +37,7 @@ some cases.
 The biggest issue was that overhangs with vertical faces, when flattened to 2D, appeared as a massive spike in the
 terrain heightmap, as if they were solid walls.
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[scale=0.45]{mesh-to-grid-old}
-    \caption{
-        Visualization of the mesh to gradient grid conversion. The structure circled in green is an overhang with vertical walls that could be passed under, but this mapping would suggest otherwise.\linebreak
-        Top-left: Mesh vertices viewed from an oblique angle\linebreak
-        Bottom-left: Mesh vertices viewed from above\linebreak
-        Right: Contour plot of the gradient magnitude
-    }
-\end{figure}
-
 This was worked around by ignoring mesh vertices more than 1 meter above the camera's current position.
 The 1 meter was chosen arbitrarily to represent the height of the robot; this will eventually be a configurable
 parameter.
 That way, only overhangs low enough to potentially hit the robot will be treated as a wall.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[scale=0.45]{mesh-to-grid}
-    \caption{Improved mesh-to-grid. The overhang is no longer interpreted as a wall.}
-\end{figure}
