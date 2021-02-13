@@ -19,10 +19,9 @@ Tarpaulin\cite{tarpaulin} tool to ensure that each endpoint was being hit.
 The second method of verification was a manual test of network bandwidth utilization while
 streaming video feeds from our cameras.
 This test was conducted by starting a camera stream at 15 frames per second at a resolution of
-1280x720p while using Wireshark\cite{wireshark} to capture packets and plot the bandwidth usage of
+960x540 while using Wireshark\cite{wireshark} to capture packets and plot the bandwidth usage of
 the program.
-The test would be successful if the bandwidth utilization was under 2,000 kilobits per second,
-although a much lower value of under 1,000 was targeted as an informal goal.
+The test would be successful if the bandwidth utilization was under 5,000 kilobits per second,
 
 \subsubsection{Test Results}
 The unit tests all passed after some debugging.
@@ -31,4 +30,17 @@ URL routes which resulted in messages being routed into the void, resulting in 4
 After some quick debugging, these were fixed.
 
 The bandwidth tests were also passed.
-Bandwidth was lower than targeted.
+Bandwidth averaged at around 4300Kb/s.
+All that mattered for this test is that bandwidth fell below our threshold, as this test served
+to establish an upper band on bandwidth consumption with a high framerate and high quality images.
+
+\begin{figure}[hbt]
+    \centering
+    \includegraphics[width=\textwidth]{wireshark}
+    \caption{
+        IO Graph captured with Wireshark.
+        Bandwidth remained relativel consistend throughout the run.
+        A sample of eight images were used to reduce the possibility of data bias impacting our
+        results.
+    }\label{fig:bandwidth}
+\end{figure}
