@@ -25,3 +25,10 @@ The test would be successful if the bandwidth utilization was under 2,000 kilobi
 although a much lower value of under 1,000 was targeted as an informal goal.
 
 \subsubsection{Test Results}
+The unit tests all passed after some debugging.
+Ultimately, there were some initial flaws which were caught involving typos which were made in the
+URL routes which resulted in messages being routed into the void, resulting in 404 messages.
+After some quick debugging, these were fixed.
+
+The bandwidth tests were also passed.
+Bandwidth was lower than targeted.
