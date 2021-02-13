@@ -33,10 +33,10 @@ pub async fn get_image(camera: Path<u64>) -> impl Responder {
         .decode()
         .unwrap();
 
-    let image = image.resize(480, 360, FilterType::Nearest);
+    let image = image.resize(1280, 720, FilterType::Nearest);
 
     let mut bytes: Vec<u8> = Vec::new();
-    image.write_to(&mut bytes, image::ImageOutputFormat::Jpeg(10)).unwrap();
+    image.write_to(&mut bytes, image::ImageOutputFormat::Jpeg(50)).unwrap();
 
     HttpResponse::Ok()
         .content_type("image/jpg")
