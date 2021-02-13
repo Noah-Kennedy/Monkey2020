@@ -79,7 +79,7 @@ function main()
         y[i] = vertices[i].y
         z[i] = vertices[i].z
     end
-    plot_3d = Plots.scatter(x, -z, y, leg = false, markersize = 1)
+    plot_3d = Plots.scatter(x, -z, y, leg = false, markersize = 0)
     Plots.plot!(-1:1, zeros(3), zeros(3), leg = false, seriescolor = :red)
     Plots.plot!(zeros(3), -1:1, zeros(3), leg = false, seriescolor = :green)
     Plots.plot!(zeros(3), zeros(3), -1:1, leg = false, seriescolor = :blue)
