@@ -13,6 +13,8 @@ Each endpoint was hit by a test client to confirm that the endpoint was showing 
 format.
 This was done using the unit testing facilities provided by the standard rust tooling, as well as
 asynchronous HTTP clients.
+Code coverage was recorded and monitored on within the communications codebase using the
+Tarpaulin\cite{tarpaulin} tool to ensure that each endpoint was being hit.
 
 The second method of verification was a manual test of network bandwidth utilization while
 streaming video feeds from our cameras.
@@ -21,3 +23,5 @@ This test was conducted by starting a camera stream at 15 frames per second at a
 the program.
 The test would be successful if the bandwidth utilization was under 2,000 kilobits per second,
 although a much lower value of under 1,000 was targeted as an informal goal.
+
+\subsubsection{Test Results}
