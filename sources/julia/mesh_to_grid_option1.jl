@@ -1,13 +1,13 @@
 #=
 mesh_to_grid_option1:
-- Julia version: 
+- Julia version: 1.4.2
 - Author: Wallace Watler <watlerathome@gmail.com>
-- Date: 2021-01-24
+- Date: 2021-02-13
 =#
 
 include("mesh_to_grid_common.jl")
 
-const INTERACTION_RADIUS_SQR = 0.10^2
+const INTERACTION_RADIUS_SQR = 0.20^2
 
 struct SmoothedParticle
     pos::Vec2D{Float64}
@@ -66,8 +66,8 @@ function main()
     particles = to_particles(vertices, tris)
 
     println("Generating plot...")
-    grid_x = range(-5, 0, length = 200)
-    grid_z = range(1, 6, length = 200)
+    grid_x = range(-5, 0, length = 100)
+    grid_z = range(1, 6, length = 100)
     #grid_y = [terrain_height(particles, Vec2D(x, -z)) for z in grid_z, x in grid_x]
     grid_y = [terrain_gradient(particles, Vec2D(x, -z)) for z in grid_z, x in grid_x]
 
@@ -86,7 +86,7 @@ function main()
     plot_2d = Plots.scatter([vertex.x for vertex in filter(v -> v.y <= 1, vertices)], [-vertex.z for vertex in filter(v -> v.y <= 1, vertices)], leg = false, markersize = 0)
     Plots.plot!(-1:1, zeros(3), leg = false, seriescolor = :red)
     Plots.plot!(zeros(3), -1:1, leg = false, seriescolor = :green)
-    plot_terrain = Plots.plot(grid_x, grid_z, grid_y, seriestype = :confourf)
+    plot_terrain = Plots.heatmap(grid_y)
     plot = Plots.plot(plot_3d, plot_2d, plot_terrain, layout = Plots.@layout [[a; b] c{0.7w}])
     display(plot)
 end
