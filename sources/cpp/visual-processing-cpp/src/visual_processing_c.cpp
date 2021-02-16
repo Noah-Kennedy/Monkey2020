@@ -1,70 +1,43 @@
-#include "visual_processing_c.h"
+#include <iostream>
+
+#include <opencv2/opencv.hpp>
 #include <sl/Camera.hpp>
+
+extern "C" {
+#include <apriltag/apriltag.h>
 #include <apriltag/tag36h11.h>
 #include <apriltag/apriltag_pose.h>
-#include <iostream>
-#include <math.h>
-
-//Width of the tags in meters
-const float tag_size = 0.125;
-//Camera focal length, in pixels
-const float focal_length = 1000.0;
-
-apriltag_family_t *tag_family;
-apriltag_detector *tag_detector;
-
-void visual_processing_init() {
-    //Initialize AprilTag detector object
-    tag_family = tag36h11_create();
-    tag_detector = apriltag_detector_create();
-    apriltag_detector_add_family(tag_detector, tag_family);
 }
 
-zarray_t* detect_tags(cv::Mat img) {
-    //Convert OpenCV image matrix into AprilTag image format
-    image_u8_t img_header = {
-        .width = img.cols,
-        .height = img.rows,
-        .stride = img.cols,
-        .buf = img.data
-    };
-    //Run tag detector and generate zarray (resizable array) output
-    zarray_t *detected_tags = apriltag_detector_detect(tag_detector, &img_header);
-    return detected_tags;
+using namespace std;
+using namespace cv;
+using namespace sl;
+
+int getOCVtype(sl::MAT_TYPE type);
+cv::Mat slMat2cvMat(sl::Mat& input);
+float get_pixel_depth(int x, int y, sl::Mat img);
+matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float fy, float cx, float cy);
+
+int getOCVtype(sl::MAT_TYPE type) {
+    int cv_type = -1;
+    switch (type) {
+        case MAT_TYPE::F32_C1: cv_type = CV_32FC1; break;
+        case MAT_TYPE::F32_C2: cv_type = CV_32FC2; break;
+        case MAT_TYPE::F32_C3: cv_type = CV_32FC3; break;
+        case MAT_TYPE::F32_C4: cv_type = CV_32FC4; break;
+        case MAT_TYPE::U8_C1: cv_type = CV_8UC1; break;
+        case MAT_TYPE::U8_C2: cv_type = CV_8UC2; break;
+        case MAT_TYPE::U8_C3: cv_type = CV_8UC3; break;
+        case MAT_TYPE::U8_C4: cv_type = CV_8UC4; break;
+        default: break;
+    }
+    return cv_type;
 }
 
-void draw_boundary(cv::Mat img, apriltag_detection_t *tag) {
-    //Draw boundary to highlight detected AprilTag on image capture
-    line(img, cv::Point(tag->p[0][0], tag->p[0][1]), cv::Point(tag->p[1][0], tag->p[1][1]), cv::Scalar(0, 0xff, 0), 2);
-    line(img, cv::Point(tag->p[0][0], tag->p[0][1]), cv::Point(tag->p[3][0], tag->p[3][1]), cv::Scalar(0, 0, 0xff), 2);
-    line(img, cv::Point(tag->p[1][0], tag->p[1][1]), cv::Point(tag->p[2][0], tag->p[2][1]), cv::Scalar(0xff, 0, 0), 2);
-    line(img, cv::Point(tag->p[2][0], tag->p[2][1]), cv::Point(tag->p[3][0], tag->p[3][1]), cv::Scalar(0xff, 0, 0), 2);
-    //Display the ID text of the AprilTag
-    std::stringstream ss;
-    ss << tag->id;
-    cv::String id_text = ss.str();
-    int fontface = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
-    float fontscale = 1.0;
-    int baseline;
-    cv::Size textsize = cv::getTextSize(id_text, fontface, fontscale, 2, &baseline);
-    putText(img, id_text, cv::Point(tag->c[0]-textsize.width/2, tag->c[1]+textsize.height/2), fontface, fontscale, cv::Scalar(0xff, 0x99, 0), 2);
-}
-
-tag_data process_tag(apriltag_detection_t *tag, sl::Mat img) {
-    tag_data data;
-    //Get image coordinates of AprilTag
-    data.x = tag->c[0];
-    data.y = tag->c[1];
-    //Get distance from camera
-    data.distance = get_pixel_depth(data.x, data.y, img);
-    //Get rotation of tag
-    matd_t* rot = get_tag_pose(tag, tag_size, focal_length, focal_length, data.x, data.y);
-    data.pitch = atan2(matd_get(rot, 3,2), matd_get(rot, 3,3));
-    data.yaw = atan2(-matd_get(rot, 3,1), sqrt(matd_get(rot, 3,2)*matd_get(rot, 3,2) + matd_get(rot, 3,3)*matd_get(rot, 3,3)));
-    data.roll = atan2(matd_get(rot, 2,1), matd_get(rot, 1,1));
-    matd_destroy(rot);
-
-    return data; 
+cv::Mat slMat2cvMat(sl::Mat& input) {
+    // Since cv::Mat data requires a uchar* pointer, we get the uchar1 pointer from sl::Mat (getPtr<T>())
+    // cv::Mat and sl::Mat will share a single memory structure
+    return cv::Mat(input.getHeight(), input.getWidth(), getOCVtype(input.getDataType()), input.getPtr<sl::uchar1>(MEM::CPU), input.getStepBytes(sl::MEM::CPU));
 }
 
 float get_pixel_depth(int x, int y, sl::Mat img) {
@@ -92,72 +65,118 @@ matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float 
     return pose.R;
 }
 
-cv::Mat slMat2cvMat(sl::Mat& input) {\
-    int cv_type = -1;
-    switch (input.getDataType()) {
-        case sl::MAT_TYPE::F32_C1: cv_type = CV_32FC1; break;
-        case sl::MAT_TYPE::F32_C2: cv_type = CV_32FC2; break;
-        case sl::MAT_TYPE::F32_C3: cv_type = CV_32FC3; break;
-        case sl::MAT_TYPE::F32_C4: cv_type = CV_32FC4; break;
-        case sl::MAT_TYPE::U8_C1: cv_type = CV_8UC1; break;
-        case sl::MAT_TYPE::U8_C2: cv_type = CV_8UC2; break;
-        case sl::MAT_TYPE::U8_C3: cv_type = CV_8UC3; break;
-        case sl::MAT_TYPE::U8_C4: cv_type = CV_8UC4; break;
-        default: break;
+int main(int argc, char *argv[])
+{
+    // Initialize camera
+   /* VideoCapture cap(0);
+    if (!cap.isOpened()) {
+        cerr << "Couldn't open video capture device" << endl;
+        return -1;
+    }*/
+    Camera zed;
+    InitParameters init_params;
+    init_params.camera_resolution = RESOLUTION::VGA; // Use VGA video mode
+    init_params.camera_fps = 30; // Set fps at 30
+    init_params.depth_mode = DEPTH_MODE::ULTRA;
+    init_params.coordinate_units = UNIT::METER;
+    auto returned_state = zed.open(init_params);
+    if (returned_state != ERROR_CODE::SUCCESS) {
+        cout << "Error " << returned_state << ", exit program." << endl;
+        return EXIT_FAILURE;
     }
-    cv::cuda::GpuMat gpu_image = cv::cuda::GpuMat(input.getHeight(), input.getWidth(), cv_type, input.getPtr<sl::uchar1>(sl::MEM::GPU), input.getStepBytes(sl::MEM::GPU));
-    cv::Mat ocv_image;
-    gpu_image.download(ocv_image);
-    return ocv_image;
-}
+    RuntimeParameters runtime_parameters;
+    runtime_parameters.sensing_mode = SENSING_MODE::STANDARD;
+    Resolution image_size = zed.getCameraInformation().camera_resolution;
+    int new_width = image_size.width / 2;
+    int new_height = image_size.height / 2;
+    Resolution new_image_size(new_width, new_height);
+    sl::Mat frame_zed(new_width, new_height, MAT_TYPE::U8_C4);
+    sl::Mat point_cloud;
 
-void visual_processing_dealloc() {
-    apriltag_detector_destroy(tag_detector);
-    tag36h11_destroy(tag_family);
-}
+    // Initialize tag detector
+    apriltag_family_t *tf = tag36h11_create();
+    apriltag_detector_t *td = apriltag_detector_create();
+    apriltag_detector_add_family(td, tf);
 
-int main() {
-    sl::Camera zed;
-    sl::Resolution image_res = zed.getCameraInformation().camera_resolution;
-    sl::Mat zed_image(image_res.width/2, image_res.height/2, sl::MAT_TYPE::U8_C4, sl::MEM::GPU);
-    cv::Mat opencv_image = slMat2cvMat(zed_image);
-    visual_processing_init();
-    
-    int frame_count = 0;
+    cv::Mat frame, gray, image_depth;
+    sl::Mat frame_depth;
     while (true) {
-        frame_count++;
-        if (zed.grab() == sl::ERROR_CODE::SUCCESS) {
-            //Capture camera frame
-            zed.retrieveImage(zed_image, sl::VIEW::LEFT);
-            //Find tags in image
-            zarray_t* detected_tags = detect_tags(opencv_image);
-            //Process all detected tags
-            printf("Frame: %d\r\n", frame_count);
-            if (zarray_size(detected_tags) == 0) {
-                printf("No AprilTags detected in frame #%d\r\n", frame_count);
+        //cap >> frame;
+        zed.grab();
+        zed.retrieveImage(frame_zed, VIEW::LEFT);
+        zed.retrieveImage(frame_depth, VIEW::DEPTH);
+        zed.retrieveMeasure(point_cloud, MEASURE::XYZRGBA);
+        frame = slMat2cvMat(frame_zed);
+        image_depth = slMat2cvMat(frame_depth);
+        cvtColor(frame, gray, COLOR_BGR2GRAY);
+
+        // Make an image_u8_t header for the Mat data
+        image_u8_t im = { .width = gray.cols,
+            .height = gray.rows,
+            .stride = gray.cols,
+            .buf = gray.data
+        };
+
+        zarray_t *detections = apriltag_detector_detect(td, &im);
+
+        // Process detections
+        for (int i = 0; i < zarray_size(detections); i++) {
+            apriltag_detection_t *det;
+            zarray_get(detections, i, &det);
+
+            //Draw borders
+            line(frame, Point(det->p[0][0], det->p[0][1]),
+                     Point(det->p[1][0], det->p[1][1]),
+                     Scalar(0, 0xff, 0), 2);
+            line(frame, Point(det->p[0][0], det->p[0][1]),
+                     Point(det->p[3][0], det->p[3][1]),
+                     Scalar(0, 0, 0xff), 2);
+            line(frame, Point(det->p[1][0], det->p[1][1]),
+                     Point(det->p[2][0], det->p[2][1]),
+                     Scalar(0xff, 0, 0), 2);
+            line(frame, Point(det->p[2][0], det->p[2][1]),
+                     Point(det->p[3][0], det->p[3][1]),
+                     Scalar(0xff, 0, 0), 2);
+
+            //Get distance
+            float distance = get_pixel_depth(det->c[0], det->c[1], point_cloud);
+            //Get angle
+            //matd_t* rot = get_tag_pose(det, 0.125, 1000, 1000, det->c[0], det->c[1]);
+            //float angle = atan2(-matd_get(rot, 3,1), sqrt(matd_get(rot, 3,2)*matd_get(rot, 3,2) + matd_get(rot, 3,3)*matd_get(rot, 3,3)));
+
+            //Display distance
+            stringstream ss;
+            ss << setprecision(2) << distance << "m";
+            cv::String text = ss.str();
+            int fontface = FONT_HERSHEY_SIMPLEX;
+            double fontscale = 1.0;
+            int baseline;
+            Size textsize = getTextSize(text, fontface, fontscale, 2, &baseline);
+            if (text != "nanm" && text != "infm") {
+                putText(frame, text, Point(det->c[0]+textsize.width/2, det->c[1]-textsize.height/2), fontface, fontscale, Scalar(0, 0, 0), 6);
+                putText(frame, text, Point(det->c[0]+textsize.width/2, det->c[1]-textsize.height/2), fontface, fontscale, Scalar(0xff, 0xff, 0xff), 2);
             }
-            for (int i = 0; i < zarray_size(detected_tags); i++) {
-                apriltag_detection_t *tag;
-                zarray_get(detected_tags, i, &tag);
-                draw_boundary(opencv_image, tag);
-                tag_data tag_info = process_tag(tag, zed_image);
-                printf("AprilTag ID: %d\r\n", tag->id);
-                printf("Image coordinates: %d, %d\r\n", tag_info.x, tag_info.y);
-                printf("Distance: %fm\r\n", tag_info.distance);
-                printf("Pitch angle: %f\r\n", tag_info.pitch);
-                printf("Yaw angle: %f\r\n", tag_info.yaw);
-                printf("Roll angle: %f\r\n\r\n", tag_info.roll);
-            }
-            printf("\r\n");
-            cv::imshow("Image", opencv_image);
-            apriltag_detections_destroy(detected_tags);
-        } else {
-            printf("Error: Could not retrieve image from ZED. Exiting...\r\n");
-            return 0;
+            //Display angle
+            //ss.str("");
+            //ss.clear();
+            //ss << setprecision(2) << angle << "deg";
+            //text = ss.str();
+            //textsize = getTextSize(text, fontface, fontscale, 2, &baseline);
+            //putText(frame, text, Point(det->c[0]+textsize.width, det->c[1]+textsize.height), fontface, fontscale, Scalar(0, 0, 0), 6);
+            //putText(frame, text, Point(det->c[0]+textsize.width, det->c[1]+textsize.height), fontface, fontscale, Scalar(0xff, 0xff, 0xff), 2);
         }
+        apriltag_detections_destroy(detections);
+        cv::Mat overlay;
+        addWeighted(image_depth, 0, frame, 1, 0, overlay);
+        cv::Mat output;
+        cv::resize(overlay, output, cv::Size(frame.size().width*2.5, frame.size().height*2.5));
+        imshow("Tag Detections", output);
+        if (waitKey(30) >= 0)
+            break;
     }
 
-    visual_processing_dealloc();
+    apriltag_detector_destroy(td);
+    tag36h11_destroy(tf);
+
     return 0;
 }
-
