@@ -2,7 +2,7 @@
 mesh_to_grid_option1:
 - Julia version: 1.4.2
 - Author: Wallace Watler <watlerathome@gmail.com>
-- Date: 2021-02-13
+- Date: 2021-02-16
 =#
 
 include("mesh_to_grid_common.jl")
@@ -24,8 +24,8 @@ function to_particles(vertices::Vector{Vertex}, tris::Vector{Tri})
         t3 = Vec2D(vertices[tri.v3].x, vertices[tri.v3].z)
 
         # The centroid
-        pos = lerp(lerp(t1, t2, 0.5), t3, 1 / 3)
-        height = lerp(lerp(vertices[tri.v1].y, vertices[tri.v2].y, 0.5), vertices[tri.v3].y, 1 / 3)
+        pos = (t1 + t2 + t3) * (1 / 3)
+        height = (vertices[tri.v1].y + vertices[tri.v2].y + vertices[tri.v3].y) * (1 / 3)
         area = abs(wedge(t2 - t1, t3 - t1)) / 2
 
         if height <= 1

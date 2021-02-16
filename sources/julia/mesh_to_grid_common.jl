@@ -2,7 +2,7 @@
 mesh_to_grid_common:
 - Julia version: 1.4.2
 - Author: Wallace Watler <watlerathome@gmail.com>
-- Date: 2021-01-24
+- Date: 2021-02-16
 =#
 
 #=
@@ -150,6 +150,54 @@ function read_mesh_from_file(filename)
     end
 
     return vertices, tris
+end
+
+#=
+Write mesh data to a binary PLY file.
+
+File format:
+----Header----
+"ply\n" - ASCII
+"format binary_little_endian 1.0\n" - ASCII
+"element vertex ####\n" - ASCII
+"property float32 x\n" - ASCII
+"property float32 y\n" - ASCII
+"property float32 z\n" - ASCII
+"element face ####\n" - ASCII
+"property list uchar int vertex_indices\n" - ASCII
+"end_header\n" - ASCII
+----Data (variable size)----
+Formatted according to header - binary
+=#
+function write_mesh_to_file(filename, vertices, tris)
+    println("Writing mesh to $filename...")
+
+    open(filename, "w") do io
+        # Write header
+        write(io, "ply\n")
+        write(io, "format binary_little_endian 1.0\n")
+        write(io, "element vertex $(length(vertices))\n")
+        write(io, "property float32 x\n")
+        write(io, "property float32 y\n")
+        write(io, "property float32 z\n")
+        write(io, "element face $(length(tris))\n")
+        write(io, "property list uchar int vertex_indices\n")
+        write(io, "end_header\n")
+
+        # Read binary data
+        for vertex in vertices
+            write(io, htol(vertex.x))
+            write(io, htol(vertex.y))
+            write(io, htol(vertex.z))
+        end
+        for tri in tris
+            write(io, htol(UInt8(3)))
+            # 1 is subtracted since Julia uses 1-based indexing
+            write(io, htol(tri.v1 - 1))
+            write(io, htol(tri.v2 - 1))
+            write(io, htol(tri.v3 - 1))
+        end
+    end
 end
 
 function remove_redundant_vertices!(vertices::Vector{Vertex}, tris::Vector{Tri})

@@ -2,7 +2,7 @@
 mesh_to_grid_option2:
 - Julia version: 1.4.2
 - Author: Wallace Watler <watlerathome@gmail.com>
-- Date: 2021-01-24
+- Date: 2021-02-16
 =#
 
 include("mesh_to_grid_common.jl")
@@ -51,10 +51,10 @@ function main()
     filter_mesh!(vertices, tris)
 
     println("Generating plot...")
-    grid_x = range(-5, 0, length = 200)
-    grid_z = range(1, 6, length = 200)
-    grid_y = [terrain_height(vertices, tris, Vec2D(x, -z)) for z in grid_z, x in grid_x]
-    #grid_y = [terrain_gradient(vertices, tris, Vec2D(x, -z)) for z in grid_z, x in grid_x]
+    grid_x = range(-5, 0, length = 100)
+    grid_z = range(1, 6, length = 100)
+    #grid_y = [terrain_height(vertices, tris, Vec2D(x, -z)) for z in grid_z, x in grid_x]
+    grid_y = [terrain_gradient(vertices, tris, Vec2D(x, -z)) for z in grid_z, x in grid_x]
 
     x = Vector{Float32}(undef, length(vertices))
     y = Vector{Float32}(undef, length(vertices))
@@ -64,14 +64,15 @@ function main()
         y[i] = vertices[i].y
         z[i] = vertices[i].z
     end
-    plot_3d = Plots.scatter(x, -z, y, leg = false, markersize = 1)
+    plot_3d = Plots.scatter(x, -z, y, leg = false, markersize = 0)
     Plots.plot!(-1:1, zeros(3), zeros(3), leg = false, seriescolor = :red)
     Plots.plot!(zeros(3), -1:1, zeros(3), leg = false, seriescolor = :green)
     Plots.plot!(zeros(3), zeros(3), -1:1, leg = false, seriescolor = :blue)
-    plot_2d = Plots.scatter(x, -z, leg = false, markersize = 1)
+    plot_2d = Plots.scatter(x, -z, leg = false, markersize = 0)
     Plots.plot!(-1:1, zeros(3), leg = false, seriescolor = :red)
     Plots.plot!(zeros(3), -1:1, leg = false, seriescolor = :green)
-    plot_terrain = Plots.plot(grid_x, grid_z, grid_y, seriestype = :confourf)
+    #plot_terrain = Plots.plot(grid_x, grid_z, grid_y, seriestype = :confourf)
+    plot_terrain = Plots.heatmap(grid_y)
     plot = Plots.plot(plot_3d, plot_2d, plot_terrain, layout = Plots.@layout [[a; b] c{0.7w}])
     display(plot)
 end
