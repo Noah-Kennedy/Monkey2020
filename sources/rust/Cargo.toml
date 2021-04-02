@@ -3,13 +3,14 @@
 members = [
     "monkey-api",
     "monkey-pathfinding",
-    "monkey-unified-command"
+    "monkey-unified-command",
+    "space-monkeys"
 ]
-
-[profile.release]
-codegen-units = 1
-lto = "fat"
-
-[profile.bench]
-codegen-units = 1
-lto = "fat"
+#
+#[profile.release]
+#codegen-units = 1
+#lto = "fat"
+#
+#[profile.bench]
+#codegen-units = 1
+#lto = "fat"
