@@ -3,6 +3,7 @@
 members = [
     "monkey-api",
     "monkey-pathfinding",
+    "monkey-unified-command"
 ]
 
 [profile.release]
