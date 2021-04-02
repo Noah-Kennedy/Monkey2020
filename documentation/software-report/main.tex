@@ -1,0 +1,96 @@
+\documentclass[11pt]{article}
+\marginparwidth 0pt
+\oddsidemargin 0pt
+\evensidemargin 0pt
+\marginparsep 0pt
+
+\topmargin 0pt
+\textwidth 6.5 in
+\textheight 8 in
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{amsmath}
+\usepackage{color}
+\newcommand{\hilight}[1]{\colorbox{yellow}{#1}}
+
+\usepackage{bm}
+%\usepackage{algorithmic}
+\usepackage{url}
+\usepackage[
+    backend=biber,
+    citestyle=ieee,
+]{biblatex}
+\graphicspath{ {Figures/} }
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\addbibresource{references.bib}
+
+\title{
+    A Comprehensive Report on the Mental Capabilities of Digital Monkeys
+}
+\author{
+    Noah M. Kennedy \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\tt noah.kennedy.professional@gmail.com}} \\[12pt]
+    \and
+    Wallace O. Watler \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\tt watlerathome@gmail.com}} \\[12pt]
+    \and
+    Cody Nettesheim \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\tt nettcod@gmail.com}} \\[12pt]
+}
+
+\date{}
+
+\usepackage[parfill]{parskip}
+\usepackage[font={small, it}, justification=centering]{caption}
+\usepackage{array}
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+\begin{document}
+    \maketitle
+
+    \newpage
+
+    \abstract
+    \input{abstract}
+
+    \newpage
+
+    \tableofcontents
+
+    \newpage
+
+
+    \section{Introduction}\label{sec:introduction}
+    \input{intro}
+
+
+    \section{Verification of the Software Subsystems}\label{sec:software-subsystems-results}
+
+    \subsection{Monkey Pathfinding}\label{subsec:monkey-pathfinding}
+    \input{pathfinding}
+
+    \subsection{Monkey Communication}\label{subsec:monkey-communication}
+    \input{communication}
+
+    \subsection{Monkey Target Detection}\label{subsec:monkey-target-detection}
+    \input{target-detection}
+
+    \section*{Appendix}\label{sec:appendix}
+    \input{appendix}
+
+    \pagebreak
+
+    \printbibliography
+\end{document}
