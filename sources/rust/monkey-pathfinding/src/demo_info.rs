@@ -4,11 +4,9 @@ use crate::Discrete;
 pub const LENGTH: u16 = 160;
 pub const WIDTH: u16 = 80;
 pub const ANGLE_RES: u16 = 64;
+pub const MIN_TURN_RAD: u16 = 5;
 pub const MAX_SPEED: u16 = 3;
-pub const MIN_SPEED: u16 = 2;
 pub const REV_MAX_SPEED: u16 = 2;
-pub const REV_MIN_SPEED: u16 = 3;
-pub const MAX_OMEGA: u16 = 8;
 
 pub const START: DiscreteState = DiscreteState {
     position: RobotVector {
@@ -30,9 +28,7 @@ pub const MODEL: MonkeyModel = MonkeyModel {
     length: LENGTH,
     width: WIDTH,
     ang_res: ANGLE_RES,
-    max_omega: MAX_OMEGA,
-    min_speed: MIN_SPEED,
+    min_turn_rad: MIN_TURN_RAD,
     max_speed: MAX_SPEED,
-    rev_min_speed: REV_MIN_SPEED,
     rev_max_speed: REV_MAX_SPEED,
 };
