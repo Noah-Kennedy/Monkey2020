@@ -2443,6 +2443,10 @@ dependencies = [
 [[package]]
 name = "space-monkeys"
 version = "0.1.0"
+dependencies = [
+ "byteorder",
+ "plotters",
+]
 
 [[package]]
 name = "standback"
