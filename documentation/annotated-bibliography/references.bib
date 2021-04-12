@@ -113,6 +113,25 @@
     url = {https://github.com/davidmball/ratslam}
 }
 
+@online{bluetooth,
+    title = {Bluetooth Angle Estimation for Real-Time Locationing},
+    date = {2020},
+    url = {https://www.silabs.com/whitepapers/bluetooth-angle-estimation-for-real-time-locationing},
+    addendum = {This whitepaper, written by Sauli Lehtimaki, Senior Software Engineer, Silicon Labs, discusses the
+    process for real-time localization with Bluetooth. The article goes into detail on how the angle of arrival and
+    angle of departure  of the signals in the Bluetooth arrays can be used to achieve localization. It also goes into
+    the math and science that allow devices to make these estimations, and different advantages in different array
+    configurations. This source is relevant to the MONKEY project in helping to determine whether using Bluetooth is a
+    plausible method of achieving localization.Not only does it describe how the location would work from a circuit
+    perspective, it also provided challenges that would need to be overcome in order to get the location finder to work.
+    While it was possible that a particular Bluetooth development board may have an accompanying SDK (software
+    development kit) that would solve these problems, we had to be prepared to figure out how to solve them ourselves.
+    Some problems, such as high processing power needed, would be a simple solution, while others, such as antenna
+    coupling, would be harder to overcome. It also provided other solutions using bluetooth, in case the antenna array
+    method was unsuccessful. While the team ended up not using bluetooth in our final design, this article showed us
+    that it was a plausible solution to our localization needs and could be useful to the NASA RMC team in the future.}
+}
+
 @article{kim2018introduction,
     title={Introduction to Kalman filter and its applications},
     author={Kim, Youngjoo and Bang, Hyochoong},
