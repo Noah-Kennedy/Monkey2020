@@ -141,6 +141,41 @@
     year={2018},
     publisher={IntechOpen},
     addendum = {
+    This excerpt covers the workings of the Kalman filter, and has been instrumental in efforts
+    towards sensor fusion by the team.
 
+    Kalman filters are used for estimating states in linear
+    dynamical systems, although extensions exist for nonlinear systems. Kalman filters are useful
+    for sensor fusion because they can be used to model covariances in different estimates of state
+    variables. For example, current velocity is related to future position.
+
+    This text covers the algorithm in sufficient detail for an inexperienced individual to become
+    quickly familiar with the technique, and was quite useful in early work at modeling anticipated
+    bluetooth localization data with localization data from the stereoscopic vision system.
+    },
+}
+
+@online{actix,
+    title = {Actix Web Documentation},
+    url = {https://actix.rs/docs/},
+    addendum = {
+    Actix-Web is the http server used by the project. Actix-Web is widely considered to be among
+    the fastest open-source servers, and it leverages asynchronous multi-worker techniques to
+    ensure low overhead.
+
+    The referenced page here contains the documentation on Actix-Web.
+    },
+}
+
+@online{tokio,
+    title = {Tokio Web Site},
+    url = {https://tokio.rs/},
+    addendum = {
+    Tokio is the asynchronous engine powering Actix-Web, and much of our asynchronous backend.
+    Tokio leverages work-stealing multi-worker concurrency to ensure efficient performance across
+    multiple CPUs, while also performing well on a single CPU. Tokio is very lightweight, and is
+    among the fastest such runtimes currently in use.
+
+    The linked page contains the documentation for Tokio.
     },
 }
