@@ -10,12 +10,20 @@
     organization = {Springer}
 }
 
+@inproceedings{engel2015_stereo_lsdslam,
+    author = {J. Engel and J. Stueckler and D. Cremers},
+    title = {Large-Scale Direct SLAM with Stereo Cameras},
+    booktitle = {International Conference on Intelligent Robots and Systems (IROS)},
+    year = {2015},
+    month = {sept},
+    keywords = {slam, stereo, semidense, reconstruction, vslam},
+}
+
 @manual{nasa-comp-2021,
     title = {NASA Robotic Mining Competition Lunabotics 2021 Registration, Rules, and Rubrics},
     author = {NASA},
     url = {https://www.nasa.gov/sites/default/files/atoms/files/000_rmc_lunabotics_rules_rubrics_2021.pdf},
 }
-
 
 @book{Lav06,
     author = {S. M. LaValle},
@@ -25,29 +33,71 @@
     note = {Available at http://planning.cs.uiuc.edu/},
     year = {2006},
     addendum = {
-    This whitepaper, written by Edward Olson of the University of Michigan EECS department,
-    outlines the AprilTag system of fiducial markers for computer vision applications.
-    The article talks in-depth about the math involved in AprilTag detection, as well as the
-    structure of an AprilTag marker.
-    This article is relevant to the project because the M.O.N.K.E.Y. needs to implement some form
-    of visual fiducial detection to aid in locating important landmarks in the field, and AprilTag
-    is a robust fiducial system suited for such a task.
-    },
+    Chapters 2 and 8 of the book Planning Algorithms, authored by Steven M. LaValle and published by Cambridge
+    University, discusses methods of modeling and planning motion through both discrete spaces and continuous spaces.
+    One approach of particular interest involves modeling a goal position as an attractor and obstacles as repulsors,
+    creating a potential field that could guide an agent from any starting location to the goal. The MONKEY would need
+    to implement some form of navigation function to carry out its role of guiding the RMC team’s robot to a dig site
+    autonomously, so we used the ideas presented in Planning Algorithms as a launch point for brainstorming. The
+    potential field method was deemed unsuitable as we needed to model not only the robot’s position but its orientation
+    as well, and it had to be possible to specify initial and goal orientations. In the end, we settled on using a
+    Markov Decision Process (MDP) as it is more flexible in state-space construction, and while Planning Algorithms does
+    not explicitly mention MDPs, it does cover value iteration, a method of solving MDPs, in Chapter 2.
+    }
 }
 
 @INPROCEEDINGS{5979561,
-    author = {E. {Olson}},
-    booktitle = {2011 IEEE International Conference on Robotics and Automation},
-    title = {AprilTag: A robust and flexible visual fiducial system},
-    year = {2011},
-    pages = {3400-3407},
-    keywords = {Encoding;Visualization;Robustness;Payloads;Detectors;Image segmentation;Robots},
-    doi = {10.1109/ICRA.2011.5979561},
-    ISSN = {1050-4729},
-    month = {May}
+    author={E. {Olson}},
+    booktitle={2011 IEEE International Conference on Robotics and Automation},
+    title={AprilTag: A robust and flexible visual fiducial system},
+    year={2011},
+    volume={},
+    number={},
+    pages={3400-3407},
+    abstract={While the use of naturally-occurring features is a central focus of machine perception, artificial
+    features (fiducials) play an important role in creating controllable experiments, ground truthing, and in
+    simplifying the development of systems where perception is not the central objective. We describe a new visual
+    fiducial system that uses a 2D bar code style "tag", allowing full 6 DOF localization of features from a single
+    image. Our system improves upon previous systems, incorporating a fast and robust line detection system, a stronger
+    digital coding system, and greater robustness to occlusion, warping, and lens distortion. While similar in concept
+    to the ARTag system, our method is fully open and the algorithms are documented in detail.},
+    keywords={Encoding;Visualization;Robustness;Payloads;Detectors;Image segmentation;Robots},
+    doi={10.1109/ICRA.2011.5979561},
+    ISSN={1050-4729},
+    month={May},
+    addendum = {This whitepaper, written by Edward Olson of the University of Michigan EECS department, outlines the
+    AprilTag system of fiducial markers for computer vision applications. The article talks in-depth about the math
+    involved in AprilTag detection, as well as the structure of an AprilTag marker. This article is relevant to the
+    project because the M.O.N.K.E.Y. needs to implement some form of visual fiducial detection to aid in locating
+    important landmarks in the field, and AprilTag is a robust fiducial system suited for such a task.}
 }
 
 @manual{zedmanual,
     title = "Stereolabs Docs: API Reference, Tutorials, and Integration",
     url = "https://www.stereolabs.com/docs/"
+}
+
+@online{OpenCV,
+    title = {OpenCV: Depth Map from Stereo Images},
+    date = {2021-04-11},
+    url = {https://docs.opencv.org/master/dd/d53/tutorial_py_depthmap.html}
+}
+
+@article{falin2003reverse,
+    title={Reverse current/battery protection circuits},
+    author={Falin, Jeff and Power, PMP Portable},
+    journal={Texas Instruments},
+    year={2003}
+}
+
+@online{OpenSLAM,
+    title = {OpenSLAM},
+    date = {2020},
+    url = {https://openslam-org.github.io/openratslam.html}
+}
+
+@online{ratslam,
+    title = {davidmball/ratslam},
+    date = {2019},
+    url = {https://github.com/davidmball/ratslam}
 }
