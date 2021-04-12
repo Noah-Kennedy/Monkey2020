@@ -1,0 +1,94 @@
+\documentclass[8pt]{article}
+\usepackage[margin=1in,columnsep=.8cm]{geometry}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{xcolor}
+
+\usepackage{bm}
+\usepackage{url}
+
+\usepackage[
+    backend=biber,
+    citestyle=ieee,
+]{biblatex}
+
+\graphicspath{ {Figures/} }
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\usepackage{hyperref}
+\usepackage{helvet}
+\DeclareFieldFormat{addendum}{\paragraph\indent{\textbf\addspace#1}\\}
+\addbibresource{references.bib}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{
+    Sources Of M.O.N.K.E.Y
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Authors
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{authblk}
+%\author[1]{Noah M. Kennedy}
+%\author[2]{Wallace O. Watler}
+%\author[3]{Cody J. Nettesheim}
+%\author[4]{Joseph C. McClanahan}
+%\author[5]{Tim J. Buchmann}
+%
+%\affil[1, 2, 3, 4, 5]{Department of Electrical Engineering and Computer Science, Milwaukee School of Engineering}
+%%\affil[1, 2]{Department of Software Engineering, Milwaukee School of Engineering}
+%%\affil[1]{Department of \LaTeX\ Engineering, \LaTeX\ University}
+%%\affil[3]{Department of Computer Engineering, Milwaukee School of Engineering}
+%%\affil[4, 5]{Department of Electrical Engineering, Milwaukee School of Engineering}
+
+\author{
+    Noah M. Kennedy \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\texttt{noah.kennedy.professional@gmail.com} }} \\
+    \and
+    Wallace O. Watler \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\texttt{watlerathome@gmail.com} }} \\
+    \and
+    Cody J. Nettesheim \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\texttt{nettcod@gmail.com} }} \\
+    \and
+    Joseph C. McClanahan \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\texttt{watlerathome@gmail.com} }} \\
+    \and
+    Tim J. Buchmann \\[3pt]
+    {\small Department of Electrical Engineering and Computer Science} \\
+    {\small Milwaukee School of Engineering} \\
+    {\small Milwaukee, WI, USA} \\
+    {\small Email: {\texttt{nettcod@gmail.com} }}
+}
+
+\usepackage[parfill]{parskip}
+\usepackage{float}
+\usepackage[font={small, it}, justification=centering]{caption}
+\usepackage{array}
+\newcommand{\unit}[1]{\ensuremath{\, \mathrm{#1}}}
+\usepackage{lipsum}
+
+\begin{document}
+    \maketitle~\nocite{*}
+    \newpage
+
+    \printbibliography
+\end{document}
