@@ -5,7 +5,7 @@ use std::io::ErrorKind;
 use std::f32::consts;
 use byteorder::{ReadBytesExt, LittleEndian};
 
-const INTERACTION_RADIUS: f32 = 0.02;
+const INTERACTION_RADIUS: f32 = 0.2;
 const INTERACTION_RADIUS_SQR: f32 = INTERACTION_RADIUS * INTERACTION_RADIUS;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -412,8 +412,8 @@ mod tests {
         let max_x = 1.0;
         let min_z = -7.0;
         let max_z = 0.0;
-        let res_x = 1024;
-        let res_z = 1024;
+        let res_x = 100;
+        let res_z = 100;
 
         let start = Instant::now();
         let grid = mesh_to_grid("test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
@@ -427,7 +427,8 @@ mod tests {
                 for grid_z in 0..res_z {
                     for grid_x in 0..res_x {
                         let height = grid.get_relative(grid_x, grid_z);
-                        let hue = lerp_f32(240.0 / 360.0, 0.0, height) as f64;
+                        let mut hue = lerp_f32(240.0 / 360.0, -60.0 / 360.0, height) as f64;
+                        while hue < 0.0 { hue += 1.0; }
                         let sat = (height * height - height) as f64 + 1.0;
                         let lit = (2.0 * height as f64 - 1.0).powf(3.0) / 2.0 + 0.5;
                         let c = HSLColor(hue, sat, lit);
