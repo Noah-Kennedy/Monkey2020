@@ -2,10 +2,10 @@ use std::path::Path;
 use std::fs::File;
 use std::io;
 use std::io::ErrorKind;
-use std::f32;
+use std::f32::consts;
 use byteorder::{ReadBytesExt, LittleEndian};
 
-const INTERACTION_RADIUS: f32 = 0.20;
+const INTERACTION_RADIUS: f32 = 2.0;
 const INTERACTION_RADIUS_SQR: f32 = INTERACTION_RADIUS * INTERACTION_RADIUS;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -266,93 +266,21 @@ fn read_line(file: &mut File) -> io::Result<String> {
     Ok(s)
 }
 
-fn remove_redundant_vertices(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
-    for i in (1..vertices.len()).rev() {
-        println!("{}", i);
-        for j in 0..(i - 1) {
-            if vertices[i] == vertices[j] {
-                vertices.remove(i);
-                for tri in &mut *tris {
-                    if tri.v1 == i as u32 {
-                        tri.v1 = j as u32;
-                    } else if tri.v2 == i as u32 {
-                        tri.v2 = j as u32;
-                    } else if tri.v3 == i as u32 {
-                        tri.v3 = j as u32;
-                    }
-
-                    if tri.v1 > i as u32 {
-                        tri.v1 -= 1;
-                    }
-                    if tri.v2 > i as u32 {
-                        tri.v2 -= 1;
-                    }
-                    if tri.v3 > i as u32 {
-                        tri.v3 -= 1;
-                    }
-                }
-                break;
-            }
-        }
-    }
-}
-
-fn remove_upside_down_tris(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
+fn filter_mesh(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
+    println!("Removing upside-down tris...");
     tris.retain(|tri| -> bool {
         let t1 = vertices[tri.v2 as usize].sub(&vertices[tri.v1 as usize]);
         let t2 = vertices[tri.v3 as usize].sub(&vertices[tri.v1 as usize]);
         t1.cross(&t2).y >= 0.0
     });
-}
 
-fn remove_tris_far_above_camera(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
+    println!("Removing tris far above the camera...");
     tris.retain(|tri| -> bool {
         let t1 = &vertices[tri.v1 as usize];
         let t2 = &vertices[tri.v2 as usize];
         let t3 = &vertices[tri.v3 as usize];
         t1.y < 1.0 || t2.y < 1.0 || t3.y < 1.0
     });
-}
-
-fn remove_unused_vertices(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
-    for i in (0..vertices.len()).rev() {
-        let mut vertex_used = false;
-        for tri in tris.iter() {
-            if tri.v1 == i as u32 || tri.v2 == i as u32 || tri.v3 == i as u32 {
-                vertex_used = true;
-                break;
-            }
-        }
-
-        if !vertex_used {
-            vertices.remove(i);
-            for tri in &mut *tris {
-                if tri.v1 > i as u32 {
-                    tri.v1 -= 1;
-                }
-                if tri.v2 > i as u32 {
-                    tri.v2 -= 1;
-                }
-                if tri.v3 > i as u32 {
-                    tri.v3 -= 1;
-                }
-            }
-        }
-    }
-}
-
-fn filter_mesh(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
-    println!("Removing redundant vertices...");
-    //remove_redundant_vertices(vertices, tris);
-
-    println!("Removing upside-down tris...");
-    remove_upside_down_tris(vertices, tris);
-
-    println!("Removing tris far above the camera...");
-    remove_tris_far_above_camera(vertices, tris);
-
-    println!("Removing unused vertices...");
-    remove_unused_vertices(vertices, tris);
 }
 
 struct SmoothedParticle {
@@ -387,7 +315,7 @@ fn terrain_height(particles: &[SmoothedParticle], p: Vec2D) -> f32 {
     for particle in particles {
         let d_sqr = p.sub(&particle.pos).l2_sqr();
         if d_sqr < INTERACTION_RADIUS_SQR {
-            height += particle.area * particle.height * (4.0 / (f32::consts::PI * INTERACTION_RADIUS_SQR.powf(4.0))) * (INTERACTION_RADIUS_SQR - d_sqr).powf(3.0);
+            height += particle.area * particle.height * (4.0 / (consts::PI * INTERACTION_RADIUS_SQR.powf(4.0))) * (INTERACTION_RADIUS_SQR - d_sqr).powf(3.0);
         }
     }
     height
@@ -416,6 +344,7 @@ fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f32, 
             //grid.set(grid_x, grid_z, terrain_gradient(&particles, Vec2D { x, y: -z }));
         }
     }
+    grid.update_extrema();
 
     Ok(grid)
 }
@@ -448,25 +377,7 @@ impl Grid {
     }
 
     fn set(&mut self, x: usize, z: usize, value: f32) {
-        let old_min = self.min_y;
-        let old_max = self.max_y;
         self.values[z * x + x] = value;
-        self.min_y = value;
-        self.max_y = value;
-        if value > old_min {
-            for value in &self.values {
-                if *value < self.min_y {
-                    self.min_y = *value;
-                }
-            }
-        }
-        if value < old_max {
-            for value in &self.values {
-                if *value > self.max_y {
-                    self.max_y = *value;
-                }
-            }
-        }
     }
 
     fn get(&self, x: usize, z: usize) -> f32 {
@@ -480,14 +391,20 @@ impl Grid {
             (self.values[z * x + x] - self.min_y) / (self.max_y - self.min_y)
         }
     }
+
+    fn update_extrema(&mut self) {
+        self.min_y = self.values.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+        self.max_y = self.values.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{mesh_to_grid, lerp_f32};
+    use crate::{mesh_to_grid, lerp_f32, Vec2D};
     use plotters::drawing::IntoDrawingArea;
     use plotters::prelude::BitMapBackend;
     use plotters::style::{BLACK, HSLColor};
+    use std::time::{Instant, Duration};
 
     #[test]
     fn test_mesh() {
@@ -498,9 +415,15 @@ mod tests {
         let res_x = 100;
         let res_z = 100;
 
-        match mesh_to_grid("test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z) {
+        let start = Instant::now();
+        let grid = mesh_to_grid("test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
+        let elapsed = start.elapsed();
+        println!("Elapsed: {:?}", elapsed);
+        assert!(elapsed < Duration::from_secs(5));
+
+        match grid {
             Ok(grid) => {
-                let root = BitMapBackend::new("images/terrain.png", (res_x as u32, res_z as u32)).into_drawing_area();
+                let root = BitMapBackend::new("../images/terrain.png", (res_x as u32, res_z as u32)).into_drawing_area();
                 root.fill(&BLACK).unwrap();
 
                 for grid_z in 0..res_z {
@@ -513,5 +436,19 @@ mod tests {
             },
             Err(_) => assert_eq!(true, false)
         }
+    }
+
+    #[test]
+    fn test_vec2d() {
+        let mut a = Vec2D { x: 3.0, y: 2.0 };
+        let b = Vec2D { x: -1.0, y: 4.0 };
+        assert_eq!(a.add(&b), Vec2D { x: 2.0, y: 6.0 });
+        assert_eq!(a.sub(&b), Vec2D { x: 4.0, y: -2.0 });
+        assert_eq!(a.scale(3.0), Vec2D { x: 9.0, y: 6.0 });
+        assert_eq!(Vec2D { x: 3.0, y: 2.0 }.add_mut(&b).to_owned(), Vec2D { x: 2.0, y: 6.0 });
+        assert_eq!(Vec2D { x: 3.0, y: 2.0 }.sub_mut(&b).to_owned(), Vec2D { x: 4.0, y: -2.0 });
+        assert_eq!(Vec2D { x: 3.0, y: 2.0 }.scale_mut(3.0).to_owned(), Vec2D { x: 9.0, y: 6.0 });
+        assert_eq!(a.l2_sqr(), 13.0);
+        assert_eq!(a.wedge(&b), 14.0);
     }
 }
