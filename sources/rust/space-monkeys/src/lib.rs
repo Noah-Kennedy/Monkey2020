@@ -8,7 +8,7 @@ use byteorder::{ReadBytesExt, LittleEndian};
 const INTERACTION_RADIUS: f32 = 0.20;
 const INTERACTION_RADIUS_SQR: f32 = INTERACTION_RADIUS * INTERACTION_RADIUS;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct Vec2D {
     x: f32,
     y: f32
@@ -67,7 +67,7 @@ impl Vec2D {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct Vec3D {
     x: f32,
     y: f32,
@@ -156,6 +156,7 @@ fn lerp_vec3d(low: &Vec3D, high: &Vec3D, frac: f32) -> Vec3D {
     }
 }
 
+#[derive(Debug)]
 struct Tri {
     v1: u32,
     v2: u32,
@@ -179,7 +180,6 @@ struct Tri {
 /// Formatted according to header - binary
 fn read_mesh_from_file(filename: &str) -> io::Result<(Vec<Vec3D>, Vec<Tri>)> {
     println!("Reading mesh from {}...", filename);
-
     let mut file = File::open(&Path::new(filename))?;
 
     // Read header
@@ -268,6 +268,7 @@ fn read_line(file: &mut File) -> io::Result<String> {
 
 fn remove_redundant_vertices(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
     for i in (1..vertices.len()).rev() {
+        println!("{}", i);
         for j in 0..(i - 1) {
             if vertices[i] == vertices[j] {
                 vertices.remove(i);
@@ -342,7 +343,7 @@ fn remove_unused_vertices(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
 
 fn filter_mesh(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
     println!("Removing redundant vertices...");
-    remove_redundant_vertices(vertices, tris);
+    //remove_redundant_vertices(vertices, tris);
 
     println!("Removing upside-down tris...");
     remove_upside_down_tris(vertices, tris);
@@ -496,7 +497,8 @@ mod tests {
         let max_z = 5.0;
         let res_x = 100;
         let res_z = 100;
-        match mesh_to_grid("space_monkeys/test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z) {
+
+        match mesh_to_grid("test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z) {
             Ok(grid) => {
                 let root = BitMapBackend::new("images/terrain.png", (res_x as u32, res_z as u32)).into_drawing_area();
                 root.fill(&BLACK).unwrap();
