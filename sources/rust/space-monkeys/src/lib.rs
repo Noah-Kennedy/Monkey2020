@@ -137,7 +137,7 @@ impl Vec3D {
     }
 }
 
-fn lerp_f32(low: f32, high: f32, frac: f32) -> f32 {
+pub fn lerp_f32(low: f32, high: f32, frac: f32) -> f32 {
     low * (1.0 - frac) + high * frac
 }
 
@@ -328,7 +328,8 @@ fn terrain_gradient(particles: &[SmoothedParticle], p: Vec2D) -> f32 {
     (grad_x * grad_x + grad_y * grad_y).sqrt()
 }
 
-fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f32, res_x: usize, res_z: usize) -> io::Result<Grid> {
+pub fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f32, res_x: usize,
+res_z: usize) -> io::Result<Grid> {
     let (mut vertices, mut tris) = read_mesh_from_file(filename)?;
     filter_mesh(&mut vertices, &mut tris);
 
@@ -349,7 +350,7 @@ fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f32, 
     Ok(grid)
 }
 
-struct Grid {
+pub struct Grid {
     min_x: f32,
     max_x: f32,
     min_y: f32,
@@ -384,7 +385,7 @@ impl Grid {
         self.values[z * self.res_x + x]
     }
 
-    fn get_relative(&self, x: usize, z: usize) -> f32 {
+    pub fn get_relative(&self, x: usize, z: usize) -> f32 {
         if (self.min_y - self.max_y).abs() < f32::EPSILON {
             0.0
         } else {
