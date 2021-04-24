@@ -1,7 +1,7 @@
-Fuse std::f32::consts;
+use std::f32::consts;
 use std::fs::File;
 use std::io;
-use std::io::ErrorKind;
+use std::io::{ErrorKind, BufReader, BufRead};
 use std::path::Path;
 
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -53,10 +53,6 @@ impl Vec2D {
         self.x *= factor;
         self.y *= factor;
         self
-    }
-
-    fn l2(&self) -> f32 {
-        self.l2_sqr().sqrt()
     }
 
     fn l2_sqr(&self) -> f32 {
@@ -121,10 +117,6 @@ impl Vec3D {
         self
     }
 
-    fn l2(&self) -> f32 {
-        self.l2_sqr().sqrt()
-    }
-
     fn l2_sqr(&self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -140,21 +132,6 @@ impl Vec3D {
 
 pub fn lerp_f32(low: f32, high: f32, frac: f32) -> f32 {
     low * (1.0 - frac) + high * frac
-}
-
-fn lerp_vec2d(low: &Vec2D, high: &Vec2D, frac: f32) -> Vec2D {
-    Vec2D {
-        x: low.x * (1.0 - frac) + high.x * frac,
-        y: low.y * (1.0 - frac) + high.y * frac,
-    }
-}
-
-fn lerp_vec3d(low: &Vec3D, high: &Vec3D, frac: f32) -> Vec3D {
-    Vec3D {
-        x: low.x * (1.0 - frac) + high.x * frac,
-        y: low.y * (1.0 - frac) + high.y * frac,
-        z: low.z * (1.0 - frac) + high.z * frac,
-    }
 }
 
 #[derive(Debug)]
@@ -183,21 +160,26 @@ struct Tri {
 /// Formatted according to header - binary
 fn read_mesh_from_file(filename: &str) -> io::Result<(Vec<Vec3D>, Vec<Tri>)> {
     println!("Reading mesh from {}...", filename);
-    let mut file = File::open(&Path::new(filename))?;
+    let file = File::open(&Path::new(filename))?;
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
 
     // Read header
-    if !read_line(&mut file)?.eq("ply") {
+    read_line(&mut reader, &mut line)?;
+    if !line.eq("ply") {
         return Err(io::Error::new(ErrorKind::InvalidData, "not a PLY file"));
     }
 
-    if !read_line(&mut file)?.eq("format binary_little_endian 1.0") {
+    read_line(&mut reader, &mut line)?;
+    if !line.eq("format binary_little_endian 1.0") {
         return Err(io::Error::new(ErrorKind::InvalidData, "not formatted in binary little-endian 1.0"));
     }
 
     // Skip the comment
-    read_line(&mut file)?;
+    read_line(&mut reader, &mut line)?;
 
-    let next_line = read_line(&mut file)?;
+    read_line(&mut reader, &mut line)?;
+    let next_line = line.to_owned();
     let next_line: Vec<&str> = next_line.split(' ').collect();
     if !next_line.get(0).unwrap_or(&"").eq(&"element") || !next_line.get(1).unwrap_or(&"").eq(&"vertex") {
         return Err(io::Error::new(ErrorKind::InvalidData, "unexpected header strings encountered"));
@@ -208,19 +190,23 @@ fn read_mesh_from_file(filename: &str) -> io::Result<(Vec<Vec3D>, Vec<Tri>)> {
 
     let mut vertices = Vec::with_capacity(num_vertices as usize);
 
-    if !read_line(&mut file)?.eq("property float32 x") {
+    read_line(&mut reader, &mut line)?;
+    if !line.eq("property float32 x") {
         return Err(io::Error::new(ErrorKind::InvalidData, "unexpected header strings encountered"));
     }
 
-    if !read_line(&mut file)?.eq("property float32 y") {
+    read_line(&mut reader, &mut line)?;
+    if !line.eq("property float32 y") {
         return Err(io::Error::new(ErrorKind::InvalidData, "unexpected header strings encountered"));
     }
 
-    if !read_line(&mut file)?.eq("property float32 z") {
+    read_line(&mut reader, &mut line)?;
+    if !line.eq("property float32 z") {
         return Err(io::Error::new(ErrorKind::InvalidData, "unexpected header strings encountered"));
     }
 
-    let next_line = read_line(&mut file)?;
+    read_line(&mut reader, &mut line)?;
+    let next_line = line.to_owned();
     let next_line: Vec<&str> = next_line.split(' ').collect();
     if !next_line.get(0).unwrap_or(&"").eq(&"element") || !next_line.get(1).unwrap_or(&"").eq(&"face") {
         return Err(io::Error::new(ErrorKind::InvalidData, "unexpected header strings encountered"));
@@ -231,42 +217,44 @@ fn read_mesh_from_file(filename: &str) -> io::Result<(Vec<Vec3D>, Vec<Tri>)> {
 
     let mut tris = Vec::with_capacity(num_tris as usize);
 
-    if !read_line(&mut file)?.eq("property list uchar int vertex_indices") {
+    read_line(&mut reader, &mut line)?;
+    if !line.eq("property list uchar int vertex_indices") {
         return Err(io::Error::new(ErrorKind::InvalidData, "unexpected header strings encountered"));
     }
 
-    if !read_line(&mut file)?.eq("end_header") {
+    read_line(&mut reader, &mut line)?;
+    if !line.eq("end_header") {
         return Err(io::Error::new(ErrorKind::InvalidData, "end of header not found"));
     }
 
     // Read binary data
     for _ in 0..num_vertices {
-        let x = file.read_f32::<LittleEndian>()?;
-        let y = file.read_f32::<LittleEndian>()?;
-        let z = file.read_f32::<LittleEndian>()?;
+        let x = reader.read_f32::<LittleEndian>()?;
+        let y = reader.read_f32::<LittleEndian>()?;
+        let z = reader.read_f32::<LittleEndian>()?;
         vertices.push(Vec3D { x, y, z });
     }
 
     for _ in 0..num_tris {
-        if file.read_u8()? != 3 {
+        if reader.read_u8()? != 3 {
             return Err(io::Error::new(ErrorKind::InvalidData, "found a non-tri polygon"));
         }
-        let v1 = file.read_u32::<LittleEndian>()?;
-        let v2 = file.read_u32::<LittleEndian>()?;
-        let v3 = file.read_u32::<LittleEndian>()?;
+        let v1 = reader.read_u32::<LittleEndian>()?;
+        let v2 = reader.read_u32::<LittleEndian>()?;
+        let v3 = reader.read_u32::<LittleEndian>()?;
         tris.push(Tri { v1, v2, v3 });
     }
 
     Ok((vertices, tris))
 }
 
-fn read_line(file: &mut File) -> io::Result<String> {
-    let mut s = String::new();
-    while !s.ends_with('\n') {
-        s.push(file.read_u8()? as char);
+fn read_line(reader: &mut BufReader<File>, line: &mut String) -> io::Result<usize> {
+    line.clear();
+    let result = reader.read_line(line);
+    if result.is_ok() {
+        line.pop();
     }
-    s.pop();
-    Ok(s)
+    result
 }
 
 fn filter_mesh(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
@@ -380,11 +368,7 @@ impl Grid {
         }
     }
 
-    fn set(&mut self, x: usize, z: usize, value: f32) {
-        self.values[z * self.res_x + x] = value;
-    }
-
-    fn get(&self, x: usize, z: usize) -> f32 {
+    pub fn get(&self, x: usize, z: usize) -> f32 {
         self.values[z * self.res_x + x]
     }
 
@@ -394,6 +378,10 @@ impl Grid {
         } else {
             (self.values[z * self.res_x + x] - self.min_y) / (self.max_y - self.min_y)
         }
+    }
+
+    fn set(&mut self, x: usize, z: usize, value: f32) {
+        self.values[z * self.res_x + x] = value;
     }
 
     fn update_extrema(&mut self) {
@@ -418,11 +406,11 @@ mod tests {
         let max_x = 1.0;
         let min_z = -7.0;
         let max_z = 0.0;
-        let res_x = 100;
-        let res_z = 100;
+        let res_x = 128;
+        let res_z = 128;
 
         let start = Instant::now();
-        let grid = mesh_to_grid("test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
+        let grid = mesh_to_grid("../test-data/test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
         let elapsed = start.elapsed();
 
         match grid {
@@ -442,7 +430,7 @@ mod tests {
                     }
                 }
             }
-            Err(_) => assert_eq!(true, false)
+            Err(err) => panic!("{}", err)
         }
         println!("Elapsed: {:?}", elapsed);
         assert!(elapsed < Duration::from_secs(1));
@@ -450,7 +438,7 @@ mod tests {
 
     #[test]
     fn test_vec2d() {
-        let mut a = Vec2D { x: 3.0, y: 2.0 };
+        let a = Vec2D { x: 3.0, y: 2.0 };
         let b = Vec2D { x: -1.0, y: 4.0 };
         assert_eq!(a.add(&b), Vec2D { x: 2.0, y: 6.0 });
         assert_eq!(a.sub(&b), Vec2D { x: 4.0, y: -2.0 });
@@ -464,7 +452,7 @@ mod tests {
 
     #[test]
     fn test_vec3d() {
-        let mut a = Vec3D { x: 3.0, y: 2.0, z: -5.0 };
+        let a = Vec3D { x: 3.0, y: 2.0, z: -5.0 };
         let b = Vec3D { x: -1.0, y: 4.0, z: 1.0 };
         assert_eq!(a.add(&b), Vec3D { x: 2.0, y: 6.0, z: -4.0 });
         assert_eq!(a.sub(&b), Vec3D { x: 4.0, y: -2.0, z: -6.0 });

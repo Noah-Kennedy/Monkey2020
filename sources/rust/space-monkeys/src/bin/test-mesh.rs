@@ -11,8 +11,8 @@ fn main() {
     let max_x = 1.0;
     let min_z = -7.0;
     let max_z = 0.0;
-    let res_x = 100;
-    let res_z = 100;
+    let res_x = 128;
+    let res_z = 128;
 
     let start = Instant::now();
     let grid = mesh_to_grid("test-data/test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
@@ -35,7 +35,7 @@ fn main() {
                 }
             }
         }
-        Err(_) => assert_eq!(true, false)
+        Err(err) => panic!("{:?}", err)
     }
     println!("Elapsed: {:?}", elapsed);
 }
