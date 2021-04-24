@@ -400,7 +400,7 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
-    use crate::{mesh_to_grid, lerp_f32, Vec2D};
+    use crate::{mesh_to_grid, lerp_f32, Vec2D, Vec3D};
     use plotters::drawing::IntoDrawingArea;
     use plotters::prelude::BitMapBackend;
     use plotters::style::{BLACK, HSLColor};
@@ -450,5 +450,19 @@ mod tests {
         assert_eq!(Vec2D { x: 3.0, y: 2.0 }.scale_mut(3.0).to_owned(), Vec2D { x: 9.0, y: 6.0 });
         assert_eq!(a.l2_sqr(), 13.0);
         assert_eq!(a.wedge(&b), 14.0);
+    }
+
+    #[test]
+    fn test_vec3d() {
+        let mut a = Vec3D { x: 3.0, y: 2.0, z: -5.0 };
+        let b = Vec3D { x: -1.0, y: 4.0, z: 1.0 };
+        assert_eq!(a.add(&b), Vec3D { x: 2.0, y: 6.0, z: -4.0 });
+        assert_eq!(a.sub(&b), Vec3D { x: 4.0, y: -2.0, z: -6.0 });
+        assert_eq!(a.scale(3.0), Vec3D { x: 9.0, y: 6.0, z: -15.0 });
+        assert_eq!(Vec3D { x: 3.0, y: 2.0, z: -5.0 }.add_mut(&b).to_owned(), Vec3D { x: 2.0, y: 6.0, z: -4.0 });
+        assert_eq!(Vec3D { x: 3.0, y: 2.0, z: -5.0 }.sub_mut(&b).to_owned(), Vec3D { x: 4.0, y: -2.0, z: -6.0 });
+        assert_eq!(Vec3D { x: 3.0, y: 2.0, z: -5.0 }.scale_mut(3.0).to_owned(), Vec3D { x: 9.0, y: 6.0, z: -15.0 });
+        assert_eq!(a.l2_sqr(), 38.0);
+        assert_eq!(a.cross(&b), Vec3D { x: 22.0, y: 2.0, z: 14.0 });
     }
 }
