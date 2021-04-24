@@ -5,7 +5,7 @@ use std::io::ErrorKind;
 use std::f32::consts;
 use byteorder::{ReadBytesExt, LittleEndian};
 
-const INTERACTION_RADIUS: f32 = 2.0;
+const INTERACTION_RADIUS: f32 = 0.02;
 const INTERACTION_RADIUS_SQR: f32 = INTERACTION_RADIUS * INTERACTION_RADIUS;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -339,9 +339,9 @@ fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f32, 
     for grid_z in 0..res_z {
         for grid_x in 0..res_x {
             let x = lerp_f32(min_x, max_x, grid_x as f32 / res_x as f32);
-            let z = lerp_f32(min_z, max_z, grid_z as f32 / res_x as f32);
-            grid.set(grid_x, grid_z, terrain_height(&particles, Vec2D { x, y: -z }));
-            //grid.set(grid_x, grid_z, terrain_gradient(&particles, Vec2D { x, y: -z }));
+            let z = lerp_f32(min_z, max_z, grid_z as f32 / res_z as f32);
+            //grid.set(grid_x, grid_z, terrain_height(&particles, Vec2D { x, y: z }));
+            grid.set(grid_x, grid_z, terrain_gradient(&particles, Vec2D { x, y: z }));
         }
     }
     grid.update_extrema();
@@ -377,18 +377,18 @@ impl Grid {
     }
 
     fn set(&mut self, x: usize, z: usize, value: f32) {
-        self.values[z * x + x] = value;
+        self.values[z * self.res_x + x] = value;
     }
 
     fn get(&self, x: usize, z: usize) -> f32 {
-        self.values[z * x + x]
+        self.values[z * self.res_x + x]
     }
 
     fn get_relative(&self, x: usize, z: usize) -> f32 {
         if (self.min_y - self.max_y).abs() < f32::EPSILON {
             0.0
         } else {
-            (self.values[z * x + x] - self.min_y) / (self.max_y - self.min_y)
+            (self.values[z * self.res_x + x] - self.min_y) / (self.max_y - self.min_y)
         }
     }
 
@@ -409,17 +409,15 @@ mod tests {
     #[test]
     fn test_mesh() {
         let min_x = -5.0;
-        let max_x = 5.0;
-        let min_z = -5.0;
-        let max_z = 5.0;
-        let res_x = 100;
-        let res_z = 100;
+        let max_x = 1.0;
+        let min_z = -7.0;
+        let max_z = 0.0;
+        let res_x = 1024;
+        let res_z = 1024;
 
         let start = Instant::now();
         let grid = mesh_to_grid("test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
         let elapsed = start.elapsed();
-        println!("Elapsed: {:?}", elapsed);
-        assert!(elapsed < Duration::from_secs(5));
 
         match grid {
             Ok(grid) => {
@@ -428,14 +426,19 @@ mod tests {
 
                 for grid_z in 0..res_z {
                     for grid_x in 0..res_x {
-                        let lightness = grid.get_relative(grid_x, grid_z);
-                        let c = HSLColor(lerp_f32(-120.0, 60.0, lightness) as f64, 1.0, lightness as f64);
+                        let height = grid.get_relative(grid_x, grid_z);
+                        let hue = lerp_f32(240.0 / 360.0, 0.0, height) as f64;
+                        let sat = (height * height - height) as f64 + 1.0;
+                        let lit = (2.0 * height as f64 - 1.0).powf(3.0) / 2.0 + 0.5;
+                        let c = HSLColor(hue, sat, lit);
                         root.draw_pixel((grid_x as i32, grid_z as i32), &c).unwrap();
                     }
                 }
             },
             Err(_) => assert_eq!(true, false)
         }
+        println!("Elapsed: {:?}", elapsed);
+        assert!(elapsed < Duration::from_secs(1));
     }
 
     #[test]
