@@ -1,9 +1,10 @@
-use std::path::Path;
+Fuse std::f32::consts;
 use std::fs::File;
 use std::io;
 use std::io::ErrorKind;
-use std::f32::consts;
-use byteorder::{ReadBytesExt, LittleEndian};
+use std::path::Path;
+
+use byteorder::{LittleEndian, ReadBytesExt};
 
 const INTERACTION_RADIUS: f32 = 0.2;
 const INTERACTION_RADIUS_SQR: f32 = INTERACTION_RADIUS * INTERACTION_RADIUS;
@@ -11,14 +12,14 @@ const INTERACTION_RADIUS_SQR: f32 = INTERACTION_RADIUS * INTERACTION_RADIUS;
 #[derive(Clone, Debug, PartialEq)]
 struct Vec2D {
     x: f32,
-    y: f32
+    y: f32,
 }
 
 impl Vec2D {
     fn add(&self, rhs: &Self) -> Self {
         Self {
             x: self.x + rhs.x,
-            y: self.y + rhs.y
+            y: self.y + rhs.y,
         }
     }
 
@@ -31,7 +32,7 @@ impl Vec2D {
     fn sub(&self, rhs: &Self) -> Self {
         Self {
             x: self.x - rhs.x,
-            y: self.y - rhs.y
+            y: self.y - rhs.y,
         }
     }
 
@@ -44,7 +45,7 @@ impl Vec2D {
     fn scale(&self, factor: f32) -> Self {
         Self {
             x: self.x * factor,
-            y: self.y * factor
+            y: self.y * factor,
         }
     }
 
@@ -71,7 +72,7 @@ impl Vec2D {
 struct Vec3D {
     x: f32,
     y: f32,
-    z: f32
+    z: f32,
 }
 
 impl Vec3D {
@@ -79,7 +80,7 @@ impl Vec3D {
         Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
-            z: self.z + rhs.z
+            z: self.z + rhs.z,
         }
     }
 
@@ -94,7 +95,7 @@ impl Vec3D {
         Self {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
-            z: self.z - rhs.z
+            z: self.z - rhs.z,
         }
     }
 
@@ -109,7 +110,7 @@ impl Vec3D {
         Self {
             x: self.x * factor,
             y: self.y * factor,
-            z: self.z * factor
+            z: self.z * factor,
         }
     }
 
@@ -132,7 +133,7 @@ impl Vec3D {
         Vec3D {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
-            z: self.x * rhs.y - self.y * rhs.x
+            z: self.x * rhs.y - self.y * rhs.x,
         }
     }
 }
@@ -144,7 +145,7 @@ pub fn lerp_f32(low: f32, high: f32, frac: f32) -> f32 {
 fn lerp_vec2d(low: &Vec2D, high: &Vec2D, frac: f32) -> Vec2D {
     Vec2D {
         x: low.x * (1.0 - frac) + high.x * frac,
-        y: low.y * (1.0 - frac) + high.y * frac
+        y: low.y * (1.0 - frac) + high.y * frac,
     }
 }
 
@@ -152,7 +153,7 @@ fn lerp_vec3d(low: &Vec3D, high: &Vec3D, frac: f32) -> Vec3D {
     Vec3D {
         x: low.x * (1.0 - frac) + high.x * frac,
         y: low.y * (1.0 - frac) + high.y * frac,
-        z: low.z * (1.0 - frac) + high.z * frac
+        z: low.z * (1.0 - frac) + high.z * frac,
     }
 }
 
@@ -160,12 +161,13 @@ fn lerp_vec3d(low: &Vec3D, high: &Vec3D, frac: f32) -> Vec3D {
 struct Tri {
     v1: u32,
     v2: u32,
-    v3: u32
+    v3: u32,
 }
 
 /// Read mesh data from a binary PLY file.
 ///
 /// Expected file format:
+/// ```
 /// ----Header----
 /// "ply\n" - ASCII
 /// "format binary_little_endian 1.0\n" - ASCII
@@ -177,6 +179,7 @@ struct Tri {
 /// "property list uchar int vertex_indices\n" - ASCII
 /// "end_header\n" - ASCII
 /// ----Data (variable size)----
+/// ```
 /// Formatted according to header - binary
 fn read_mesh_from_file(filename: &str) -> io::Result<(Vec<Vec3D>, Vec<Tri>)> {
     println!("Reading mesh from {}...", filename);
@@ -286,7 +289,7 @@ fn filter_mesh(vertices: &mut Vec<Vec3D>, tris: &mut Vec<Tri>) {
 struct SmoothedParticle {
     pos: Vec2D,
     height: f32,
-    area: f32
+    area: f32,
 }
 
 fn to_particles(vertices: &[Vec3D], tris: &[Tri]) -> Vec<SmoothedParticle> {
@@ -329,7 +332,7 @@ fn terrain_gradient(particles: &[SmoothedParticle], p: Vec2D) -> f32 {
 }
 
 pub fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f32, res_x: usize,
-res_z: usize) -> io::Result<Grid> {
+                    res_z: usize) -> io::Result<Grid> {
     let (mut vertices, mut tris) = read_mesh_from_file(filename)?;
     filter_mesh(&mut vertices, &mut tris);
 
@@ -359,7 +362,7 @@ pub struct Grid {
     max_z: f32,
     res_x: usize,
     res_z: usize,
-    values: Vec<f32>
+    values: Vec<f32>,
 }
 
 impl Grid {
@@ -373,7 +376,7 @@ impl Grid {
             max_z,
             res_x,
             res_z,
-            values: vec![0.0; res_x * res_z]
+            values: vec![0.0; res_x * res_z],
         }
     }
 
@@ -401,11 +404,13 @@ impl Grid {
 
 #[cfg(test)]
 mod tests {
-    use crate::{mesh_to_grid, lerp_f32, Vec2D, Vec3D};
+    use std::time::{Duration, Instant};
+
     use plotters::drawing::IntoDrawingArea;
     use plotters::prelude::BitMapBackend;
     use plotters::style::{BLACK, HSLColor};
-    use std::time::{Instant, Duration};
+
+    use crate::{lerp_f32, mesh_to_grid, Vec2D, Vec3D};
 
     #[test]
     fn test_mesh() {
@@ -436,7 +441,7 @@ mod tests {
                         root.draw_pixel((grid_x as i32, grid_z as i32), &c).unwrap();
                     }
                 }
-            },
+            }
             Err(_) => assert_eq!(true, false)
         }
         println!("Elapsed: {:?}", elapsed);
