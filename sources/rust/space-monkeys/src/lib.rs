@@ -332,8 +332,8 @@ pub fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f
         for grid_x in 0..res_x {
             let x = lerp_f32(min_x, max_x, grid_x as f32 / res_x as f32);
             let z = lerp_f32(min_z, max_z, grid_z as f32 / res_z as f32);
-            //grid.set(grid_x, grid_z, terrain_height(&particles, Vec2D { x, y: z }));
-            grid.set(grid_x, grid_z, terrain_gradient(&particles, Vec2D { x, y: z }));
+            grid.set_height(grid_x, grid_z, terrain_height(&particles, Vec2D { x, y: z }));
+            grid.set_grad_mag(grid_x, grid_z, terrain_gradient(&particles, Vec2D { x, y: z }));
         }
     }
     grid.update_extrema();
@@ -344,13 +344,16 @@ pub fn mesh_to_grid(filename: &str, min_x: f32, max_x: f32, min_z: f32, max_z: f
 pub struct Grid {
     min_x: f32,
     max_x: f32,
-    min_y: f32,
-    max_y: f32,
+    min_height: f32,
+    max_height: f32,
+    min_grad_mag: f32,
+    max_grad_mag: f32,
     min_z: f32,
     max_z: f32,
     res_x: usize,
     res_z: usize,
-    values: Vec<f32>,
+    height: Vec<f32>,
+    grad_mag: Vec<f32>,
 }
 
 impl Grid {
@@ -358,35 +361,60 @@ impl Grid {
         Grid {
             min_x,
             max_x,
-            min_y: 0.0,
-            max_y: 0.0,
+            min_height: 0.0,
+            max_height: 0.0,
+            min_grad_mag: 0.0,
+            max_grad_mag: 0.0,
             min_z,
             max_z,
             res_x,
             res_z,
-            values: vec![0.0; res_x * res_z],
+            height: vec![0.0; res_x * res_z],
+            grad_mag: vec![0.0; res_x * res_z],
         }
     }
 
-    pub fn get(&self, x: usize, z: usize) -> f32 {
-        self.values[z * self.res_x + x]
+    /// The height at a grid cell.
+    pub fn get_height(&self, x: usize, z: usize) -> f32 {
+        self.height[z * self.res_x + x]
     }
 
-    pub fn get_relative(&self, x: usize, z: usize) -> f32 {
-        if (self.min_y - self.max_y).abs() < f32::EPSILON {
+    /// The height at a grid cell, normalized between 0 and 1.
+    pub fn get_height_normed(&self, x: usize, z: usize) -> f32 {
+        if (self.min_height - self.max_height).abs() < f32::EPSILON {
             0.0
         } else {
-            (self.values[z * self.res_x + x] - self.min_y) / (self.max_y - self.min_y)
+            (self.height[z * self.res_x + x] - self.min_height) / (self.max_height - self.min_height)
         }
     }
 
-    fn set(&mut self, x: usize, z: usize, value: f32) {
-        self.values[z * self.res_x + x] = value;
+    fn set_height(&mut self, x: usize, z: usize, value: f32) {
+        self.height[z * self.res_x + x] = value;
+    }
+
+    /// The magnitude of the gradient at a grid cell.
+    pub fn get_grad_mag(&self, x: usize, z: usize) -> f32 {
+        self.grad_mag[z * self.res_x + x]
+    }
+
+    /// The magnitude of the gradient at a grid cell, normalized between 0 and 1.
+    pub fn get_grad_mag_normed(&self, x: usize, z: usize) -> f32 {
+        if (self.min_grad_mag - self.max_grad_mag).abs() < f32::EPSILON {
+            0.0
+        } else {
+            (self.grad_mag[z * self.res_x + x] - self.min_grad_mag) / (self.max_grad_mag - self.min_grad_mag)
+        }
+    }
+
+    fn set_grad_mag(&mut self, x: usize, z: usize, value: f32) {
+        self.grad_mag[z * self.res_x + x] = value;
     }
 
     fn update_extrema(&mut self) {
-        self.min_y = self.values.iter().fold(f32::INFINITY, |a, &b| a.min(b));
-        self.max_y = self.values.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
+        self.min_height = self.height.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+        self.max_height = self.height.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
+        self.min_grad_mag = self.grad_mag.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+        self.max_grad_mag = self.grad_mag.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
     }
 }
 
@@ -415,18 +443,26 @@ mod tests {
 
         match grid {
             Ok(grid) => {
-                let root = BitMapBackend::new("../images/terrain.png", (res_x as u32, res_z as u32)).into_drawing_area();
-                root.fill(&BLACK).unwrap();
+                let terrain_height = BitMapBackend::new("../images/terrain_height.png", (res_x as u32, res_z as u32)).into_drawing_area();
+                let terrain_grad_mag = BitMapBackend::new("../images/terrain_grad_mag.png", (res_x as u32, res_z as u32)).into_drawing_area();
+                terrain_height.fill(&BLACK).unwrap();
+                terrain_grad_mag.fill(&BLACK).unwrap();
 
                 for grid_z in 0..res_z {
                     for grid_x in 0..res_x {
-                        let height = grid.get_relative(grid_x, grid_z);
-                        let mut hue = lerp_f32(240.0 / 360.0, -60.0 / 360.0, height) as f64;
-                        while hue < 0.0 { hue += 1.0; }
-                        let sat = (height * height - height) as f64 + 1.0;
-                        let lit = (2.0 * height as f64 - 1.0).powf(3.0) / 2.0 + 0.5;
-                        let c = HSLColor(hue, sat, lit);
-                        root.draw_pixel((grid_x as i32, grid_z as i32), &c).unwrap();
+                        let height = grid.get_height_normed(grid_x, grid_z);
+                        let grad_mag = grid.get_grad_mag_normed(grid_x, grid_z);
+
+                        let colorizer = |value: f32| -> HSLColor {
+                            let mut hue = lerp_f32(240.0 / 360.0, -60.0 / 360.0, value) as f64;
+                            while hue < 0.0 { hue += 1.0; }
+                            let sat = (value * value - value) as f64 + 1.0;
+                            let lit = (2.0 * value as f64 - 1.0).powf(3.0) / 2.0 + 0.5;
+                            return HSLColor(hue, sat, lit);
+                        };
+
+                        terrain_height.draw_pixel((grid_x as i32, grid_z as i32), &colorizer(height)).unwrap();
+                        terrain_grad_mag.draw_pixel((grid_x as i32, grid_z as i32), &colorizer(grad_mag)).unwrap();
                     }
                 }
             }
