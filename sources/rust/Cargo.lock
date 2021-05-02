@@ -1439,6 +1439,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56d855069fafbb9b344c0f962150cd2c1187975cb1c22c1522c240d8c4986714"
 
 [[package]]
+name = "libmonkey-sys"
+version = "0.1.0"
+dependencies = [
+ "cmake",
+]
+
+[[package]]
 name = "linked-hash-map"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1610,6 +1617,10 @@ dependencies = [
 
 [[package]]
 name = "monkey-unified-command"
+version = "0.1.0"
+
+[[package]]
+name = "monkey-vision"
 version = "0.1.0"
 
 [[package]]

@@ -4,7 +4,9 @@ members = [
     "monkey-api",
     "monkey-pathfinding",
     "monkey-unified-command",
-    "space-monkeys"
+    "space-monkeys",
+    "libmonkey-sys",
+    "monkey-vision"
 ]
 #
 #[profile.release]
