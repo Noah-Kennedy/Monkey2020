@@ -1,7 +1,6 @@
 find_package(zed 3)
 find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(apriltag REQUIRED)
 
 file(
         GLOB SOURCES_LIST CONFIGURE_DEPENDS
@@ -27,5 +26,4 @@ target_link_libraries(
         PRIVATE ${CUDA_LIBRARIES}
         PRIVATE ${OpenCV_LIBS}
         PRIVATE ${CUDA_npps_LIBRARY}
-        PRIVATE apriltag
 )

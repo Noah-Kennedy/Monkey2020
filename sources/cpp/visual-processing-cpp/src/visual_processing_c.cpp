@@ -2,42 +2,27 @@
 
 #include <opencv2/opencv.hpp>
 #include <sl/Camera.hpp>
-
-extern "C" {
-#include <apriltag/apriltag.h>
-#include <apriltag/tag36h11.h>
-#include <apriltag/apriltag_pose.h>
-}
+#include "aruco.hpp"
+#include "visual_processing_c.h"
 
 using namespace std;
 using namespace cv;
 using namespace sl;
 
-int getOCVtype(sl::MAT_TYPE type);
-cv::Mat slMat2cvMat(sl::Mat& input);
+//ZED camera handler
+Camera zed;
+//Aruco dictionary used for detection - Aruco Original
+auto dictionary = aruco::getPredefinedDictionary(aruco::DICT_ARUCO_ORIGINAL);
+
+//Convert OpenCV matrix object to ZED matrix object
+Mat slMat2cvMat(sl::Mat& input);
+//Get corresponding depth measurement at specified camera pixel coordinate
 float get_pixel_depth(int x, int y, sl::Mat img);
-matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float fy, float cx, float cy);
 
-int getOCVtype(sl::MAT_TYPE type) {
-    int cv_type = -1;
-    switch (type) {
-        case MAT_TYPE::F32_C1: cv_type = CV_32FC1; break;
-        case MAT_TYPE::F32_C2: cv_type = CV_32FC2; break;
-        case MAT_TYPE::F32_C3: cv_type = CV_32FC3; break;
-        case MAT_TYPE::F32_C4: cv_type = CV_32FC4; break;
-        case MAT_TYPE::U8_C1: cv_type = CV_8UC1; break;
-        case MAT_TYPE::U8_C2: cv_type = CV_8UC2; break;
-        case MAT_TYPE::U8_C3: cv_type = CV_8UC3; break;
-        case MAT_TYPE::U8_C4: cv_type = CV_8UC4; break;
-        default: break;
-    }
-    return cv_type;
-}
-
-cv::Mat slMat2cvMat(sl::Mat& input) {
-    // Since cv::Mat data requires a uchar* pointer, we get the uchar1 pointer from sl::Mat (getPtr<T>())
-    // cv::Mat and sl::Mat will share a single memory structure
-    return cv::Mat(input.getHeight(), input.getWidth(), getOCVtype(input.getDataType()), input.getPtr<sl::uchar1>(MEM::CPU), input.getStepBytes(sl::MEM::CPU));
+Mat slMat2cvMat(sl::Mat& input) {
+    // Since Mat data requires a uchar* pointer, we get the uchar1 pointer from sl::Mat (getPtr<T>())
+    // Mat and sl::Mat will share a single memory structure
+    return Mat(input.getHeight(), input.getWidth(), getOCVtype(input.getDataType()), input.getPtr<sl::uchar1>(MEM::CPU), input.getStepBytes(sl::MEM::CPU));
 }
 
 float get_pixel_depth(int x, int y, sl::Mat img) {
@@ -49,134 +34,139 @@ float get_pixel_depth(int x, int y, sl::Mat img) {
     return depth;
 }
 
-matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float fy, float cx, float cy) {
-    //Initialize tag data
-    apriltag_detection_info_t info;
-    info.det = tag;
-    info.tagsize = tag_size;
-    info.fx = fx;
-    info.fy = fy;
-    info.cx = cx;
-    info.cy = cy;
-    //Estimate pose using homography
-    apriltag_pose_t pose;
-    estimate_tag_pose(&info, &pose);
-    //Return rotation matrix
-    return pose.R;
-}
-
-int main(int argc, char *argv[])
-{
-    // Initialize camera
-   /* VideoCapture cap(0);
-    if (!cap.isOpened()) {
-        cerr << "Couldn't open video capture device" << endl;
-        return -1;
-    }*/
-    Camera zed;
+bool visual_processing_init(zed_resolution camera_res, zed_depth_quality depth) {
     InitParameters init_params;
-    init_params.camera_resolution = RESOLUTION::VGA; // Use VGA video mode
-    init_params.camera_fps = 30; // Set fps at 30
-    init_params.depth_mode = DEPTH_MODE::ULTRA;
+    //Select ZED camera resolution and FPS from argument
+    switch (camera_res) {
+        case 2K:
+            init_params.camera_resolution = RESOLUTION::HD2K;
+            init_params.camera_fps = 15;
+            break;
+        case 1080P:
+            init_params.camera_resolution = RESOLUTION::HD1080;
+            init_params.camera_fps = 30;
+            break;
+        case 720P:
+            init_params.camera_resolution = RESOLUTION::HD720;
+            init_params.camera_fps = 60;
+            break;
+        default:
+            init_params.camera_resolution = RESOLUTION::VGA;
+            init_params.camera_fps = 30;
+    }
+    //Select ZED camera depth mode from argument
+    switch (depth) {
+        case PERFORMANCE_DEPTH:
+            init_params.depth_mode = DEPTH_MODE::PERFORMANCE;
+            break;
+        case QUALITY_DEPTH:
+            init_params.depth_mode = DEPTH_MODE::QUALITY;
+            break;
+        case ULTRA_DEPTH:
+            init_params.depth_mode = DEPTH_MODE::ULTRA;
+            break;
+        default:
+            init_params.depth_mode = DEPTH_MODE::NONE;
+    }
     init_params.coordinate_units = UNIT::METER;
+    //Initialize camera using given parameters
     auto returned_state = zed.open(init_params);
     if (returned_state != ERROR_CODE::SUCCESS) {
-        cout << "Error " << returned_state << ", exit program." << endl;
-        return EXIT_FAILURE;
+        cout << "Error " << returned_state << "." << endl;
+        return false;
     }
-    RuntimeParameters runtime_parameters;
-    runtime_parameters.sensing_mode = SENSING_MODE::STANDARD;
-    Resolution image_size = zed.getCameraInformation().camera_resolution;
-    int new_width = image_size.width / 2;
-    int new_height = image_size.height / 2;
-    Resolution new_image_size(new_width, new_height);
-    sl::Mat frame_zed(new_width, new_height, MAT_TYPE::U8_C4);
-    sl::Mat point_cloud;
+    return true;
+}
 
-    // Initialize tag detector
-    apriltag_family_t *tf = tag36h11_create();
-    apriltag_detector_t *td = apriltag_detector_create();
-    apriltag_detector_add_family(td, tf);
+bool run_visual_processing(aruco_data* aruco_list, bool display, float marker_size) {
+    aruco_delete(aruco_list);
 
-    cv::Mat frame, gray, image_depth;
-    sl::Mat frame_depth;
-    while (true) {
-        //cap >> frame;
-        zed.grab();
-        zed.retrieveImage(frame_zed, VIEW::LEFT);
-        zed.retrieveImage(frame_depth, VIEW::DEPTH);
-        zed.retrieveMeasure(point_cloud, MEASURE::XYZRGBA);
-        frame = slMat2cvMat(frame_zed);
-        image_depth = slMat2cvMat(frame_depth);
-        cvtColor(frame, gray, COLOR_BGR2GRAY);
+    auto cameraInfo = zed.getCameraInformation();
+    Resolution image_size = cameraInfo.camera_resolution;
+    sl::Mat image_zed(image_size, MAT_TYPE::U8_C4);
+    cv::Mat image_ocv = Mat(image_zed.getHeight(), image_zed.getWidth(), CV_8UC4, image_zed.getPtr<sl::uchar1>(MEM::CPU));
+    cv::Mat image_ocv_rgb;
 
-        // Make an image_u8_t header for the Mat data
-        image_u8_t im = { .width = gray.cols,
-            .height = gray.rows,
-            .stride = gray.cols,
-            .buf = gray.data
-        };
+    auto calibInfo = cameraInfo.calibration_parameters.left_cam;
+    Matx33d camera_matrix = Matx33d::eye();
+    camera_matrix(0, 0) = calibInfo.fx;
+    camera_matrix(1, 1) = calibInfo.fy;
+    camera_matrix(0, 2) = calibInfo.cx;
+    camera_matrix(1, 2) = calibInfo.cy;
 
-        zarray_t *detections = apriltag_detector_detect(td, &im);
+    Matx<float, 4, 1> dist_coeffs = Vec4f::zeros();
 
-        // Process detections
-        for (int i = 0; i < zarray_size(detections); i++) {
-            apriltag_detection_t *det;
-            zarray_get(detections, i, &det);
+    cout << "Make sure the ArUco marker is an Aruco Original, measuring " << marker_size * 1000 << " mm" << endl;
 
-            //Draw borders
-            line(frame, Point(det->p[0][0], det->p[0][1]),
-                     Point(det->p[1][0], det->p[1][1]),
-                     Scalar(0, 0xff, 0), 2);
-            line(frame, Point(det->p[0][0], det->p[0][1]),
-                     Point(det->p[3][0], det->p[3][1]),
-                     Scalar(0, 0, 0xff), 2);
-            line(frame, Point(det->p[1][0], det->p[1][1]),
-                     Point(det->p[2][0], det->p[2][1]),
-                     Scalar(0xff, 0, 0), 2);
-            line(frame, Point(det->p[2][0], det->p[2][1]),
-                     Point(det->p[3][0], det->p[3][1]),
-                     Scalar(0xff, 0, 0), 2);
+    Transform pose;
+    Pose zed_pose;
+    vector<Vec3d> rvecs, tvecs;
+    vector<int> ids;
+    vector<vector<Point2f> > corners;
+    string position_txt;
 
-            //Get distance
-            float distance = get_pixel_depth(det->c[0], det->c[1], point_cloud);
-            //Get angle
-            //matd_t* rot = get_tag_pose(det, 0.125, 1000, 1000, det->c[0], det->c[1]);
-            //float angle = atan2(-matd_get(rot, 3,1), sqrt(matd_get(rot, 3,2)*matd_get(rot, 3,2) + matd_get(rot, 3,3)*matd_get(rot, 3,3)));
 
-            //Display distance
-            stringstream ss;
-            ss << setprecision(2) << distance << "m";
-            cv::String text = ss.str();
-            int fontface = FONT_HERSHEY_SIMPLEX;
-            double fontscale = 1.0;
-            int baseline;
-            Size textsize = getTextSize(text, fontface, fontscale, 2, &baseline);
-            if (text != "nanm" && text != "infm") {
-                putText(frame, text, Point(det->c[0]+textsize.width/2, det->c[1]-textsize.height/2), fontface, fontscale, Scalar(0, 0, 0), 6);
-                putText(frame, text, Point(det->c[0]+textsize.width/2, det->c[1]-textsize.height/2), fontface, fontscale, Scalar(0xff, 0xff, 0xff), 2);
-            }
-            //Display angle
-            //ss.str("");
-            //ss.clear();
-            //ss << setprecision(2) << angle << "deg";
-            //text = ss.str();
-            //textsize = getTextSize(text, fontface, fontscale, 2, &baseline);
-            //putText(frame, text, Point(det->c[0]+textsize.width, det->c[1]+textsize.height), fontface, fontscale, Scalar(0, 0, 0), 6);
-            //putText(frame, text, Point(det->c[0]+textsize.width, det->c[1]+textsize.height), fontface, fontscale, Scalar(0xff, 0xff, 0xff), 2);
+    if (zed.grab() == ERROR_CODE::SUCCESS) {
+        // Retrieve the left image
+        zed.retrieveImage(image_zed, VIEW::LEFT, MEM::CPU, image_size);
+
+        // convert to RGB
+        cvtColor(image_ocv, image_ocv_rgb, COLOR_RGBA2RGB);
+        // detect marker
+        aruco::detectMarkers(image_ocv_rgb, dictionary, corners, ids);
+
+        // get actual ZED position
+        zed.getPosition(zed_pose);
+
+        // display ZED position
+        rectangle(image_ocv_rgb, Point(0, 0), Point(490, 75), Scalar(0, 0, 0), -1);
+        putText(image_ocv_rgb, "Loaded dictionary : Aruco Original.     Press 'SPACE' to reset the camera position", Point(10, 15), FONT_HERSHEY_SIMPLEX, 0.4, Scalar(220, 220, 220));
+
+        // if at least one marker detected
+        if (ids.size() > 0) {
+            aruco::estimatePoseSingleMarkers(corners, marker_size, camera_matrix, dist_coeffs, rvecs, tvecs);
+            pose.setTranslation(sl::float3(tvecs[0](0), tvecs[0](1), tvecs[0](2)));
+            pose.setRotationVector(sl::float3(rvecs[0](0), rvecs[0](1), rvecs[0](2)));
+            pose.inverse();
+
+            aruco::drawDetectedMarkers(image_ocv_rgb, corners, ids);
+            aruco::drawAxis(image_ocv_rgb, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 0.5f);
+            position_txt = "Aruco x: " + to_string(pose.tx) + "; y: " + to_string(pose.ty) + "; z: " + to_string(pose.tz);
+            putText(image_ocv_rgb, position_txt, Point(10, 60), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(124, 252, 124));
+
         }
-        apriltag_detections_destroy(detections);
-        cv::Mat overlay;
-        addWeighted(image_depth, 0, frame, 1, 0, overlay);
-        cv::Mat output;
-        cv::resize(overlay, output, cv::Size(frame.size().width*2.5, frame.size().height*2.5));
-        imshow("Tag Detections", output);
-        if (waitKey(30) >= 0)
-            break;
+
+        // Display image
+        imshow("Image", image_ocv_rgb);
+        
+        return true;
     }
+    return false;
+}
 
-    apriltag_detector_destroy(td);
-    tag36h11_destroy(tf);
+void aruco_delete(aruco_data* head) {
+    aruco_data* current_node = head;
+    aruco_data* next_node;
+    while (current_node != NULL) {
+        next_node = current_node->next;
+        free(current_node);
+        current_node = next_node;
+    }
+}
 
+//Demo program
+int main(int argc, char **argv) {
+    zed_resolution res = USB2;
+    zed_depth_quality depth = ULTRA_DEPTH;
+    visual_processing_init(res, depth);
+    aruco_data* detected_markers;
+    // Loop until 'q' is pressed
+    char key = '.';
+    while (key != 'q') {
+        run_visual_processing(detected_markers, true);
+        key = waitKey(10);
+    }
+    zed.close();
     return 0;
 }
+

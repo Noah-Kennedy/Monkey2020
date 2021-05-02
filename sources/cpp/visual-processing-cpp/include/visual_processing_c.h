@@ -4,86 +4,71 @@
  * @author Cody Nettesheim
  * @file visual_processing_c.h
  *
- * @brief Implement visual processing for AprilTag fiducial marker detection 
- * using OpenCV and a ZED2 stereo camera system.
+ * @brief Implement visual processing for Aruco fiducial marker detection 
+ * using OpenCV and the ZED2 stereo camera system from Stereolabs as well as
+ * provide a C-style wrapper for Rust interoperability.
  */
 #pragma once
 #include <sl/Camera.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/mat.hpp>
-#include <apriltag/apriltag.h>
-#include <apriltag/common/matd.h>
 
 /**
- * @brief Structure to contain position data for an identified marker
+ * @brief C-style enum to wrap the RESOLUTION enum class used by the ZED library
+ */
+typedef enum {
+    2K, /**< Maps to RESOLUTION::HD2K in the ZED library and runs at 2K, 15fps*/
+    1080P, /**< Maps to RESOLUTION::HD1080 and runs at 1080p, 30fps */
+    720P, /**< Maps to RESOLUTION::HD720 and runs at 720p, 60fps */
+    USB2 /**< Maps to RESOLUTION::VGA and runs at 672x376, 30fps; this is the only usable video mode for a ZED connected over a USB2.0 interface */
+} zed_resolution;
+
+/**
+ * @brief C-style enum to wrap the DEPTH_MODE enum class used by the ZED library
+ */
+typedef enum {
+    PERFORMANCE_DEPTH, /**< Maps to DEPTH_MODE::PERFORMANCE */
+    QUALITY_DEPTH, /**< Maps to DEPTH_MODE:: */
+    ULTRA_DEPTH /**< Maps to DEPTH_MODE::ULTRA */
+} zed_depth_quality;
+
+/**
+ * @brief Structure to contain position data for an identified Aruco marker.
+ *        Acts as a linked list node.
  */
 typedef struct {
-    int x; /**< Image X-coordinate of the center of the AprilTag tag_data#x. */
-    int y; /**< Image Y-coordinate of the center of the AprilTag tag_data#y. */
-    float distance; /**< Estimated distance from the camera to the AprilTag tag_data#distance. */
-    float pitch; /**< Pitch-axis rotation of the AprilTag tag_data#pitch. */
-    float yaw; /**< Yaw-axis rotation of the AprilTag tag_data#yaw. */
-    float roll; /**< Roll-axis rotation of the AprilTag tag_data#roll. */
-} tag_data;
+    int id; //ID value encoded by the marker
+    float distance; /**< Stereo-measured scalar distance to the marker */
+    float x_dist; /**< Pose-estimated X-axis distance to marker */
+    float y_dist; /**< Pose-estimated Y-axis distance to marker */
+    float z_dist; /**< Pose-estimated Z-axis distance to marker */
+    float x_rot; /**< Pose-estimated X-axis rotation of the marker in degrees */
+    float y_rot; /**< Pose-estimated Y-axis rotation of marker */
+    float z_rot; /**< Pose-estimated Z-axis rotation of marker */
+    aruco_data* next = NULL; /**< Pointer to next node in the list */
+} aruco_data;
 
 /**
- * @brief Intialize and allocate dynamic memory
- * @param dict Selection of pre-defined ArUco marker dictionary
+ * @brief Intialize camera
+ * @param camera_res Enum to select the resolution at which the ZED camera should run
+ * @param depth Enum to select the depth mode which the ZED should use 
+ *        NOTE: Higher quality depth measurement will use more GPU resources 
+ * @return Boolean value indicating whether the ZED camera was successfully initialized
  */
-void visual_processing_init();
+bool visual_processing_init(zed_resolution camera_res, zed_depth_quality depth);
 
 /**
- * @brief Detect AprilTags in an image 
- * @param img OpenCV image to scan
- * @return resizable array containing detected tags NOTE: caller is responsible for deallocating the zarray as visual_processing_dealloc() does not do so
+ * @brief Run visual processing on a single video frame from the ZED camera; this function should be called in a loop
+ * @param aruco_list Pointer to Aruco linked list head 
+ * @param display Boolean value indicating if the function should display the camera view in a GUI window
+ * @param marker_size Width of the Aruco markers in meters
+ * @return Boolean value indicating whether a frame could be successfully captured from the ZED camera
  */
-zarray_t* detect_tags(cv::Mat img);
+bool run_visual_processing(aruco_data* aruco_list, bool display, float marker_size);
 
 /**
- * @brief Draw boundary around detected AprilTag
- * @param img Pointer to OpenCV image containing detected AprilTag
- * @param tag Pointer to detected AprilTag
+ * @brief Deallocate Aruco data list
+ * @param head Pointer to list head 
  */
-void draw_boundary(cv::Mat img, apriltag_detection_t *tag);
-
-/**
- * @brief Process detected AprilTag and find positional data
- * @param tag Pointer to detected AprilTag
- * @param img ZED image capture where tag was detected
- * @return Structure containing position data 
- */
-tag_data process_tag(apriltag_detection_t *tag, sl::Mat img);
-
-/**
- * @brief Get point cloud distance to a single pixel of a ZED image capture
- * @param x Pixel X-coordinate
- * @param y Pixel Y-coordinate
- * @param img ZED SDK image matrix
- * @return Floating-point pixel depth value
- */
-float get_pixel_depth(int x, int y, sl::Mat img);
-
-/**
- * @brief Given the tag width, camera focal dimensions, and tag coordinates, generate a matrix for the estimated tag pose
- * @param tag Pointer to the AprilTag whose pose is being estimated
- * @param tag_size Tag width in meters
- * @param fx Camera focal width in pixels
- * @param fy Camera focal height in pixels
- * @param cx Tag X-coordinate
- * @param cy Tag Y-coordinate
- * @return Rotation matrix
- */
-matd_t* get_tag_pose(apriltag_detection_t *tag, float tag_size, float fx, float fy, float cx, float cy);
-
-/**
- * @brief Convert a ZED SDK matrix object to an OpenCV matrix
- * @param input ZED matrix
- * @return OpenCV matrix
- */
-cv::Mat slMat2cvMat(sl::Mat& input);
-
-/**
- * @brief Deallocate dynamic memory used in the visual processing
- */
-void visual_processing_dealloc();
+void aruco_delete(aruco_data* head);
 
