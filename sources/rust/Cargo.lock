@@ -1622,6 +1622,9 @@ version = "0.1.0"
 [[package]]
 name = "monkey-vision"
 version = "0.1.0"
+dependencies = [
+ "libmonkey-sys",
+]
 
 [[package]]
 name = "net2"
