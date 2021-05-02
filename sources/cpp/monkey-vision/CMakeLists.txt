@@ -1,26 +1,23 @@
 find_package(OpenCV REQUIRED)
-find_package(zed 3)
+find_package(zed 3 REQUIRED)
 
 file(
         GLOB SOURCES_LIST CONFIGURE_DEPENDS
         src/*.cpp
 )
 
-add_executable(visual-processing-cpp ${SOURCES_LIST})
+add_executable(monkey-vision ${SOURCES_LIST})
 
 target_include_directories(
-        visual-processing-cpp
+        monkey-vision
         PUBLIC include
-        PRIVATE private-include
         PRIVATE ${ZED_INCLUDE_DIRS}
         PRIVATE ${OpenCV_INCLUDE_DIRS}
         PRIVATE ${CUDA_INCLUDE_DIRS}
 )
 
-message(STATUS "Found ZED SDK")
-
 target_link_libraries(
-        visual-processing-cpp
+        monkey-vision
         PRIVATE ${ZED_LIBRARIES}
         PRIVATE ${CUDA_LIBRARIES}
         PRIVATE ${OpenCV_LIBS}
