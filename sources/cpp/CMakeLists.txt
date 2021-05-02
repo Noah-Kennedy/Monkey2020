@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(
         monkey-cpp
-        LANGUAGES CXX
+        LANGUAGES CXX CUDA
 )
 
 # if top level project
@@ -15,4 +15,4 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif ()
 
 add_subdirectory(zed)
-add_subdirectory(visual-processing-cpp)
+add_subdirectory(monkey-vision)

@@ -1,6 +1,5 @@
-find_package(zed 3)
-find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(zed 3)
 
 file(
         GLOB SOURCES_LIST CONFIGURE_DEPENDS
