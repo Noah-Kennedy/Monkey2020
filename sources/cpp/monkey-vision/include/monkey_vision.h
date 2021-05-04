@@ -10,12 +10,8 @@
  */
 #pragma once
 
-#include <sl/Camera.hpp>
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/mat.hpp>
-
 /**
- * @brief C-style enum to wrap the RESOLUTION enum class used by the ZED library
+ * @brief C-style enum to wrap the RESOLUTION enum class used by the ZED library.
  */
 extern "C" enum ZedResolution
 {
@@ -26,7 +22,7 @@ extern "C" enum ZedResolution
 };
 
 /**
- * @brief C-style enum to wrap the DEPTH_MODE enum class used by the ZED library
+ * @brief C-style enum to wrap the DEPTH_MODE enum class used by the ZED library.
  */
 extern "C" enum ZedDepthQuality
 {
@@ -36,42 +32,78 @@ extern "C" enum ZedDepthQuality
 };
 
 /**
- * @brief Structure to contain position data for an identified Aruco marker.
- *        Acts as a linked list node.
+ * @brief Structure to contain position data for an identified Aruco marker. All members default to -1 in case no Aruco marker was detected.
  */
-struct ArucoData {
-    int id; //ID value encoded by the marker
-    float distance; /**< Stereo-measured scalar distance to the marker */
-    float x_dist; /**< Pose-estimated X-axis distance to marker */
-    float y_dist; /**< Pose-estimated Y-axis distance to marker */
-    float z_dist; /**< Pose-estimated Z-axis distance to marker */
-    float x_rot; /**< Pose-estimated X-axis rotation of the marker in degrees */
-    float y_rot; /**< Pose-estimated Y-axis rotation of marker */
-    float z_rot; /**< Pose-estimated Z-axis rotation of marker */
-    ArucoData *next = NULL; /**< Pointer to next node in the list */
+extern "C" struct ArucoData {
+    float distance = -1; /**< Stereo-measured scalar distance to the marker in meters */
+    float x_dist = -1; /**< Pose-estimated X-axis distance to marker in meters */
+    float y_dist = -1; /**< Pose-estimated Y-axis distance to marker in meters */
+    float z_dist = -1; /**< Pose-estimated Z-axis distance to marker in meters */
+    float x_rot = -1; /**< Pose-estimated X-axis rotation of the marker in degrees */
+    float y_rot = -1; /**< Pose-estimated Y-axis rotation of marker in degrees */
+    float z_rot = -1; /**< Pose-estimated Z-axis rotation of marker in degrees */
 };
 
 /**
+ * @brief Structure to contain acceleration and orientation data measured from the ZED IMU. All members default to -1 in case the IMU could not be accessed.
+ */
+extern "C" struct ZedImuData {
+    float x_accel = -1; /**< Linear acceleration of the ZED along the X-axis in m/s^2 */
+    float y_accel = -1; /**< Linear acceleration of the ZED along the Y-axis in m/s^2 */
+    float z_accel = -1; /**< Linear acceleration of the ZED along the Z-axis in m/s^2 */
+    float x_rot_accel = -1; /**< Angular acceleration of the ZED around the X-axis in deg/s */
+    float y_rot_accel = -1; /**< Angular accleration of the ZED around the Z-axis in deg/s */
+    float z_rot_accel = -1; /**< Angular acceleration of the ZED around the Z-axis in deg/s */
+};
+
+/**
+ * @brief Structure to store a camera frame as a byte array with dimensions
+ */
+extern "C" struct FrameBuffer {
+    uchar *buffer; /**< Byte array which stores the image frame */
+    uint32_t width = 0; /**< Width of the image in pixels */
+    uint32_t height = 0; /**< Height of the image in pixels */
+}
+
+/**
  * @brief Intialize camera
- * @param camera_res Enum to select the resolution at which the ZED camera should run
- * @param depth Enum to select the depth mode which the ZED should use 
- *        NOTE: Higher quality depth measurement will use more GPU resources 
- * @return Boolean value indicating whether the ZED camera was successfully initialized
+ * @param camera_res Enum to select the resolution at which the ZED camera should run.
+ * @param depth Enum to select the depth mode which the ZED should use.
+ *        NOTE: Higher quality depth measurement will use more GPU resources.
+ * @return Boolean value indicating whether the ZED camera was successfully initialized.
  */
 extern "C" bool visual_processing_init(ZedResolution camera_res, ZedDepthQuality depth);
 
 /**
- * @brief Run visual processing on a single video frame from the ZED camera; this function should be called in a loop
- * @param aruco_list Pointer to Aruco linked list head 
- * @param display Boolean value indicating if the function should display the camera view in a GUI window
- * @param marker_size Width of the Aruco markers in meters
- * @return Boolean value indicating whether a frame could be successfully captured from the ZED camera
+ * @brief Get positional data for an Aruco marker encoding a given ID value.
+ * @param aruco_id ID value encoded by a detected Aruco marker.
+ * @return Structure containing position data for the Aruco marker with the given ID. Struct will have values of -1 if an Aruco marker with the given ID was not detected.
  */
-extern "C" bool run_visual_processing(ArucoData *aruco_list, bool display, float marker_size);
+extern "C" ArucoData get_aruco_data(int aruco_id);
 
 /**
- * @brief Deallocate Aruco data list
- * @param head Pointer to list head 
+ * @brief Get acceleration, orientation, and position data from the ZED IMU sensor.
+ * @return Structure containing data from the ZED IMU. Struct will have values of -1 if the ZED IMU could not be accessed.
  */
-extern "C" void aruco_delete(ArucoData *head);
+extern "C" ZedImuData get_zed_imu_data();
+
+/**
+ * @brief Get the frame buffer from the last camera capture.
+ * @return Structure containing a byte array of the image pixels and integers for the image dimensions, which will default to 0 if the camera image could not be captured. 
+ */
+extern "C" FrameBuffer get_camera_frame();
+
+/**
+ * @brief Run visual processing on a single video frame from the ZED camera.
+ * @param marker_size Width of the Aruco marker in meters.
+ * @param mesh_path C-string path to save the stereo-scanned 3D environment mesh to.
+ * @param display Boolean value indicating if the function should display the camera view in a GUI window.
+ * @return ArucoData struct for the aruco with the given ID. If no marker was detected with the given ID, return a struct with values of -1 for all parameters. 
+ */
+extern "C" bool run_visual_processing(float marker_size, const char *mesh_path, bool display);
+
+/**
+ * @brief Deallocate all dynamic memory and close ZED camera.
+ */
+extern "C" void visual_processing_dealloc();
 

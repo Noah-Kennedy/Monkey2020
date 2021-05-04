@@ -5,23 +5,32 @@
 #include "aruco.hpp"
 #include "monkey_vision.h"
 
-//ZED camera handler
+// ZED camera handler
 sl::Camera zed;
+// Vectors for storing detected Aruco marker IDs and positional data
+std::vector<int> detected_ids;
+std::vector<ArucoData> detected_markers;
+// Struct for storing ZED IMU data
+ZedImuData zed_imu_data;
+// Struct for storing the latest camera capture
+FrameBuffer camera_frame;
 
-//Aruco dictionary used for detection - Aruco Original
-auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
+// Aruco dictionary used for detection - Aruco Original
+const auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
 
-//Convert OpenCV matrix object to ZED matrix object
+// Get corresponding OpenCV matrix subtype for a given ZED library matrix subtype
+int getOCVtype(sl::MAT_TYPE type);
+// Convert ZED matrix object to OpenCV matrix object
 // TODO pls check is ambiguous
 cv::Mat slMat2cvMat(sl::Mat &input);
-
-//Get corresponding depth measurement at specified camera pixel coordinate
+// Get corresponding depth measurement at specified camera pixel coordinate
 float get_pixel_depth(int x, int y, sl::Mat img);
 
 int getOCVtype(sl::MAT_TYPE type)
 {
     int cv_type = -1;
-    switch (type) {
+    switch (type)
+    {
         case sl::MAT_TYPE::F32_C1:
             cv_type = CV_32FC1;
             break;
@@ -61,10 +70,10 @@ cv::Mat slMat2cvMat(sl::Mat &input)
 
 float get_pixel_depth(int x, int y, sl::Mat img)
 {
-    //Convert image pixel to 3d point from point cloud
+    // Convert image pixel to 3d point from point cloud
     sl::float4 point3d;
     img.getValue(x, y, &point3d);
-    //Calculate absolute point depth from X,Y,Z
+    // Calculate absolute point depth from X,Y,Z
     float depth = sqrt(point3d.x * point3d.x + point3d.y * point3d.y + point3d.z * point3d.z);
     return depth;
 }
@@ -72,8 +81,9 @@ float get_pixel_depth(int x, int y, sl::Mat img)
 bool visual_processing_init(ZedResolution camera_res, ZedDepthQuality depth)
 {
     sl::InitParameters init_params;
-    //Select ZED camera resolution and FPS from argument
-    switch (camera_res) {
+    // Select ZED camera resolution and FPS from argument
+    switch (camera_res)
+    {
         case ZedResolution::Res2K:
             init_params.camera_resolution = sl::RESOLUTION::HD2K;
             init_params.camera_fps = 15;
@@ -90,8 +100,9 @@ bool visual_processing_init(ZedResolution camera_res, ZedDepthQuality depth)
             init_params.camera_resolution = sl::RESOLUTION::VGA;
             init_params.camera_fps = 30;
     }
-    //Select ZED camera depth mode from argument
-    switch (depth) {
+    // Select ZED camera depth mode from argument
+    switch (depth)
+    {
         case PERFORMANCE_DEPTH:
             init_params.depth_mode = sl::DEPTH_MODE::PERFORMANCE;
             break;
@@ -105,23 +116,53 @@ bool visual_processing_init(ZedResolution camera_res, ZedDepthQuality depth)
             init_params.depth_mode = sl::DEPTH_MODE::NONE;
     }
     init_params.coordinate_units = sl::UNIT::METER;
-    //Initialize camera using given parameters
+    init_params.coordinate_system = sl::COORDINATE_SYSTEM::RIGHT_HANDED_Y_UP;
+    // Initialize camera using given parameters
     auto returned_state = zed.open(init_params);
-    if (returned_state != sl::ERROR_CODE::SUCCESS) {
+    if (returned_state != sl::ERROR_CODE::SUCCESS)
+    {
         std::cout << "Error " << returned_state << "." << std::endl;
         return false;
     }
+    std::cout << "Loaded dictionary: Aruco Original." << std::endl;
     return true;
 }
 
-bool run_visual_processing(ArucoData *aruco_list, bool display, float marker_size)
+ArucoData get_aruco_data(int aruco_id)
 {
-    aruco_delete(aruco_list);
+    // Check if any markers were detected
+    if (detected_ids.size() > 0)
+    {
+        // Determine if the selected marker ID was detected
+        auto iterator = find(detected_ids.begin(), detected_ids.end(), aruco_id);
+        if (iterator != detected_ids.end()) 
+        {
+            // Return data for the Aruco marker which encodes the given ID
+            int index = iterator - detected_ids.begin();
+            return detected_markers[index];
+        }
+    }
+    // If an Aruco with the given ID has not been detected, return a default ArucoData struct with -1 for all member values
+    ArucoData default_no_data;
+    return default_no_data;
+}
 
+ZedImuData get_zed_imu_data()
+{
+    return zed_imu_data;
+}
+
+FrameBuffer get_camera_frame()
+{
+    return camera_frame;
+}
+
+bool run_visual_processing(float marker_size, const char *mesh_path, bool display)
+{
     auto cameraInfo = zed.getCameraInformation();
     sl::Resolution image_size = cameraInfo.camera_resolution;
     sl::Mat image_zed(image_size, sl::MAT_TYPE::U8_C4);
-    cv::Mat image_ocv = cv::Mat(image_zed.getHeight(), image_zed.getWidth(), CV_8UC4, image_zed.getPtr<sl::uchar1>(sl::MEM::CPU));
+    cv::Mat image_ocv(image_zed.getHeight(), image_zed.getWidth(), CV_8UC4, image_zed.getPtr<sl::uchar1>(sl::MEM::CPU));
     cv::Mat image_ocv_rgb;
 
     auto calibInfo = cameraInfo.calibration_parameters.left_cam;
@@ -133,80 +174,76 @@ bool run_visual_processing(ArucoData *aruco_list, bool display, float marker_siz
 
     cv::Matx<float, 4, 1> dist_coeffs = cv::Vec4f::zeros();
 
-    std::cout << "Make sure the ArUco marker is an Aruco Original, measuring " << marker_size * 1000 << " mm" << std::endl;
-
-    sl::Transform pose;
     sl::Pose zed_pose;
     std::vector<cv::Vec3d> rvecs, tvecs;
-    std::vector<int> ids;
     std::vector<std::vector<cv::Point2f>> corners;
-    std::string position_txt;
 
+    if (zed.grab() == sl::ERROR_CODE::SUCCESS)
+    {
+        // Reset data for new frame
+        detected_ids.clear();
+        detected_markers.clear();
+        zed_imu_data = {-1,-1,-1,-1,-1,-1};
 
-    if (zed.grab() == sl::ERROR_CODE::SUCCESS) {
         // Retrieve the left image
         zed.retrieveImage(image_zed, sl::VIEW::LEFT, sl::MEM::CPU, image_size);
 
-        // convert to RGB
+        // Convert to RGB
         cvtColor(image_ocv, image_ocv_rgb, cv::COLOR_RGBA2RGB);
-        // detect marker
-        cv::aruco::detectMarkers(image_ocv_rgb, dictionary, corners, ids);
+        // Detect markers
+        cv::aruco::detectMarkers(image_ocv_rgb, dictionary, corners, detected_ids);
 
-        // get actual ZED position
-        zed.getPosition(zed_pose);
-
-        // display ZED position
-        rectangle(image_ocv_rgb, cv::Point(0, 0), cv::Point(490, 75), cv::Scalar(0, 0, 0), -1);
-        putText(image_ocv_rgb, "Loaded dictionary : Aruco Original.     Press 'SPACE' to reset the camera position", cv::Point(10, 15), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(220, 220, 220));
-
-        // if at least one marker detected
-        if (ids.size() > 0) {
+        // If at least one marker detected
+        if (detected_ids.size() > 0)
+        {
+            //calculate pose for all detected markers
             cv::aruco::estimatePoseSingleMarkers(corners, marker_size, camera_matrix, dist_coeffs, rvecs, tvecs);
-            pose.setTranslation(sl::float3(tvecs[0](0), tvecs[0](1), tvecs[0](2)));
-            pose.setRotationVector(sl::float3(rvecs[0](0), rvecs[0](1), rvecs[0](2)));
-            pose.inverse();
-
-            cv::aruco::drawDetectedMarkers(image_ocv_rgb, corners, ids);
-            cv::aruco::drawAxis(image_ocv_rgb, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 0.5f);
-            position_txt = "Aruco x: " + std::to_string(pose.tx) + "; y: " + std::to_string(pose.ty) + "; z: " + std::to_string(pose.tz);
-            putText(image_ocv_rgb, position_txt, cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(124, 252, 124));
-
+            //Save pose data into struct wrapper
+            for (auto it = detected_ids.begin(); it != detected_ids.end(); ++it)
+            {
+                int index = it - detected_ids.begin();
+                ArucoData marker_data;
+                marker_data.x_dist = tvecs[index](0);
+                marker_data.y_dist = tvecs[index](1);
+                marker_data.z_dist = tvecs[index](2);
+                marker_data.x_rot = rvecs[index](0);
+                marker_data.x_rot = rvecs[index](1);
+                marker_data.x_rot = rvecs[index](2);
+                detected_markers.push_back(marker_data);
+            }
+            // Draw on image to highlight detected markers
+            cv::aruco::drawDetectedMarkers(image_ocv_rgb, corners, detected_ids);
+            cv::aruco::drawAxis(image_ocv_rgb, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 1.5f);
         }
 
         // Display image
-        imshow("Image", image_ocv_rgb);
-
+        if (display)
+        {
+            imshow("Image", image_ocv_rgb);
+        }
         return true;
     }
     return false;
 }
 
-void aruco_delete(ArucoData *head)
+void visual_processing_dealloc()
 {
-    ArucoData *current_node = head;
-    ArucoData *next_node;
-    while (current_node != NULL) {
-        next_node = current_node->next;
-        free(current_node);
-        current_node = next_node;
-    }
+    zed.close();
 }
 
 //Demo program
 int main(int argc, char **argv)
 {
-    ZedResolution res = ZedResolution::ResUSB2;
-    ZedDepthQuality depth = ULTRA_DEPTH;
-    visual_processing_init(res, depth);
-    ArucoData *detected_markers;
+    visual_processing_init(ZedResolution::ResUSB2, ZedDepthQuality::ULTRA_DEPTH);
     // Loop until 'q' is pressed
     char key = '.';
-    while (key != 'q') {
-        // TODO fix this; I added NAN to make it compile, there was no third arg before
-        run_visual_processing(detected_markers, true, NAN);
+    while (key != 'q')
+    {
+        std::string path = "./mesh.obj";
+        run_visual_processing(0.10, path.c_str(), true);
         key = cv::waitKey(10);
     }
-    zed.close();
+    visual_processing_dealloc();
     return 0;
 }
 
