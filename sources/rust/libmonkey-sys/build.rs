@@ -44,7 +44,7 @@ fn link_static_libs() {
 
 fn link_dynamic_libs() {
     if cfg!(feature = "link_zed") {
-        println!("cargo:rustc-link-lib=dylib=zed");
+        // println!("cargo:rustc-link-lib=dylib=libsl_zed");
     }
 
     if cfg!(feature = "link_opencv_aruco") {
