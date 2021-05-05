@@ -5,6 +5,7 @@ authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
 [features]
+default = ["server"]
 server = ["actix-web", "serde", "objects", "image", "openssl"]
 objects = []
 
