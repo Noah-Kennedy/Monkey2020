@@ -6,7 +6,9 @@ members = [
     "monkey-unified-command",
     "space-monkeys",
     "libmonkey-sys",
-    "monkey-vision"
+    "monkey-vision",
+    "cameralot",
+    "cameralot-demo"
 ]
 #
 #[profile.release]

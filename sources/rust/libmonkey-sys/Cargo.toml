@@ -4,6 +4,25 @@ version = "0.1.0"
 authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
+[features]
+cameralot = [
+    "link_opencv_core",
+    "link_opencv_videoio",
+    "link_opencv_imgproc",
+    "link_opencv_imgcodecs"
+]
+
+monkey-vision = [
+    "link_opencv_aruco"
+]
+
+# Private features
+link_opencv_aruco = []
+link_opencv_core = []
+link_opencv_videoio = []
+link_opencv_imgproc = []
+link_opencv_imgcodecs = []
+
 [dependencies]
 
 [build-dependencies]
