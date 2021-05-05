@@ -6,19 +6,18 @@ file(
         src/*.cpp
 )
 
-add_library(monkey-vision ${SOURCES_LIST})
-install(TARGETS monkey-vision)
+add_executable(monkey-vision-smoke ${SOURCES_LIST})
 
 target_include_directories(
-        monkey-vision
-        PUBLIC include
+        monkey-vision-smoke
         PRIVATE ${ZED_INCLUDE_DIRS}
         PRIVATE ${OpenCV_INCLUDE_DIRS}
         PRIVATE ${CUDA_INCLUDE_DIRS}
 )
 
 target_link_libraries(
-        monkey-vision
+        monkey-vision-smoke
+        PRIVATE monkey-vision
         PRIVATE ${ZED_LIBRARIES}
         PRIVATE ${CUDA_LIBRARIES}
         PRIVATE ${OpenCV_LIBS}
