@@ -11,6 +11,8 @@ int main(int argc, char **argv)
     std::cout << "Loaded dictionary: Aruco Original." << std::endl;
     // Loop until 'q' is pressed
     char key = '.';
+    auto frame_count = get_frame_count();
+
     while (key != 'q')
     {
         if (frame_count % 60 == 0 && frame_count > 0)
