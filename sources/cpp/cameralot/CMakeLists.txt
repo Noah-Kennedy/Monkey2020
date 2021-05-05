@@ -12,10 +12,10 @@ install(TARGETS cameralot)
 target_include_directories(
         cameralot
         PUBLIC include
-        PRIVATE opencv_core opencv_video opencv_imgproc
 )
 
 # OpenCV is required; link it here
 target_link_libraries(
-        cameralot ${OpenCV_LIBS}
+        cameralot
+        PRIVATE opencv_core opencv_video opencv_imgproc
 )
