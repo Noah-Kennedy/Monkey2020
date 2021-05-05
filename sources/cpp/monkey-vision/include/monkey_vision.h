@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <sl/Camera.hpp>
 #include <opencv2/opencv.hpp>
-#include "aruco.hpp"
+#include <opencv2/aruco.hpp>
 
 //#define _DEBUG_
 
