@@ -16,3 +16,4 @@ endif ()
 
 add_subdirectory(zed)
 add_subdirectory(monkey-vision)
+add_subdirectory(cameralot)
