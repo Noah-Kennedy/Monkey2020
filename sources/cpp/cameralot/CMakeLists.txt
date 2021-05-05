@@ -6,16 +6,16 @@ file(
         src/*.cpp
 )
 
-add_library(cameralot-capture ${SOURCES_LIST})
-install(TARGETS cameralot-capture)
+add_library(cameralot ${SOURCES_LIST})
+install(TARGETS cameralot)
 
 target_include_directories(
-        cameralot-capture
+        cameralot
         PUBLIC include
         PRIVATE opencv_core opencv_video opencv_imgproc
 )
 
 # OpenCV is required; link it here
 target_link_libraries(
-        cameralot-capture ${OpenCV_LIBS}
+        cameralot ${OpenCV_LIBS}
 )
