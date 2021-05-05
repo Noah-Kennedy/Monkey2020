@@ -7,6 +7,13 @@ file(
 )
 
 add_library(monkey-vision ${SOURCES_LIST})
+
+set_target_properties(
+        monkey-vision
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+)
+
 install(TARGETS monkey-vision)
 
 target_include_directories(
@@ -20,6 +27,4 @@ target_link_libraries(
         monkey-vision
         PRIVATE opencv_aruco
         PRIVATE ${ZED_LIBRARIES}
-        PRIVATE ${CUDA_LIBRARIES}
-        PRIVATE ${CUDA_npps_LIBRARY}
 )
