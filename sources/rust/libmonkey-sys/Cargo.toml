@@ -4,26 +4,51 @@ version = "0.1.0"
 authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
+
+###############################################################################
+# Public Features
+###############################################################################
 [features]
+full = ["cameralot", "monkey-vision"]
+
 cameralot = [
     "link_opencv_core",
     "link_opencv_videoio",
     "link_opencv_imgproc",
-    "link_opencv_imgcodecs"
+    "link_opencv_imgcodecs",
+    "link_stdcpp"
 ]
 
 monkey-vision = [
-    "link_opencv_aruco"
+    "link_opencv_aruco",
+    "link_zed",
+    "link_stdcpp"
 ]
 
-# Private features
-link_opencv_aruco = []
-link_opencv_core = []
-link_opencv_videoio = []
-link_opencv_imgproc = []
-link_opencv_imgcodecs = []
+###############################################################################
+# Private Features
+###############################################################################
 
+# stdc++
+link_stdcpp = []
+
+# opencv
+link_opencv_aruco = ["link_stdcpp"]
+link_opencv_core = ["link_stdcpp"]
+link_opencv_videoio = ["link_stdcpp"]
+link_opencv_imgproc = ["link_stdcpp"]
+link_opencv_imgcodecs = ["link_stdcpp"]
+
+# zed
+link_zed = ["link_stdcpp"]
+
+###############################################################################
+# Dependencies
+###############################################################################
 [dependencies]
 
+###############################################################################
+# Build Dependencies
+###############################################################################
 [build-dependencies]
 cmake = "0.1.0"

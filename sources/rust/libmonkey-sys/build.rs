@@ -43,6 +43,10 @@ fn link_static_libs() {
 }
 
 fn link_dynamic_libs() {
+    if cfg!(feature = "link_zed") {
+        println!("cargo:rustc-link-lib=dylib=zed");
+    }
+
     if cfg!(feature = "link_opencv_aruco") {
         println!("cargo:rustc-link-lib=dylib=opencv_aruco");
     }
@@ -63,5 +67,8 @@ fn link_dynamic_libs() {
         println!("cargo:rustc-link-lib=dylib=opencv_videoio");
     }
 
-    println!("cargo:rustc-link-lib=dylib=stdc++");
+    // make sure this is last!
+    if cfg!(feature = "link_stdcpp") {
+        println!("cargo:rustc-link-lib=dylib=stdc++");
+    }
 }
