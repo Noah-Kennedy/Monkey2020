@@ -137,6 +137,7 @@ namespace visual_processing {
             sl::Mesh map_mesh;
             sl::MeshFilterParameters::MESH_FILTER mesh_filter;
             bool update_map_mesh = false;
+            bool mapping_success = false;
             // Vectors for storing detected Aruco marker IDs and positional data
             std::vector<int> detected_ids;
             std::vector<ArucoData> detected_markers;
