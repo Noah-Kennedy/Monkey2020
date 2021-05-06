@@ -84,34 +84,34 @@ extern "C" struct FrameBuffer {
 };
 
 extern "C" enum ZedCameraResolution {
-    Res2K15;
-    Res1080HD30;
-    Res720HD60;
-    ResVGA100;
+    Res2K15,
+    Res1080HD30,
+    Res720HD60,
+    ResVGA100
 };
 
 extern "C" enum ZedDepthQuality {
-    DepthPERFORMANCE;
-    DepthQUALITY;
-    DepthULTRA;
+    DepthPERFORMANCE,
+    DepthQUALITY,
+    DepthULTRA
 };
 
 extern "C" enum ZedMappingResolution {
-    MapLOWRES;
-    MapMEDIUMRES;
-    MapLOWRES;
+    MapLOWRES,
+    MapMEDIUMRES,
+    MapHIGHRES
 };
 
 extern "C" enum ZedMappingRange {
-    MapNEAR;
-    MapMEDIUM;
-    MapFAR;
+    MapNEAR,
+    MapMEDIUM,
+    MapFAR
 };
 
 extern "C" enum ZedMeshFilter {
-    FilterLOW;
-    FilterMEDIUM;
-    FilterHIGH;
+    FilterLOW,
+    FilterMEDIUM,
+    FilterHIGH
 };
 
 /**************************************************************************************************
@@ -193,7 +193,7 @@ extern "C" long get_frame_count(visual_processing::MonkeyVision *vision);
  * @param mesh_path C-string path to save the stereo-scanned 3D environment mesh to.
  * @return Boolean value indicating whether the ZED camera was successfully initialized.
  */
-extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, bool *success, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappinRange range, ZedMeshFilter mesh_filter;);
+extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, bool *success, enum ZedCameraResolution camera_res, enum ZedDepthQuality depth_quality, enum ZedMappingResolution map_res, enum ZedMappingRange range, enum ZedMeshFilter mesh_filter);
 
 /**
  * @brief Run visual processing on a single video frame from the ZED camera.
