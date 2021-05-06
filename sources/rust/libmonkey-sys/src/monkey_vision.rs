@@ -1,3 +1,7 @@
+/**************************************************************************************************
+ * Structs
+ *************************************************************************************************/
+
 /// Structure to contain position data for an identified Aruco marker.
 #[repr(C)]
 #[derive(Clone, PartialOrd, PartialEq, Debug, Default)]
@@ -55,6 +59,10 @@ pub struct FrameBuffer {
     pub height: u32,
 }
 
+/**************************************************************************************************
+ * Enums
+ *************************************************************************************************/
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum ZedCameraResolution {
@@ -94,4 +102,13 @@ pub enum ZedMeshFilter {
     FilterLOW,
     FilterMEDIUM,
     FilterHIGH,
+}
+
+/**************************************************************************************************
+ * Functions
+ *************************************************************************************************/
+
+#[link(name = "monkey-vision")]
+extern {
+    // TODO
 }
