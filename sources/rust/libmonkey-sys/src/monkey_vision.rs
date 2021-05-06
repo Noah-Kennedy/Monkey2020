@@ -1,3 +1,5 @@
+use std::ffi;
+
 /**************************************************************************************************
  * Structs
  *************************************************************************************************/
@@ -110,5 +112,53 @@ pub enum ZedMeshFilter {
 
 #[link(name = "monkey-vision")]
 extern {
-    // TODO
+    // TODO get_aruco_data
+
+    /// Get acceleration, orientation, and position data from the ZED IMU sensor.
+    /// Returns structure containing data from the ZED IMU.
+    pub fn get_zed_imu_data(data: *mut ZedImuData, vision: *mut ffi::c_void) -> bool;
+
+    // TODO frame API when cody finishes it
+
+    /// Set a flag to update the map mesh file the next time run_visual_processing() is called.
+    /// NOTE: only update the mesh periodically as it is resource-intensive to do so.
+    pub fn request_map_update(vision: *mut ffi::c_void);
+
+    // TODO get_frame_count
+
+    /// Initialize camera
+    /// # Arguments
+    /// `mesh_path` - C-string path to save the stereo-scanned 3D environment mesh to.
+    ///
+    /// # Returns
+    /// `success` - Boolean value indicating whether the ZED camera was successfully initialized.
+    pub fn visual_processing_init(
+        mesh_path: *const u8,
+        success: *mut bool,
+        camera_res: ZedCameraResolution,
+        depth_quality: ZedDepthQuality,
+        map_res: ZedMappingResolution,
+        range: ZedMappingRange,
+        mesh_filter: ZedMeshFilter,
+    ) -> *mut ffi::c_void;
+
+    /// Run visual processing on a single video frame from the ZED camera.
+    ///
+    /// # Arguments
+    /// marker_size - Width of the Aruco marker in meters.
+    /// display - Boolean value indicating if the function should display the camera view in a GUI
+    /// window.
+    ///
+    /// # Output
+    /// Returns a boolean value indicating whether a camera frame could be successfully captured.
+    /// `mapping_success` is set to whether or not map generation worked.
+    pub fn run_visual_processing(
+        marker_size: f32,
+        display: bool,
+        mapping_success: *mut bool,
+        vision: *mut ffi::c_void
+    ) -> bool;
+
+    /// Deallocate all dynamic memory and close ZED camera.
+    pub fn visual_processing_dealloc(vision: *mut ffi::c_void);
 }
