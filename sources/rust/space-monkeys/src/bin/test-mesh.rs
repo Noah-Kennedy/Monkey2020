@@ -4,7 +4,8 @@ use plotters::drawing::IntoDrawingArea;
 use plotters::prelude::BitMapBackend;
 use plotters::style::{BLACK, HSLColor};
 
-use space_monkeys::{lerp_f32, mesh_to_grid};
+use space_monkeys::mesh_to_grid;
+use space_monkeys::math;
 
 fn main() {
     let min_x = -5.0;
@@ -15,7 +16,7 @@ fn main() {
     let res_z = 128;
 
     let start = Instant::now();
-    let grid = mesh_to_grid("test-data/test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
+    let grid = mesh_to_grid::mesh_to_grid("test-data/test_mesh.ply", min_x, max_x, min_z, max_z, res_x, res_z);
     let elapsed = start.elapsed();
 
     match grid {
@@ -31,7 +32,7 @@ fn main() {
                     let grad_mag = grid.get_grad_mag_normed(grid_x, grid_z);
 
                     let colorizer = |value: f32| -> HSLColor {
-                        let mut hue = lerp_f32(240.0 / 360.0, -60.0 / 360.0, value) as f64;
+                        let mut hue = math::lerp_f32(240.0 / 360.0, -60.0 / 360.0, value) as f64;
                         while hue < 0.0 { hue += 1.0; }
                         let sat = (value * value - value) as f64 + 1.0;
                         let lit = (2.0 * value as f64 - 1.0).powf(3.0) / 2.0 + 0.5;
