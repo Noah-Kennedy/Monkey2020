@@ -14,8 +14,6 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 
-//#define _DEBUG_
-
 /**************************************************************************************************
  * Aruco marker dictionary
  *************************************************************************************************/
@@ -85,6 +83,37 @@ extern "C" struct FrameBuffer {
     uint32_t height = 0; /**< Height of the image in pixels */
 };
 
+extern "C" enum ZedCameraResolution {
+    Res2K15;
+    Res1080HD30;
+    Res720HD60;
+    ResVGA100;
+};
+
+extern "C" enum ZedDepthQuality {
+    DepthPERFORMANCE;
+    DepthQUALITY;
+    DepthULTRA;
+};
+
+extern "C" enum ZedMappingResolution {
+    MapLOWRES;
+    MapMEDIUMRES;
+    MapLOWRES;
+};
+
+extern "C" enum ZedMappingRange {
+    MapNEAR;
+    MapMEDIUM;
+    MapFAR;
+};
+
+extern "C" enum ZedMeshFilter {
+    FilterLOW;
+    FilterMEDIUM;
+    FilterHIGH;
+};
+
 /**************************************************************************************************
  * C++
  *************************************************************************************************/
@@ -92,31 +121,35 @@ namespace visual_processing {
     class MonkeyVision
     {
         public:
-            MonkeyVision(std::string mesh_path, bool success);
+            MonkeyVision(std::string mesh_path, bool *success, sl::RESOLUTION camera_res, int fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range, sl::MeshFilterParameters::MESH_FILTER filter);
             ~MonkeyVision();
             bool run(float marker_size, bool display);
             bool get_aruco(int id, ArucoData *data);
             bool get_imu(ZedImuData *data);
             bool get_frame(FrameBuffer *frame);
             long  frame_count();
-            void update_map();
+            bool update_map();
         private:
             // ZED camera handler
             sl::Camera zed;
             //ZED spatial mapping mesh
             std::string mesh_file_path;
             sl::Mesh map_mesh;
+            sl::MeshFilterParameters::MESH_FILTER mesh_filter;
+            bool update_map_mesh = false;
             // Vectors for storing detected Aruco marker IDs and positional data
             std::vector<int> detected_ids;
             std::vector<ArucoData> detected_markers;
             // Struct for storing ZED IMU data
             ZedImuData zed_imu_data;
+            bool imu_valid = false;
             // Struct for storing the latest camera capture
             FrameBuffer camera_frame;
-            // Flag to update the map mesh while processing the next camera frame
-            bool update_map_mesh = false;
             // Frame counter for periodic tasks
-            long frame_count;
+            long frame_counter = 0;
+            //
+            float mapping_resolution;
+            float mapping_range;
     };
 }
 
@@ -147,7 +180,7 @@ extern "C" bool get_camera_frame(FrameBuffer *img, visual_processing::MonkeyVisi
  * @brief Set a flag to update the map mesh file the next time run_visual_processing() is called.
  *        NOTE: only update the mesh periodically as it is resource-intensive to do so.
  */
-extern "C" void request_map_update(visual_processing::MonkeyVision *vision);
+extern "C" bool request_map_update(visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Get the number of frames that have been processed.
@@ -160,7 +193,7 @@ extern "C" long get_frame_count(visual_processing::MonkeyVision *vision);
  * @param mesh_path C-string path to save the stereo-scanned 3D environment mesh to.
  * @return Boolean value indicating whether the ZED camera was successfully initialized.
  */
-extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, bool *success);
+extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, bool *success, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappinRange range, ZedMeshFilter mesh_filter;);
 
 /**
  * @brief Run visual processing on a single video frame from the ZED camera.
@@ -174,4 +207,3 @@ extern "C" bool run_visual_processing(float marker_size, bool display, visual_pr
  * @brief Deallocate all dynamic memory and close ZED camera.
  */
 extern "C" void visual_processing_dealloc(visual_processing::MonkeyVision *vision);
-
