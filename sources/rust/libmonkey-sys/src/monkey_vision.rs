@@ -115,6 +115,7 @@ extern {
     // TODO get_aruco_data
 
     /// Get acceleration, orientation, and position data from the ZED IMU sensor.
+    /// # Output
     /// Returns structure containing data from the ZED IMU.
     pub fn get_zed_imu_data(data: *mut ZedImuData, vision: *mut raw::c_void) -> bool;
 

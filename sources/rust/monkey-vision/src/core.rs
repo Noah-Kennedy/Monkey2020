@@ -12,6 +12,9 @@ pub enum MonkeyVisionError {
 }
 
 impl MonkeyVision {
+    /// Initialize camera
+    /// # Arguments
+    /// `mesh_path` path to save the stereo-scanned 3D environment mesh to.
     pub fn create(
         mesh_path: &str,
         camera_res: ZedCameraResolution,
@@ -42,6 +45,9 @@ impl MonkeyVision {
         }
     }
 
+    /// Get acceleration, orientation, and position data from the ZED IMU sensor.
+    /// # Output
+    /// Returns structure containing data from the ZED IMU.
     pub fn get_zed_imu_data(&mut self, data: &mut ZedImuData) -> Result<(), MonkeyVisionError> {
         let status = unsafe {
             get_zed_imu_data(data as *mut ZedImuData, self.internal)
@@ -54,6 +60,8 @@ impl MonkeyVision {
         }
     }
 
+    /// Set a flag to update the map mesh file the next time run_visual_processing() is called.
+    /// NOTE: only update the mesh periodically as it is resource-intensive to do so.
     pub fn request_map_update(&mut self) {
         unsafe {
             request_map_update(self.internal);
