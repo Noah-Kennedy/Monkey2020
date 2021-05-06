@@ -15,32 +15,6 @@
 #include <opencv2/aruco.hpp>
 
 /**************************************************************************************************
- * Aruco marker dictionary
- *************************************************************************************************/
-const auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
-/**************************************************************************************************
- * ZED camera options
- *************************************************************************************************/
-//VGA, HD720, HD1080, HD2K
-const sl::RESOLUTION ZedCameraResolution = sl::RESOLUTION::VGA;
-//VGA=100, HD720=60, HD1080=30, HD2K=15
-const int ZedCameraFps = 100;
-//PERFORMANCE, QUALITY, ULTRA 
-const sl::DEPTH_MODE ZedDepthQuality = sl::DEPTH_MODE::ULTRA;
-/**************************************************************************************************
- * ZED spatial mapping options
- *************************************************************************************************/
-//MESH, FUSED_POINT_CLOUD
-const sl::SpatialMappingParameters::SPATIAL_MAP_TYPE ZedMapType = sl::SpatialMappingParameters::SPATIAL_MAP_TYPE::MESH;
-//LOW=8cm, MEDIUM=5cm, HIGH=2cm
-const float ZedMappingResolution = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RANGE::MEDIUM);
-//NEAR=3.5m, MEDIUM=5m, FAR=10m
-const float ZedMappingRange = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RANGE::MEDIUM);
-//LOW, MEDIUM, HIGH
-const sl::MeshFilterParameters::MESH_FILTER ZedMeshFilter = sl::MeshFilterParameters::MESH_FILTER::MEDIUM;
-
-
-/**************************************************************************************************
  * C
  *************************************************************************************************/
 
@@ -193,7 +167,7 @@ extern "C" long get_frame_count(visual_processing::MonkeyVision *vision);
  * @param mesh_path C-string path to save the stereo-scanned 3D environment mesh to.
  * @return Boolean value indicating whether the ZED camera was successfully initialized.
  */
-extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, bool *success, enum ZedCameraResolution camera_res, enum ZedDepthQuality depth_quality, enum ZedMappingResolution map_res, enum ZedMappingRange range, enum ZedMeshFilter mesh_filter);
+extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, bool *success, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappingRange range, ZedMeshFilter mesh_filter);
 
 /**
  * @brief Run visual processing on a single video frame from the ZED camera.
