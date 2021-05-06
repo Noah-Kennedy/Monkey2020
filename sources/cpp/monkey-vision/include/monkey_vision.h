@@ -137,7 +137,6 @@ namespace visual_processing {
             sl::Mesh map_mesh;
             sl::MeshFilterParameters::MESH_FILTER mesh_filter;
             bool update_map_mesh = false;
-            bool mapping_success = false;
             // Vectors for storing detected Aruco marker IDs and positional data
             std::vector<int> detected_ids;
             std::vector<ArucoData> detected_markers;
@@ -202,7 +201,7 @@ extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *m
  * @param display Boolean value indicating if the function should display the camera view in a GUI window.
  * @return Boolean value indicating whether a camera frame could be successfully captured. 
  */
-extern "C" bool run_visual_processing(float marker_size, bool display, visual_processing::MonkeyVision *vision);
+extern "C" bool run_visual_processing(float marker_size, bool display, bool *mapping_success, visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Deallocate all dynamic memory and close ZED camera.
