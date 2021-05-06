@@ -1,4 +1,4 @@
-use std::ffi;
+use std::os::raw;
 
 /**************************************************************************************************
  * Structs
@@ -116,32 +116,29 @@ extern {
 
     /// Get acceleration, orientation, and position data from the ZED IMU sensor.
     /// Returns structure containing data from the ZED IMU.
-    pub fn get_zed_imu_data(data: *mut ZedImuData, vision: *mut ffi::c_void) -> bool;
+    pub fn get_zed_imu_data(data: *mut ZedImuData, vision: *mut raw::c_void) -> bool;
 
     // TODO frame API when cody finishes it
 
     /// Set a flag to update the map mesh file the next time run_visual_processing() is called.
     /// NOTE: only update the mesh periodically as it is resource-intensive to do so.
-    pub fn request_map_update(vision: *mut ffi::c_void);
+    pub fn request_map_update(vision: *mut raw::c_void);
 
     // TODO get_frame_count
 
     /// Initialize camera
     /// # Arguments
     /// `mesh_path` - C-string path to save the stereo-scanned 3D environment mesh to.
-    ///
-    /// # Returns
-    /// `success` - Boolean value indicating whether the ZED camera was successfully initialized.
     pub fn visual_processing_init(
-        mesh_path: *const u8,
-        success: *mut bool,
+        mesh_path: *const raw::c_char,
         camera_res: ZedCameraResolution,
         depth_quality: ZedDepthQuality,
         map_res: ZedMappingResolution,
         range: ZedMappingRange,
         mesh_filter: ZedMeshFilter,
-    ) -> *mut ffi::c_void;
+    ) -> *mut raw::c_void;
 
+    // todo update
     /// Run visual processing on a single video frame from the ZED camera.
     ///
     /// # Arguments
@@ -156,9 +153,9 @@ extern {
         marker_size: f32,
         display: bool,
         mapping_success: *mut bool,
-        vision: *mut ffi::c_void
+        vision: *mut raw::c_void
     ) -> bool;
 
     /// Deallocate all dynamic memory and close ZED camera.
-    pub fn visual_processing_dealloc(vision: *mut ffi::c_void);
+    pub fn visual_processing_dealloc(vision: *mut raw::c_void);
 }
