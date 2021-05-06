@@ -128,7 +128,7 @@ namespace visual_processing {
             bool get_imu(ZedImuData *data);
             bool get_frame(FrameBuffer *frame);
             long  frame_count();
-            bool update_map();
+            void update_map();
         private:
             // ZED camera handler
             sl::Camera zed;
