@@ -180,7 +180,7 @@ extern "C" bool get_camera_frame(FrameBuffer *img, visual_processing::MonkeyVisi
  * @brief Set a flag to update the map mesh file the next time run_visual_processing() is called.
  *        NOTE: only update the mesh periodically as it is resource-intensive to do so.
  */
-extern "C" bool request_map_update(visual_processing::MonkeyVision *vision);
+extern "C" void request_map_update(visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Get the number of frames that have been processed.
