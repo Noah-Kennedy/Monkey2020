@@ -25,9 +25,9 @@ extern "C" struct ArucoData {
     float x_dist = 0; /**< Pose-estimated X-axis distance to marker in meters */
     float y_dist = 0; /**< Pose-estimated Y-axis distance to marker in meters */
     float z_dist = 0; /**< Pose-estimated Z-axis distance to marker in meters */
-    float x_rot = 0; /**< Pose-estimated X-axis rotation of the marker in degrees */
-    float y_rot = 0; /**< Pose-estimated Y-axis rotation of marker in degrees */
-    float z_rot = 0; /**< Pose-estimated Z-axis rotation of marker in degrees */
+    float x_rot = 0; /**< Pose-estimated X-axis rotation of the marker in radians */
+    float y_rot = 0; /**< Pose-estimated Y-axis rotation of marker in radians */
+    float z_rot = 0; /**< Pose-estimated Z-axis rotation of marker in radians */
 };
 
 /**
@@ -97,7 +97,7 @@ namespace visual_processing {
         public:
             MonkeyVision(std::string mesh_path, bool *success, sl::RESOLUTION camera_res, int fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range, sl::MeshFilterParameters::MESH_FILTER filter);
             ~MonkeyVision();
-            bool run(float marker_size, bool display);
+            bool run(float marker_size, bool display, bool *mapping_available);
             bool get_aruco(int id, ArucoData *data);
             bool get_imu(ZedImuData *data);
             bool get_frame(FrameBuffer *frame);
