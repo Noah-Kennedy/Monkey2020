@@ -147,7 +147,7 @@ pub enum ZedStatusCode {
     /// The Object detection module is only compatible with the ZED 2
     ZedErrorModuleNotCompatibleWithCamera,
     /// The module needs the sensors to be enabled (see InitParameters::disable_sensors)
-    ZedErrorMotionSensorsRequired
+    ZedErrorMotionSensorsRequired,
 }
 
 #[repr(C)]
