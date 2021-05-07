@@ -11,8 +11,8 @@ int main(int argc, char **argv)
     std::string path = "./mesh";
     InitErrorFlags init_flags;
     RuntimeErrorFlags loop_flags;
-    visual_processing::MonkeyVision *vision = visual_processing_init(path.c_str(), &init_flags, ZedCameraResolution::ResVGA60, ZedDepthQuality::DepthQUALITY, ZedMappingResolution::MapMEDIUMRES, ZedMappingRange::MapNEAR, ZedMeshFilter::FilterMEDIUM);
-    if (init_flags.map_status_code != ZedErrorCode::ZedError_SUCCESS)
+    visual_processing::MonkeyVision *vision = visual_processing_init(path.c_str(), &init_flags, ZedCameraResolution::ResVGA60, ZedDepthQuality::DepthQuality, ZedMappingResolution::MapMediumres, ZedMappingRange::MapNear, ZedMeshFilter::FilterMedium);
+    if (init_flags.map_status_code != ZedErrorCode::ZedErrorSuccess)
     {
         std::cout << "ERROR: Could not initialize ZED camera." << std::endl;
         visual_processing_dealloc(vision);
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
         ZedErrorCode camera_code, imu_code;
         ZedSpatialMappingState map_state;
         run_visual_processing(0.04, true, &loop_flags, vision);
-        if (loop_flags.camera_status_code != ZedErrorCode::ZedError_SUCCESS)
+        if (loop_flags.camera_status_code != ZedErrorCode::ZedErrorSuccess)
         {
             std::cout << "ERROR: Could not capture frame from ZED camera." << std::endl;
             visual_processing_dealloc(vision);
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         }
         if (frame_count % 60 == 0 && frame_count > 0) {
             std::cout << "Frame #" << frame_count << ", updating mesh..." << std::endl;
-            if (loop_flags.map_status_code == ZedSpatialMappingState::ZedMap_OK)
+            if (loop_flags.map_status_code == ZedSpatialMappingState::ZedMapOk)
             {
                 request_map_update(vision);
             }

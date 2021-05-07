@@ -29,8 +29,8 @@ MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, s
     if (returned_state != sl::ERROR_CODE::SUCCESS)
     {
         std::cout << "Error " << returned_state << ". Camera could not be initialized." << std::endl;
-        error_codes->imu_status_code = ZedError_CAMERA_NOT_INITIALIZED;
-        error_codes->map_status_code = ZedError_CAMERA_NOT_INITIALIZED;
+        error_codes->imu_status_code = ZedErrorCameraNotInitialized;
+        error_codes->map_status_code = ZedErrorCameraNotInitialized;
         return;
     }
     // Enable IMU position tracking
@@ -40,7 +40,7 @@ MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, s
     if (returned_state != sl::ERROR_CODE::SUCCESS)
     {
         this->zed.close();
-        error_codes->map_status_code = ZedError_FAILURE;
+        error_codes->map_status_code = ZedErrorFailure;
         return;
     }
     // Enable spatial mapping
@@ -162,19 +162,19 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
         switch (map_status)
         {
             case sl::SPATIAL_MAPPING_STATE::INITIALIZING:
-                error_codes->map_status_code = ZedMap_INITIALIZING;
+                error_codes->map_status_code = ZedMapInitializing;
                 break;
             case sl::SPATIAL_MAPPING_STATE::OK:
-                error_codes->map_status_code = ZedMap_OK;
+                error_codes->map_status_code = ZedMapOk;
                 break;
             case sl::SPATIAL_MAPPING_STATE::NOT_ENOUGH_MEMORY:
-                error_codes->map_status_code = ZedMap_NOT_ENOUGH_MEMORY;
+                error_codes->map_status_code = ZedMapNotEnoughMemory;
                 break;
             case sl::SPATIAL_MAPPING_STATE::NOT_ENABLED:
-                error_codes->map_status_code = ZedMap_NOT_ENABLED;
+                error_codes->map_status_code = ZedMapNotEnabled;
                 break;
             case sl::SPATIAL_MAPPING_STATE::FPS_TOO_LOW:
-                error_codes->map_status_code = ZedMap_FPS_TOO_LOW;
+                error_codes->map_status_code = ZedMapFpsTooLow;
                 break;
             default:
                 NULL;
@@ -244,69 +244,69 @@ ZedErrorCode MonkeyVision::wrap_error_code(sl::ERROR_CODE error_code)
 {
     switch (error_code) {
         case sl::ERROR_CODE::SUCCESS:
-            return ZedError_SUCCESS;
+            return ZedErrorSuccess;
         case sl::ERROR_CODE::FAILURE:
-            return ZedError_FAILURE;
+            return ZedErrorFailure;
         case sl::ERROR_CODE::NO_GPU_COMPATIBLE:
-            return ZedError_NO_GPU_COMPATIBLE;
+            return ZedErrorNoGpuCompatible;
         case sl::ERROR_CODE::NOT_ENOUGH_GPU_MEMORY:
-            return ZedError_NOT_ENOUGH_GPU_MEMORY;
+            return ZedErrorNotEnoughGpuMemory;
         case sl::ERROR_CODE::CAMERA_NOT_DETECTED:
-            return ZedError_CAMERA_NOT_DETECTED;
+            return ZedErrorCameraNotDetected;
         case sl::ERROR_CODE::SENSORS_NOT_AVAILABLE:
-            return ZedError_SENSORS_NOT_AVAILABLE;
+            return ZedErrorSensorsNotAvailable;
         case sl::ERROR_CODE::INVALID_RESOLUTION:
-            return ZedError_INVALID_RESOLUTION;
+            return ZedErrorInvalidResolution;
         case sl::ERROR_CODE::LOW_USB_BANDWIDTH:
-            return ZedError_LOW_USB_BANDWIDTH;
+            return ZedErrorLowUsbBandwidth;
         case sl::ERROR_CODE::CALIBRATION_FILE_NOT_AVAILABLE:
-            return ZedError_CALIBRATION_FILE_NOT_AVAILABLE;
+            return ZedErrorCalibrationFileNotAvailable;
         case sl::ERROR_CODE::INVALID_CALIBRATION_FILE:
-            return ZedError_INVALID_CALIBRATION_FILE;
+            return ZedErrorInvalidCalibrationFile;
         case sl::ERROR_CODE::INVALID_SVO_FILE:
-            return ZedError_INVALID_SVO_FILE;
+            return ZedErrorInvalidSvoFile;
         case sl::ERROR_CODE::SVO_RECORDING_ERROR:
-            return ZedError_SVO_RECORDING_ERROR;
+            return ZedErrorSvoRecordingError;
         case sl::ERROR_CODE::SVO_UNSUPPORTED_COMPRESSION:
-            return ZedError_SVO_UNSUPPORTED_COMPRESSION;
+            return ZedErrorSvoUnsupportedCompression;
         case sl::ERROR_CODE::END_OF_SVOFILE_REACHED:
-            return ZedError_END_OF_SVOFILE_REACHED;
+            return ZedErrorEndOfSVOFileReached;
         case sl::ERROR_CODE::INVALID_COORDINATE_SYSTEM:
-            return ZedError_INVALID_COORDINATE_SYSTEM;
+            return ZedErrorInvalidCoordinateSystem;
         case sl::ERROR_CODE::INVALID_FIRMWARE:
-            return ZedError_INVALID_FIRMWARE;
+            return ZedErrorInvalidFirmware;
         case sl::ERROR_CODE::INVALID_FUNCTION_PARAMETERS:
-            return ZedError_INVALID_FUNCTION_PARAMETERS;
+            return ZedErrorInvalidFunctionParameters;
         case sl::ERROR_CODE::CUDA_ERROR:
-            return ZedError_CUDA_ERROR;
+            return ZedErrorCudaError;
         case sl::ERROR_CODE::CAMERA_NOT_INITIALIZED:
-            return ZedError_CAMERA_NOT_INITIALIZED;
+            return ZedErrorCameraNotInitialized;
         case sl::ERROR_CODE::NVIDIA_DRIVER_OUT_OF_DATE:
-            return ZedError_NVIDIA_DRIVER_OUT_OF_DATE;
+            return ZedErrorNvidiaDriverOutOfDate;
         case sl::ERROR_CODE::INVALID_FUNCTION_CALL:
-            return ZedError_INVALID_FUNCTION_CALL;
+            return ZedErrorInvalidFunctionCall;
         case sl::ERROR_CODE::CORRUPTED_SDK_INSTALLATION:
-            return ZedError_CORRUPTED_SDK_INSTALLATION;
+            return ZedErrorCorruptedSdkInstallation;
         case sl::ERROR_CODE::INCOMPATIBLE_SDK_VERSION:
-            return ZedError_INCOMPATIBLE_SDK_VERSION;
+            return ZedErrorIncompatibleSdkVersion;
         case sl::ERROR_CODE::INVALID_AREA_FILE:
-            return ZedError_INVALID_AREA_FILE;
+            return ZedErrorInvalidAreaFile;
         case sl::ERROR_CODE::INCOMPATIBLE_AREA_FILE:
-            return ZedError_INCOMPATIBLE_AREA_FILE;
+            return ZedErrorIncompatibleAreaFile;
         case sl::ERROR_CODE::CAMERA_FAILED_TO_SETUP:
-            return ZedError_CAMERA_FAILED_TO_SETUP;
+            return ZedErrorCameraFailedToSetup;
         case sl::ERROR_CODE::CAMERA_DETECTION_ISSUE:
-            return ZedError_CAMERA_DETECTION_ISSUE;
+            return ZedErrorCameraDetectionIssue;
         case sl::ERROR_CODE::CANNOT_START_CAMERA_STREAM:
-            return ZedError_CANNOT_START_CAMERA_STREAM;
+            return ZedErrorCannotStartCameraStream;
         case sl::ERROR_CODE::NO_GPU_DETECTED:
-            return ZedError_NO_GPU_DETECTED;
+            return ZedErrorNoGpuDetected;
         case sl::ERROR_CODE::PLANE_NOT_FOUND:
-            return ZedError_PLANE_NOT_FOUND;
+            return ZedErrorPlaneNotFound;
         case sl::ERROR_CODE::MODULE_NOT_COMPATIBLE_WITH_CAMERA:
-            return ZedError_MODULE_NOT_COMPATIBLE_WITH_CAMERA;
+            return ZedErrorModuleNotCompatibleWithCamera;
         case sl::ERROR_CODE::MOTION_SENSORS_REQUIRED:
-            return ZedError_MOTION_SENSORS_REQUIRED;
+            return ZedErrorMotionSensorsRequired;
         default:
             ZedErrorCode none;
             return none;
@@ -366,10 +366,10 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
 
     switch(depth_quality)
     {
-        case DepthPERFORMANCE:
+        case DepthPerformance:
             zed_depth_quality = sl::DEPTH_MODE::PERFORMANCE;
             break;
-        case DepthQUALITY:
+        case DepthQuality:
             zed_depth_quality = sl::DEPTH_MODE::QUALITY;
             break;
         default:
@@ -378,10 +378,10 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
 
     switch(map_res)
     {
-        case MapLOWRES:
+        case MapLowres:
             mapping_resolution = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RESOLUTION::LOW);
             break;
-        case MapHIGHRES:
+        case MapHighres:
             mapping_resolution = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RESOLUTION::HIGH);
             break;
         default:
@@ -390,10 +390,10 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
 
     switch(range)
     {
-        case MapNEAR:
+        case MapNear:
             mapping_range = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RANGE::SHORT);
             break;
-        case MapFAR:
+        case MapFar:
             mapping_range = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RANGE::LONG);
             break;
         default:
@@ -402,10 +402,10 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
 
     switch(mesh_filter)
     {
-        case FilterLOW:
+        case FilterLow:
             mesh_filter_level = sl::MeshFilterParameters::MESH_FILTER::LOW;
             break;
-        case FilterHIGH:
+        case FilterHigh:
             mesh_filter_level = sl::MeshFilterParameters::MESH_FILTER::HIGH;
             break;
         default:
