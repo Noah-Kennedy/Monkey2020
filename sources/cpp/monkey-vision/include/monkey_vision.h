@@ -19,36 +19,50 @@
  * C
  *************************************************************************************************/
 
-/**
- * @brief Structure to contain position data for an identified Aruco marker.
- */
+/// Structure to contain position data for an identified Aruco marker.
 extern "C" struct ArucoData
 {
-    float x_dist = 0; /**< Pose-estimated X-axis distance to marker in meters */
-    float y_dist = 0; /**< Pose-estimated Y-axis distance to marker in meters */
-    float z_dist = 0; /**< Pose-estimated Z-axis distance to marker in meters */
-    float x_rot = 0; /**< Pose-estimated X-axis rotation of the marker in radians */
-    float y_rot = 0; /**< Pose-estimated Y-axis rotation of marker in radians */
-    float z_rot = 0; /**< Pose-estimated Z-axis rotation of marker in radians */
+    /// Pose-estimated X-axis distance to marker in meters
+    float x_dist = 0;
+    /// Pose-estimated Y-axis distance to marker in meters
+    float y_dist = 0;
+    /// Pose-estimated Z-axis distance to marker in meters
+    float z_dist = 0;
+    /// Pose-estimated X-axis rotation of the marker in radians
+    float x_rot = 0;
+    /// Pose-estimated Y-axis rotation of marker in radians
+    float y_rot = 0;
+    /// Pose-estimated Z-axis rotation of marker in radians
+    float z_rot = 0;
 };
 
-/**
- * @brief Structure to contain acceleration and orientation data measured from the ZED IMU.
- */
+ /// Structure to contain acceleration and orientation data measured from the ZED IMU.
 extern "C" struct ZedImuData
 {
-    float x_accel = 0; /**< Linear acceleration of the ZED along the X-axis in m/s^2 */
-    float y_accel = 0; /**< Linear acceleration of the ZED along the Y-axis in m/s^2 */
-    float z_accel = 0; /**< Linear acceleration of the ZED along the Z-axis in m/s^2 */
-    float x_rot_vel = 0; /**< Angular velocity of the ZED around the X-axis in deg/s */
-    float y_rot_vel = 0; /**< Angular velocity of the ZED around the Z-axis in deg/s */
-    float z_rot_vel = 0; /**< Angular velocity of the ZED around the Z-axis in deg/s */
-    float x_pos = 0; /**< Estimated X-axis displacement of the ZED relative to the origin in meters */
-    float y_pos = 0; /**< Estimated Y-axis displacement of the ZED relative to the origin in meters */
-    float z_pos = 0; /**< Estimated Z-axis displacement of the ZED relative to the origin in meters */
-    float x_rot = 0; /**< X-axis orientation of the ZED in degrees */
-    float y_rot = 0; /**< Y-axis orientation of the ZED in degrees */
-    float z_rot = 0; /**< Z-axis orientation of the ZED in degrees */
+    /// Linear acceleration of the ZED along the X-axis in m/s^2
+    float x_accel = 0;
+    /// Linear acceleration of the ZED along the Y-axis in m/s^2
+    float y_accel = 0;
+    /// Linear acceleration of the ZED along the Z-axis in m/s^2
+    float z_accel = 0;
+    /// Angular velocity of the ZED around the X-axis in deg/s
+    float x_rot_vel = 0;
+    /// Angular velocity of the ZED around the Z-axis in deg/s
+    float y_rot_vel = 0;
+    /// Angular velocity of the ZED around the Z-axis in deg/s
+    float z_rot_vel = 0;
+    /// Estimated X-axis displacement of the ZED relative to the origin in meters
+    float x_pos = 0;
+    /// Estimated Y-axis displacement of the ZED relative to the origin in meters
+    float y_pos = 0;
+    /// Estimated Z-axis displacement of the ZED relative to the origin in meters
+    float z_pos = 0;
+    /// X-axis orientation of the ZED in degrees
+    float x_rot = 0;
+    /// Y-axis orientation of the ZED in degrees
+    float y_rot = 0;
+    /// Z-axis orientation of the ZED in degrees
+    float z_rot = 0;
 };
 
 extern "C" enum ZedCameraResolution
@@ -96,53 +110,85 @@ extern "C" enum ZedSpatialMappingState
     ZedMapFpsTooLow
 };
 
-extern "C" enum ZedErrorCode
+extern "C" enum ZedStatusCode
 {
-    ZedErrorSuccess, /**< Standard code for successful behavior.*/
-    ZedErrorFailure, /**< Standard code for unsuccessful behavior.*/
-    ZedErrorNoGpuCompatible, /**< No GPU found or CUDA capability of the device is not supported.*/
-    ZedErrorNotEnoughGpuMemory, /**< Not enough GPU memory for this depth mode, try a different mode (such as PERFORMANCE), or increase the minimum depth value (see InitParameters::depth_minimum_distance).*/
-    ZedErrorCameraNotDetected, /**< The ZED camera is not plugged or detected.*/
-    ZedErrorSensorsNotAvailable, /**< a ZED-M or ZED2 camera is detected but the sensors (imu,barometer...) cannot be opened. Only for ZED-M or ZED2 devices*/
-    ZedErrorInvalidResolution, /**< In case of invalid resolution parameter, such as a upsize beyond the original image size in Camera::retrieveImage */
-    ZedErrorLowUsbBandwidth, /**< This issue can occurs when you use multiple ZED or a USB 2.0 port (bandwidth issue).*/
-    ZedErrorCalibrationFileNotAvailable, /**< ZED calibration file is not found on the host machine. Use ZED Explorer or ZED Calibration to get one.*/
-    ZedErrorInvalidCalibrationFile, /**< ZED calibration file is not valid, try to download the factory one or recalibrate your camera using 'ZED Calibration'.*/
-    ZedErrorInvalidSvoFile, /**< The provided SVO file is not valid.*/
-    ZedErrorSvoRecordingError, /**< An recorder related error occurred (not enough free storage, invalid file).*/
-    ZedErrorSvoUnsupportedCompression, /**< An SVO related error when NVIDIA based compression cannot be loaded.*/
-    ZedErrorEndOfSVOFileReached, /**<SVO end of file has been reached, and no frame will be available until the SVO position is reset.*/
-    ZedErrorInvalidCoordinateSystem, /**< The requested coordinate system is not available.*/
-    ZedErrorInvalidFirmware, /**< The firmware of the ZED is out of date. Update to the latest version.*/
-    ZedErrorInvalidFunctionParameters, /**< An invalid parameter has been set for the function. */
-    ZedErrorCudaError, /**< In grab() or retrieveXXX() only, a CUDA error has been detected in the process. Activate verbose in sl::Camera::open for more info.*/
-    ZedErrorCameraNotInitialized, /**< In grab() only, ZED SDK is not initialized. Probably a missing call to sl::Camera::open.*/
-    ZedErrorNvidiaDriverOutOfDate, /**< Your NVIDIA driver is too old and not compatible with your current CUDA version. */
-    ZedErrorInvalidFunctionCall, /**< The call of the function is not valid in the current context. Could be a missing call of sl::Camera::open. */
-    ZedErrorCorruptedSdkInstallation, /**< The SDK wasn't able to load its dependencies or somes assets are missing, the installer should be launched. */
-    ZedErrorIncompatibleSdkVersion, /**< The installed SDK is incompatible SDK used to compile the program. */
-    ZedErrorInvalidAreaFile, /**< The given area file does not exist, check the path. */
-    ZedErrorIncompatibleAreaFile, /**< The area file does not contain enought data to be used or the sl::DEPTH_MODE used during the creation of the area file is different from the one currently set. */
-    ZedErrorCameraFailedToSetup, /**< Failed to open the camera at the proper resolution. Try another resolution or make sure that the UVC driver is properly installed.*/
-    ZedErrorCameraDetectionIssue, /**< Your ZED can not be opened, try replugging it to another USB port or flipping the USB-C connector.*/
-    ZedErrorCannotStartCameraStream, /**< Cannot start camera stream. Make sure your camera is not already used by another process or blocked by firewall or antivirus.*/
-    ZedErrorNoGpuDetected, /**< No GPU found, CUDA is unable to list it. Can be a driver/reboot issue.*/
-    ZedErrorPlaneNotFound, /**< Plane not found, either no plane is detected in the scene, at the location or corresponding to the floor, or the floor plane doesn't match the prior given*/
-    ZedErrorModuleNotCompatibleWithCamera, /**< The Object detection module is only compatible with the ZED 2*/
-    ZedErrorMotionSensorsRequired /**< The module needs the sensors to be enabled (see InitParameters::disable_sensors) */
+    /// Standard code for successful behavior.
+    ZedErrorSuccess,
+    /// Standard code for unsuccessful behavior.
+    ZedErrorFailure,
+    /// No GPU found or CUDA capability of the device is not supported.
+    ZedErrorNoGpuCompatible,
+    /// Not enough GPU memory for this depth mode, try a different mode (such as PERFORMANCE), or increase the minimum depth value (see InitParameters::depth_minimum_distance).
+    ZedErrorNotEnoughGpuMemory,
+    /// The ZED camera is not plugged or detected.
+    ZedErrorCameraNotDetected,
+    /// a ZED-M or ZED2 camera is detected but the sensors (imu,barometer...) cannot be opened. Only for ZED-M or ZED2 devices
+    ZedErrorSensorsNotAvailable,
+    /// In case of invalid resolution parameter, such as a upsize beyond the original image size in Camera::retrieveImage
+    ZedErrorInvalidResolution,
+    /// This issue can occurs when you use multiple ZED or a USB 2.0 port (bandwidth issue).
+    ZedErrorLowUsbBandwidth,
+    /// ZED calibration file is not found on the host machine. Use ZED Explorer or ZED Calibration to get one.
+    ZedErrorCalibrationFileNotAvailable,
+    /// ZED calibration file is not found on the host machine. Use ZED Explorer or ZED Calibration to get one.
+    ZedErrorInvalidCalibrationFile,
+    /// The provided SVO file is not valid.
+    ZedErrorInvalidSvoFile,
+    /// An recorder related error occurred (not enough free storage, invalid file).
+    ZedErrorSvoRecordingError,
+    /// An SVO related error when NVIDIA based compression cannot be loaded.
+    ZedErrorSvoUnsupportedCompression,
+    /// SVO end of file has been reached, and no frame will be available until the SVO position is reset.
+    ZedErrorEndOfSVOFileReached,
+    /// The requested coordinate system is not available.
+    ZedErrorInvalidCoordinateSystem,
+    /// The firmware of the ZED is out of date. Update to the latest version.
+    ZedErrorInvalidFirmware,
+    /// An invalid parameter has been set for the function.
+    ZedErrorInvalidFunctionParameters,
+    /// In grab() or retrieveXXX() only, a CUDA error has been detected in the process. Activate verbose in sl::Camera::open for more info.
+    ZedErrorCudaError,
+    /// In grab() only, ZED SDK is not initialized. Probably a missing call to sl::Camera::open.
+    ZedErrorCameraNotInitialized,
+    /// Your NVIDIA driver is too old and not compatible with your current CUDA version.
+    ZedErrorNvidiaDriverOutOfDate,
+    /// The call of the function is not valid in the current context. Could be a missing call of sl::Camera::open.
+    ZedErrorInvalidFunctionCall,
+    /// The SDK wasn't able to load its dependencies or somes assets are missing, the installer should be launched.
+    ZedErrorCorruptedSdkInstallation,
+    /// The installed SDK is incompatible SDK used to compile the program.
+    ZedErrorIncompatibleSdkVersion,
+    /// The given area file does not exist, check the path.
+    ZedErrorInvalidAreaFile,
+    /// The area file does not contain enought data to be used or the sl::DEPTH_MODE used during the creation of the area file is different from the one currently set.
+    ZedErrorIncompatibleAreaFile,
+    /// Failed to open the camera at the proper resolution. Try another resolution or make sure that the UVC driver is properly installed.
+    ZedErrorCameraFailedToSetup,
+    /// Your ZED can not be opened, try replugging it to another USB port or flipping the USB-C connector.
+    ZedErrorCameraDetectionIssue,
+    /// Cannot start camera stream. Make sure your camera is not already used by another process or blocked by firewall or antivirus.
+    ZedErrorCannotStartCameraStream,
+    /// No GPU found, CUDA is unable to list it. Can be a driver/reboot issue.
+    ZedErrorNoGpuDetected,
+    /// Plane not found, either no plane is detected in the scene, at the location or corresponding to the floor, or the floor plane doesn't match the prior given
+    ZedErrorPlaneNotFound,
+    /// The Object detection module is only compatible with the ZED 2
+    ZedErrorModuleNotCompatibleWithCamera,
+    /// The module needs the sensors to be enabled (see InitParameters::disable_sensors)
+    ZedErrorMotionSensorsRequired
 };
 
 extern "C" struct InitErrorFlags
 {
-    ZedErrorCode camera_status_code;
-    ZedErrorCode imu_status_code;
-    ZedErrorCode map_status_code;
+    ZedStatusCode camera_status_code;
+    ZedStatusCode imu_status_code;
+    ZedStatusCode map_status_code;
 };
 
 extern "C" struct RuntimeErrorFlags
 {
-    ZedErrorCode camera_status_code;
-    ZedErrorCode imu_status_code;
+    ZedStatusCode camera_status_code;
+    ZedStatusCode imu_status_code;
     ZedSpatialMappingState map_status_code;
 };
 
@@ -171,7 +217,7 @@ namespace visual_processing {
         void update_map() noexcept;
 
     private:
-        static ZedErrorCode wrap_error_code(sl::ERROR_CODE error_code);
+        static ZedStatusCode wrap_error_code(sl::ERROR_CODE error_code);
 
         // ZED camera handler
         sl::Camera zed;
