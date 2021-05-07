@@ -106,6 +106,16 @@ pub enum ZedMeshFilter {
     FilterHIGH,
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub enum ZedSpatialMappingState {
+    ZedMap_INITIALIZING,
+    ZedMap_OK,
+    ZedMap_NOT_ENOUGH_MEMORY,
+    ZedMap_NOT_ENABLED,
+    ZedMap_FPS_TOO_LOW
+}
+
 /**************************************************************************************************
  * Functions
  *************************************************************************************************/
