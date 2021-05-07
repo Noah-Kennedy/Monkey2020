@@ -11,9 +11,9 @@ int main(int argc, char **argv)
     std::string path = "./mesh";
     InitErrorFlags init_flags;
     RuntimeErrorFlags loop_flags;
-    visual_processing::MonkeyVision *vision = visual_processing_init(path.c_str(), &init_flags, ZedCameraResolution::ResVGA60, ZedDepthQuality::DepthQuality, ZedMappingResolution::MapMediumres, ZedMappingRange::MapNear, ZedMeshFilter::FilterMedium);
-    if (init_flags.map_status_code != ZedErrorCode::ZedErrorSuccess)
-    {
+    visual_processing::MonkeyVision *vision = visual_processing_init(path.c_str(), &init_flags, ZedCameraResolution::ResVGA60, ZedDepthQuality::DepthQuality, ZedMappingResolution::MapMediumRes,
+                                                                     ZedMappingRange::MapNear, ZedMeshFilter::FilterMedium);
+    if (init_flags.map_status_code != ZedStatusCode::ZedErrorSuccess) {
         std::cout << "ERROR: Could not initialize ZED camera." << std::endl;
         visual_processing_dealloc(vision);
         return -1;
@@ -21,26 +21,21 @@ int main(int argc, char **argv)
     std::cout << "Loaded dictionary: Aruco Original." << std::endl;
     // Loop until 'q' is pressed
     char key = '.';
-    while (key != 'q')
-    {
+    while (key != 'q') {
         auto frame_count = get_frame_count(vision);
-        ZedErrorCode camera_code, imu_code;
+        ZedStatusCode camera_code, imu_code;
         ZedSpatialMappingState map_state;
         run_visual_processing(0.04, true, &loop_flags, vision);
-        if (loop_flags.camera_status_code != ZedErrorCode::ZedErrorSuccess)
-        {
+        if (loop_flags.camera_status_code != ZedStatusCode::ZedErrorSuccess) {
             std::cout << "ERROR: Could not capture frame from ZED camera." << std::endl;
             visual_processing_dealloc(vision);
             return -2;
         }
         if (frame_count % 60 == 0 && frame_count > 0) {
             std::cout << "Frame #" << frame_count << ", updating mesh..." << std::endl;
-            if (loop_flags.map_status_code == ZedSpatialMappingState::ZedMapOk)
-            {
+            if (loop_flags.map_status_code == ZedSpatialMappingState::ZedMapOk) {
                 request_map_update(vision);
-            }
-            else
-            {
+            } else {
                 std::cout << "ERROR: Mapping unavailable" << std::endl;
             }
 #ifdef _DEBUG_
@@ -51,7 +46,7 @@ int main(int argc, char **argv)
 
             if (detected) {
                 std::cout << "Aruco Marker 69: X=" << marker.x_dist << "m, Z=" << marker.z_dist << "m, Angle = "
-                          << marker.y_rot*10 << "rad" << std::endl;
+                          << marker.y_rot * 10 << "rad" << std::endl;
             } else {
                 std::cout << "Could not detect Aruco Marker 69" << std::endl;
             }

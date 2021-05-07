@@ -25,7 +25,7 @@ target_include_directories(
 
 target_link_libraries(
         monkey-vision
-        PRIVATE cameralot
+        PUBLIC cameralot
         PRIVATE opencv_aruco
         PRIVATE ${ZED_LIBRARIES}
 )
