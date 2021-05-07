@@ -139,7 +139,6 @@ impl MonkeyVision {
         }
     }
 
-    // TODO run_visual_processing
     // TODO get_frame_count
     // TODO frame API when cody finishes it
 }
