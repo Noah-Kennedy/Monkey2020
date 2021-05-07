@@ -24,28 +24,26 @@
 #include <opencv2/videoio.hpp>
 #include "camera_feed.h"
 
-extern "C" cameralot::CameraFeed *camera_feed_create();
-extern "C" void camera_feed_delete(cameralot::CameraFeed *feed);
+using namespace cameralot;
 
-extern "C" bool camera_feed_open_api_pref(
-        cameralot::CameraFeed *cameraFeed,
+extern "C" OpenCVCameraFeed *opencv_camera_feed_create();
+extern "C" void opencv_camera_feed_delete(cameralot::OpenCVCameraFeed *feed);
+
+extern "C" bool opencv_camera_feed_open_api_pref(
+        OpenCVCameraFeed *cameraFeed,
         int32_t index,
         int32_t api
 );
 
-extern "C" bool camera_feed_open(cameralot::CameraFeed *cameraFeed, int32_t index);
+extern "C" bool opencv_camera_feed_open(OpenCVCameraFeed *cameraFeed, int32_t index);
 
-extern "C" bool camera_feed_is_opened(cameralot::CameraFeed *cameraFeed);
+extern "C" bool camera_feed_is_opened(CameraFeed *cameraFeed);
 
-extern "C" ReadStatus camera_feed_read(
-        cameralot::CameraFeed *cameraFeed,
+extern "C" ReadStatus abstract_camera_feed_read(
+        AbstractCameraFeed *cameraFeed,
         uint32_t width,
         uint32_t height,
-        char *ext,
-        TimerData *td
-);
-
-extern "C" bool camera_feed_get_buf(
-        cameralot::CameraFeed *cameraFeed,
+        const char *ext,
+        TimerData *td,
         ByteBufferShare *buf
 );

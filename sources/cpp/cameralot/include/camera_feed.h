@@ -37,7 +37,6 @@ extern "C" struct ByteBufferShare
     size_t length;
 };
 
-
 extern "C" struct TimerData
 {
     uint32_t grab_millis;
@@ -47,31 +46,58 @@ extern "C" struct TimerData
 };
 
 namespace cameralot {
-    class CameraFeed
+    class AbstractCameraFeed
     {
     public:
-        bool is_opened() const noexcept;
+        virtual bool is_opened() const noexcept = 0;
 
-        bool open(int index, int api_preference = cv::CAP_V4L2) noexcept;
+        virtual ReadStatus read(
+                uint32_t width,
+                uint32_t height,
+                const char *ext,
+                TimerData &td,
+                ByteBufferShare *buffer
+        ) noexcept = 0;
+    };
 
-        ReadStatus read(uint32_t width, uint32_t height, const char *ext, TimerData *td) noexcept;
+    class CameraFeed : public AbstractCameraFeed
+    {
+    public:
+        ReadStatus read(
+                uint32_t width, uint32_t height,
+                const char *ext,
+                TimerData &td,
+                ByteBufferShare *buffer
+        ) noexcept final;
 
-        bool get_buffer(ByteBufferShare *buffer) noexcept;
-
+    protected:
+        virtual ReadStatus read_frame(cv::Mat &frame, TimerData &td) noexcept = 0;
 
     private:
-        cv::VideoCapture videoCapture;
-
         std::vector<uchar> image_buffer;
 
         cv::Mat reading_frame;
 
         cv::Mat output_frame;
 
-        bool has_image;
+    public:
+        CameraFeed() noexcept: image_buffer() {}
+    };
+
+    class OpenCVCameraFeed : public CameraFeed
+    {
+    public:
+        ReadStatus read_frame(cv::Mat &frame, TimerData &td) noexcept final;
+
+        bool is_opened() const noexcept final;
+
+        bool open(int index, int api_preference = cv::CAP_V4L2) noexcept;
+
+    private:
+        cv::VideoCapture videoCapture;
 
 
     public:
-        CameraFeed() noexcept: videoCapture(), image_buffer(), has_image(false) {}
+        OpenCVCameraFeed() noexcept: CameraFeed(), videoCapture() {}
     };
 }

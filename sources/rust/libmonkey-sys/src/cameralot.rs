@@ -27,17 +27,17 @@ pub enum ReadStatus {
 
 #[link(name = "cameralot")]
 extern {
-    pub fn camera_feed_create() -> *mut raw::c_void;
-    pub fn camera_feed_delete(feed: *mut raw::c_void);
-    pub fn camera_feed_open(feed: *mut raw::c_void, index: i32) -> bool;
-    pub fn camera_feed_open_api_pref(feed: *mut raw::c_void, index: i32, api: i32) -> bool;
+    pub fn opencv_camera_feed_create() -> *mut raw::c_void;
+    pub fn opencv_camera_feed_delete(feed: *mut raw::c_void);
+    pub fn opencv_camera_feed_open(feed: *mut raw::c_void, index: i32) -> bool;
+    pub fn opencv_camera_feed_open_api_pref(feed: *mut raw::c_void, index: i32, api: i32) -> bool;
     pub fn camera_feed_is_opened(feed: *mut raw::c_void) -> bool;
-    pub fn camera_feed_read(
+    pub fn abstract_camera_feed_read(
         feed: *mut raw::c_void,
         width: u32,
         height: u32,
         ext: *const raw::c_char,
         td: *mut TimerData,
+        buf: *mut ByteBufferShare
     ) -> ReadStatus;
-    pub fn camera_feed_get_buf(feed: *mut raw::c_void, buf: *mut ByteBufferShare) -> bool;
 }

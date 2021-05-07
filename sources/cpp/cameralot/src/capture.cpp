@@ -2,22 +2,22 @@
 
 using namespace cameralot;
 
-CameraFeed *camera_feed_create()
+OpenCVCameraFeed *opencv_camera_feed_create()
 {
-    return new CameraFeed();
+    return new OpenCVCameraFeed();
 }
 
-void camera_feed_delete(CameraFeed *feed)
+void opencv_camera_feed_delete(OpenCVCameraFeed *feed)
 {
     delete feed;
 }
 
-bool camera_feed_open_api_pref(CameraFeed *cameraFeed, int32_t index, int32_t api)
+bool opencv_camera_feed_open_api_pref(OpenCVCameraFeed *cameraFeed, int32_t index, int32_t api)
 {
     return cameraFeed->open(index, api);
 }
 
-bool camera_feed_open(CameraFeed *cameraFeed, int32_t index)
+bool opencv_camera_feed_open(OpenCVCameraFeed *cameraFeed, int32_t index)
 {
     return cameraFeed->open(index);
 }
@@ -27,12 +27,14 @@ bool camera_feed_is_opened(CameraFeed *cameraFeed)
     return cameraFeed->is_opened();
 }
 
-ReadStatus camera_feed_read(CameraFeed *cameraFeed, uint32_t width, uint32_t height, char *ext, TimerData* td)
+ReadStatus abstract_camera_feed_read(
+        AbstractCameraFeed *cameraFeed,
+        uint32_t width,
+        uint32_t height,
+        const char *ext,
+        TimerData *td,
+        ByteBufferShare *buf
+)
 {
-    return cameraFeed->read(width, height, ext, td);
-}
-
-bool camera_feed_get_buf(CameraFeed *cameraFeed, ByteBufferShare *buf)
-{
-    return cameraFeed->get_buffer(buf);
+    return cameraFeed->read(width, height, ext, *td, buf);
 }

@@ -12,7 +12,7 @@ fn main() {
         .arg("-f")
         .arg("images/*").spawn().unwrap().wait().unwrap();
 
-    let mut cap = CameraFeed::new();
+    let mut cap = OpenCVCameraFeed::new();
 
     cap.open(0);
 
@@ -28,9 +28,9 @@ fn main() {
 
         let timer = std::time::Instant::now();
 
-        unsafe {
-            cap.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap();
-        }
+        let buf = unsafe {
+            cap.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap()
+        };
 
         let time = timer.elapsed().as_millis();
 
@@ -40,8 +40,6 @@ fn main() {
         println!("\tResize: {} millis", td.resize_millis);
         println!("\tEncode: {} millis", td.encode_millis);
 
-        let s = cap.get_buf().unwrap();
-
-        fs::write(&path, s).unwrap();
+        fs::write(&path, buf).unwrap();
     }
 }
