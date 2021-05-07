@@ -303,7 +303,7 @@ mod tests {
     use plotters::prelude::BitMapBackend;
     use plotters::style::{BLACK, HSLColor};
 
-    use crate::mesh_to_grid;
+    use crate::mesh_to_grid::*;
     use crate::math;
     use crate::math::{Vec2D, Vec3D};
 
