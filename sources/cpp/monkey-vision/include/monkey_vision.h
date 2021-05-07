@@ -48,20 +48,17 @@ extern "C" struct ZedImuData {
     float z_rot = 0; /**< Z-axis orientation of the ZED in degrees */
 };
 
-/**
- * @brief Structure to store a camera frame as a byte array with dimensions
- */
-extern "C" struct FrameBuffer {
-    uchar *buffer; /**< Byte array which stores the image frame */
-    uint32_t width = 0; /**< Width of the image in pixels */
-    uint32_t height = 0; /**< Height of the image in pixels */
+extern "C" struct ByteBufferShare
+{
+    uchar *buffer;
+    size_t length;
 };
 
 extern "C" enum ZedCameraResolution {
     Res2K15,
     Res1080HD30,
     Res720HD60,
-    ResVGA100
+    ResVGA60
 };
 
 extern "C" enum ZedDepthQuality {
@@ -88,6 +85,61 @@ extern "C" enum ZedMeshFilter {
     FilterHIGH
 };
 
+extern "C" enum ZedSpatialMappingState {
+    ZedMap_INITIALIZING,
+    ZedMap_OK,
+    ZedMap_NOT_ENOUGH_MEMORY,
+    ZedMap_NOT_ENABLED,
+    ZedMap_FPS_TOO_LOW
+};
+
+extern "C" enum ZedErrorCode {
+    ZedError_SUCCESS, /**< Standard code for successful behavior.*/
+    ZedError_FAILURE, /**< Standard code for unsuccessful behavior.*/
+    ZedError_NO_GPU_COMPATIBLE, /**< No GPU found or CUDA capability of the device is not supported.*/
+    ZedError_NOT_ENOUGH_GPU_MEMORY, /**< Not enough GPU memory for this depth mode, try a different mode (such as PERFORMANCE), or increase the minimum depth value (see InitParameters::depth_minimum_distance).*/
+    ZedError_CAMERA_NOT_DETECTED, /**< The ZED camera is not plugged or detected.*/
+    ZedError_SENSORS_NOT_AVAILABLE, /**< a ZED-M or ZED2 camera is detected but the sensors (imu,barometer...) cannot be opened. Only for ZED-M or ZED2 devices*/
+    ZedError_INVALID_RESOLUTION, /**< In case of invalid resolution parameter, such as a upsize beyond the original image size in Camera::retrieveImage */
+    ZedError_LOW_USB_BANDWIDTH, /**< This issue can occurs when you use multiple ZED or a USB 2.0 port (bandwidth issue).*/
+    ZedError_CALIBRATION_FILE_NOT_AVAILABLE, /**< ZED calibration file is not found on the host machine. Use ZED Explorer or ZED Calibration to get one.*/
+    ZedError_INVALID_CALIBRATION_FILE, /**< ZED calibration file is not valid, try to download the factory one or recalibrate your camera using 'ZED Calibration'.*/
+    ZedError_INVALID_SVO_FILE, /**< The provided SVO file is not valid.*/
+    ZedError_SVO_RECORDING_ERROR, /**< An recorder related error occurred (not enough free storage, invalid file).*/
+    ZedError_SVO_UNSUPPORTED_COMPRESSION, /**< An SVO related error when NVIDIA based compression cannot be loaded.*/
+    ZedError_END_OF_SVOFILE_REACHED, /**<SVO end of file has been reached, and no frame will be available until the SVO position is reset.*/
+    ZedError_INVALID_COORDINATE_SYSTEM, /**< The requested coordinate system is not available.*/
+    ZedError_INVALID_FIRMWARE, /**< The firmware of the ZED is out of date. Update to the latest version.*/
+    ZedError_INVALID_FUNCTION_PARAMETERS, /**< An invalid parameter has been set for the function. */
+    ZedError_CUDA_ERROR, /**< In grab() or retrieveXXX() only, a CUDA error has been detected in the process. Activate verbose in sl::Camera::open for more info.*/
+    ZedError_CAMERA_NOT_INITIALIZED, /**< In grab() only, ZED SDK is not initialized. Probably a missing call to sl::Camera::open.*/
+    ZedError_NVIDIA_DRIVER_OUT_OF_DATE, /**< Your NVIDIA driver is too old and not compatible with your current CUDA version. */
+    ZedError_INVALID_FUNCTION_CALL, /**< The call of the function is not valid in the current context. Could be a missing call of sl::Camera::open. */
+    ZedError_CORRUPTED_SDK_INSTALLATION, /**< The SDK wasn't able to load its dependencies or somes assets are missing, the installer should be launched. */
+    ZedError_INCOMPATIBLE_SDK_VERSION, /**< The installed SDK is incompatible SDK used to compile the program. */
+    ZedError_INVALID_AREA_FILE, /**< The given area file does not exist, check the path. */
+    ZedError_INCOMPATIBLE_AREA_FILE, /**< The area file does not contain enought data to be used or the sl::DEPTH_MODE used during the creation of the area file is different from the one currently set. */
+    ZedError_CAMERA_FAILED_TO_SETUP, /**< Failed to open the camera at the proper resolution. Try another resolution or make sure that the UVC driver is properly installed.*/
+    ZedError_CAMERA_DETECTION_ISSUE, /**< Your ZED can not be opened, try replugging it to another USB port or flipping the USB-C connector.*/
+    ZedError_CANNOT_START_CAMERA_STREAM, /**< Cannot start camera stream. Make sure your camera is not already used by another process or blocked by firewall or antivirus.*/
+    ZedError_NO_GPU_DETECTED, /**< No GPU found, CUDA is unable to list it. Can be a driver/reboot issue.*/
+    ZedError_PLANE_NOT_FOUND, /**< Plane not found, either no plane is detected in the scene, at the location or corresponding to the floor, or the floor plane doesn't match the prior given*/
+    ZedError_MODULE_NOT_COMPATIBLE_WITH_CAMERA, /**< The Object detection module is only compatible with the ZED 2*/
+    ZedError_MOTION_SENSORS_REQUIRED /**< The module needs the sensors to be enabled (see InitParameters::disable_sensors) */
+};
+
+extern "C" struct InitErrorFlags {
+    ZedErrorCode camera_status_code;
+    ZedErrorCode imu_status_code;
+    ZedErrorCode map_status_code;
+};
+
+extern "C" struct RuntimeErrorFlags {
+    ZedErrorCode camera_status_code;
+    ZedErrorCode imu_status_code;
+    ZedSpatialMappingState map_status_code;
+};
+
 /**************************************************************************************************
  * C++
  *************************************************************************************************/
@@ -95,32 +147,36 @@ namespace visual_processing {
     class MonkeyVision
     {
         public:
-            MonkeyVision(std::string mesh_path, bool *success, sl::RESOLUTION camera_res, int fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range, sl::MeshFilterParameters::MESH_FILTER filter);
-            ~MonkeyVision();
-            bool run(float marker_size, bool display, bool *mapping_available);
-            bool get_aruco(int id, ArucoData *data);
-            bool get_imu(ZedImuData *data);
-            bool get_frame(FrameBuffer *frame);
-            long  frame_count();
-            void update_map();
+            MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, sl::RESOLUTION camera_res, uint8_t fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range, sl::MeshFilterParameters::MESH_FILTER filter) noexcept;
+            ~MonkeyVision() noexcept;
+            void run(float marker_size, bool display, RuntimeErrorFlags *error_codes) noexcept;
+            bool get_aruco(uint16_t id, ArucoData *data) noexcept;
+            bool get_imu(ZedImuData *data) noexcept;
+            bool get_frame(cv::Mat *image) noexcept;
+            uint32_t  frame_count() noexcept;
+            void update_map() noexcept;
         private:
+            static ZedErrorCode wrap_error_code(sl::ERROR_CODE error_code);
             // ZED camera handler
             sl::Camera zed;
+            //
+            cv::Mat image;
+            bool has_image = false;
             //ZED spatial mapping mesh
             std::string mesh_file_path;
             sl::Mesh map_mesh;
             sl::MeshFilterParameters::MESH_FILTER mesh_filter;
             bool update_map_mesh = false;
             // Vectors for storing detected Aruco marker IDs and positional data
-            std::vector<int> detected_ids;
+            std::vector<uint16_t> detected_ids;
             std::vector<ArucoData> detected_markers;
             // Struct for storing ZED IMU data
             ZedImuData zed_imu_data;
             bool imu_valid = false;
             // Struct for storing the latest camera capture
-            FrameBuffer camera_frame;
+            ByteBufferShare camera_buffer;
             // Frame counter for periodic tasks
-            long frame_counter = 0;
+            uint32_t frame_counter = 0;
             //
             float mapping_resolution;
             float mapping_range;
@@ -136,7 +192,7 @@ namespace visual_processing {
  * @param aruco_id ID value encoded by a detected Aruco marker.
  * @return Structure containing position data for the Aruco marker with the given ID.
  */
-extern "C" bool get_aruco_data(int aruco_id, ArucoData *data, visual_processing::MonkeyVision *vision);
+extern "C" bool get_aruco_data(uint16_t aruco_id, ArucoData *data, visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Get acceleration, orientation, and position data from the ZED IMU sensor.
@@ -148,7 +204,7 @@ extern "C" bool get_zed_imu_data(ZedImuData *data, visual_processing::MonkeyVisi
  * @brief Get the frame buffer from the last camera capture.
  * @return Structure containing a byte array of the image pixels and integers for the image dimensions, which will default to 0 if the camera image could not be captured. 
  */
-extern "C" bool get_camera_frame(FrameBuffer *img, visual_processing::MonkeyVision *vision);
+extern "C" bool get_camera_frame(visual_processing::MonkeyVision *vision, ByteBufferShare *image_buffer);
 
 /**
  * @brief Set a flag to update the map mesh file the next time run_visual_processing() is called.
@@ -160,14 +216,14 @@ extern "C" void request_map_update(visual_processing::MonkeyVision *vision);
  * @brief Get the number of frames that have been processed.
  * @return Integer count of the number of times run_visual_processing() has been called.
  */
-extern "C" long get_frame_count(visual_processing::MonkeyVision *vision);
+extern "C" uint32_t get_frame_count(visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Intialize camera
  * @param mesh_path C-string path to save the stereo-scanned 3D environment mesh to.
  * @return Boolean value indicating whether the ZED camera was successfully initialized.
  */
-extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, bool *success, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappingRange range, ZedMeshFilter mesh_filter);
+extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init_flags, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappingRange range, ZedMeshFilter mesh_filter);
 
 /**
  * @brief Run visual processing on a single video frame from the ZED camera.
@@ -175,7 +231,7 @@ extern "C" visual_processing::MonkeyVision* visual_processing_init(const char *m
  * @param display Boolean value indicating if the function should display the camera view in a GUI window.
  * @return Boolean value indicating whether a camera frame could be successfully captured. 
  */
-extern "C" bool run_visual_processing(float marker_size, bool display, bool *mapping_success, visual_processing::MonkeyVision *vision);
+extern "C" void run_visual_processing(float marker_size, bool display, RuntimeErrorFlags *runtime_flags, visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Deallocate all dynamic memory and close ZED camera.
