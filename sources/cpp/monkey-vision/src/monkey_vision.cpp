@@ -240,7 +240,7 @@ void MonkeyVision::update_map() noexcept
     this->update_map_mesh = true;
 }
 
-ZedErrorCode MonkeyVision::wrap_error_code(sl::ERROR_CODE error_code)
+ZedStatusCode MonkeyVision::wrap_error_code(sl::ERROR_CODE error_code)
 {
     switch (error_code) {
         case sl::ERROR_CODE::SUCCESS:
@@ -308,7 +308,7 @@ ZedErrorCode MonkeyVision::wrap_error_code(sl::ERROR_CODE error_code)
         case sl::ERROR_CODE::MOTION_SENSORS_REQUIRED:
             return ZedErrorMotionSensorsRequired;
         default:
-            ZedErrorCode none;
+            ZedStatusCode none;
             return none;
     }
 }
@@ -378,10 +378,10 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
 
     switch(map_res)
     {
-        case MapLowres:
+        case MapLowRes:
             mapping_resolution = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RESOLUTION::LOW);
             break;
-        case MapHighres:
+        case MapHighRes:
             mapping_resolution = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RESOLUTION::HIGH);
             break;
         default:
