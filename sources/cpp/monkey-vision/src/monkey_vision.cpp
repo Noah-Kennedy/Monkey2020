@@ -33,6 +33,7 @@ MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, s
         error_codes->map_status_code = ZedErrorCameraNotInitialized;
         return;
     }
+    this->is_open = true;
     // Enable IMU position tracking
     sl::PositionalTrackingParameters tracking_params;
     returned_state = this->zed.enablePositionalTracking(tracking_params);
@@ -66,7 +67,6 @@ MonkeyVision::~MonkeyVision()
 
 void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error_codes) noexcept
 {
-    this->has_image = false;
     this->imu_valid = false;
     //Setup camera frame capture
     auto cameraInfo = this->zed.getCameraInformation();
@@ -102,9 +102,9 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
         // Retrieve the left image
         this->zed.retrieveImage(image_zed, sl::VIEW::LEFT, sl::MEM::CPU, image_size);
         // Convert to RGB
-        cvtColor(image_ocv, this->image, cv::COLOR_RGBA2RGB);
+        cvtColor(image_ocv, this->image_capture, cv::COLOR_RGBA2RGB);
         // Detect markers
-        cv::aruco::detectMarkers(this->image, dictionary, corners, this->detected_ids);
+        cv::aruco::detectMarkers(this->image_capture, dictionary, corners, this->detected_ids);
         // If at least one marker detected
         if (this->detected_ids.size() > 0)
         {
@@ -124,14 +124,13 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
                 this->detected_markers.push_back(marker_data);
             }
             // Draw on image to highlight detected markers
-            cv::aruco::drawDetectedMarkers(this->image, corners, this->detected_ids);
-            cv::aruco::drawAxis(this->image, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 1.5f);
+            cv::aruco::drawDetectedMarkers(this->image_capture, corners, this->detected_ids);
+            cv::aruco::drawAxis(this->image_capture, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 1.5f);
         }
-        has_image = true;
         // Display image
         if (display)
         {
-            imshow("ZED Camera Feed", this->image);
+            imshow("ZED Camera Feed", this->image_capture);
         }
 
         // Read IMU data
@@ -204,7 +203,7 @@ bool MonkeyVision::get_aruco(uint16_t id, ArucoData *data) noexcept
     {
         // Determine if the selected marker ID was detected
         auto iterator = find(this->detected_ids.begin(), this->detected_ids.end(), id);
-        if (iterator != this->detected_ids.end()) 
+        if (iterator != this->detected_ids.end())
         {
             // Return data for the Aruco marker which encodes the given ID
             uint16_t index = iterator - this->detected_ids.begin();
@@ -221,15 +220,6 @@ bool MonkeyVision::get_imu(ZedImuData *data) noexcept
     return this->imu_valid;
 }
 
-bool MonkeyVision::get_frame(cv::Mat *image) noexcept
-{
-    if (this->has_image)
-    {
-        *image = this->image;
-    }
-    return this->has_image;
-}
-
 uint32_t MonkeyVision::frame_count() noexcept
 {
     return this->frame_counter;
@@ -238,6 +228,53 @@ uint32_t MonkeyVision::frame_count() noexcept
 void MonkeyVision::update_map() noexcept
 {
     this->update_map_mesh = true;
+}
+
+bool MonkeyVision::is_opened() const noexcept
+{
+    return this->is_open;
+}
+
+ReadStatus MonkeyVision::read(uint32_t width, uint32_t height, const char *ext, TimerData &td, ByteBufferShare *buffer) noexcept
+{
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    this->image_buffer.clear();
+
+    ReadStatus status = ReadStatus::Success;
+
+    if (!this->is_opened()) {
+        status = ReadStatus::NotOpen;
+    }
+
+    if (status == ReadStatus::Success && this->image_capture.empty()) {
+        status = ReadStatus::EmptyFrame;
+    }
+
+    if (status == ReadStatus::Success) {
+        auto s = cv::Size(width, height);
+
+        auto t1 = high_resolution_clock::now();
+        cv::resize(this->image_capture, this->image_output, s);
+        auto t2 = high_resolution_clock::now();
+        td.resize_millis = duration_cast<milliseconds>(t2 - t1).count();
+
+        t1 = high_resolution_clock::now();
+        if (cv::imencode(cv::String(ext), this->image_output, this->image_buffer)) {
+            buffer->buffer = &this->image_buffer[0];
+            buffer->length = this->image_buffer.size();
+        } else {
+            status = ReadStatus::EncodingFailed;
+        }
+
+        t2 = high_resolution_clock::now();
+        td.encode_millis = duration_cast<milliseconds>(t2 - t1).count();
+    }
+
+    return status;
 }
 
 ZedStatusCode MonkeyVision::wrap_error_code(sl::ERROR_CODE error_code)
