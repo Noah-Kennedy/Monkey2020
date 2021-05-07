@@ -1,6 +1,9 @@
 use std::ffi;
 
 use crate::raw::*;
+use cameralot::core::{AbstractCameraFeed, CameraFeedError};
+use cameralot::prelude::TimerData;
+use cameralot::extend::abstract_camera_read_from_ffi;
 
 const INIT_SUCCESS: InitErrorFlags = InitErrorFlags {
     camera_status_code: ZedStatusCode::ZedErrorSuccess,
@@ -139,6 +142,12 @@ impl MonkeyVision {
     // TODO run_visual_processing
     // TODO get_frame_count
     // TODO frame API when cody finishes it
+}
+
+impl AbstractCameraFeed for MonkeyVision {
+    unsafe fn read(&mut self, width: u32, height: u32, ext: &str, td: &mut TimerData) -> Result<&[u8], CameraFeedError> {
+        abstract_camera_read_from_ffi(self.internal, width, height, ext, td)
+    }
 }
 
 impl Drop for MonkeyVision {

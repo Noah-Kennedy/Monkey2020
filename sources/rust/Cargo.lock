@@ -1637,6 +1637,7 @@ version = "0.1.0"
 name = "monkey-vision"
 version = "0.1.0"
 dependencies = [
+ "cameralot",
  "libmonkey-sys",
 ]
 

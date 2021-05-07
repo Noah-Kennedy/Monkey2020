@@ -9,3 +9,6 @@ edition = "2018"
 [dependencies.libmonkey-sys]
 path = "../libmonkey-sys"
 features = ["monkey-vision"]
+
+[dependencies.cameralot]
+path = "../cameralot"
