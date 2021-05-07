@@ -61,9 +61,94 @@ pub struct FrameBuffer {
     pub height: u32,
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct InitErrorFlags {
+    pub camera_status_code: ZedStatusCode,
+    pub imu_status_code: ZedStatusCode,
+    pub map_status_code: ZedStatusCode,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct RuntimeErrorFlags {
+    pub camera_status_code: ZedStatusCode,
+    pub imu_status_code: ZedStatusCode,
+    pub map_status_code: ZedSpatialMappingState,
+}
+
 /**************************************************************************************************
  * Enums
  *************************************************************************************************/
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub enum ZedStatusCode {
+    /// Standard code for successful behavior.
+    ZedErrorSuccess,
+    /// Standard code for unsuccessful behavior.
+    ZedErrorFailure,
+    /// No GPU found or CUDA capability of the device is not supported.
+    ZedErrorNoGpuCompatible,
+    /// Not enough GPU memory for this depth mode, try a different mode (such as PERFORMANCE), or increase the minimum depth value (see InitParameters::depth_minimum_distance).
+    ZedErrorNotEnoughGpuMemory,
+    /// The ZED camera is not plugged or detected.
+    ZedErrorCameraNotDetected,
+    /// a ZED-M or ZED2 camera is detected but the sensors (imu,barometer...) cannot be opened. Only for ZED-M or ZED2 devices
+    ZedErrorSensorsNotAvailable,
+    /// In case of invalid resolution parameter, such as a upsize beyond the original image size in Camera::retrieveImage
+    ZedErrorInvalidResolution,
+    /// This issue can occurs when you use multiple ZED or a USB 2.0 port (bandwidth issue).
+    ZedErrorLowUsbBandwidth,
+    /// ZED calibration file is not found on the host machine. Use ZED Explorer or ZED Calibration to get one.
+    ZedErrorCalibrationFileNotAvailable,
+    /// ZED calibration file is not found on the host machine. Use ZED Explorer or ZED Calibration to get one.
+    ZedErrorInvalidCalibrationFile,
+    /// The provided SVO file is not valid.
+    ZedErrorInvalidSvoFile,
+    /// An recorder related error occurred (not enough free storage, invalid file).
+    ZedErrorSvoRecordingError,
+    /// An SVO related error when NVIDIA based compression cannot be loaded.
+    ZedErrorSvoUnsupportedCompression,
+    /// SVO end of file has been reached, and no frame will be available until the SVO position is reset.
+    ZedErrorEndOfSVOFileReached,
+    /// The requested coordinate system is not available.
+    ZedErrorInvalidCoordinateSystem,
+    /// The firmware of the ZED is out of date. Update to the latest version.
+    ZedErrorInvalidFirmware,
+    /// An invalid parameter has been set for the function.
+    ZedErrorInvalidFunctionParameters,
+    /// In grab() or retrieveXXX() only, a CUDA error has been detected in the process. Activate verbose in sl::Camera::open for more info.
+    ZedErrorCudaError,
+    /// In grab() only, ZED SDK is not initialized. Probably a missing call to sl::Camera::open.
+    ZedErrorCameraNotInitialized,
+    /// Your NVIDIA driver is too old and not compatible with your current CUDA version.
+    ZedErrorNvidiaDriverOutOfDate,
+    /// The call of the function is not valid in the current context. Could be a missing call of sl::Camera::open.
+    ZedErrorInvalidFunctionCall,
+    /// The SDK wasn't able to load its dependencies or somes assets are missing, the installer should be launched.
+    ZedErrorCorruptedSdkInstallation,
+    /// The installed SDK is incompatible SDK used to compile the program.
+    ZedErrorIncompatibleSdkVersion,
+    /// The given area file does not exist, check the path.
+    ZedErrorInvalidAreaFile,
+    /// The area file does not contain enought data to be used or the sl::DEPTH_MODE used during the creation of the area file is different from the one currently set.
+    ZedErrorIncompatibleAreaFile,
+    /// Failed to open the camera at the proper resolution. Try another resolution or make sure that the UVC driver is properly installed.
+    ZedErrorCameraFailedToSetup,
+    /// Your ZED can not be opened, try replugging it to another USB port or flipping the USB-C connector.
+    ZedErrorCameraDetectionIssue,
+    /// Cannot start camera stream. Make sure your camera is not already used by another process or blocked by firewall or antivirus.
+    ZedErrorCannotStartCameraStream,
+    /// No GPU found, CUDA is unable to list it. Can be a driver/reboot issue.
+    ZedErrorNoGpuDetected,
+    /// Plane not found, either no plane is detected in the scene, at the location or corresponding to the floor, or the floor plane doesn't match the prior given
+    ZedErrorPlaneNotFound,
+    /// The Object detection module is only compatible with the ZED 2
+    ZedErrorModuleNotCompatibleWithCamera,
+    /// The module needs the sensors to be enabled (see InitParameters::disable_sensors)
+    ZedErrorMotionSensorsRequired
+}
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -146,12 +231,12 @@ extern {
     /// Returns integer count of the number of times run_visual_processing() has been called.
     pub fn get_frame_count(vision: *mut raw::c_void) -> u32;
 
-    // TODO update
     /// Initialize camera
     /// # Arguments
     /// `mesh_path` - C-string path to save the stereo-scanned 3D environment mesh to.
     pub fn visual_processing_init(
         mesh_path: *const raw::c_char,
+        init_flags: *mut InitErrorFlags,
         camera_res: ZedCameraResolution,
         depth_quality: ZedDepthQuality,
         map_res: ZedMappingResolution,
@@ -159,7 +244,6 @@ extern {
         mesh_filter: ZedMeshFilter,
     ) -> *mut raw::c_void;
 
-    // todo update
     /// Run visual processing on a single video frame from the ZED camera.
     ///
     /// # Arguments
@@ -173,9 +257,9 @@ extern {
     pub fn run_visual_processing(
         marker_size: f32,
         display: bool,
-        mapping_success: *mut bool,
+        runtime_flags: *mut RuntimeErrorFlags,
         vision: *mut raw::c_void,
-    ) -> bool;
+    );
 
     /// Deallocate all dynamic memory and close ZED camera.
     pub fn visual_processing_dealloc(vision: *mut raw::c_void);
