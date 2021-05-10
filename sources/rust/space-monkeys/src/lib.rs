@@ -32,7 +32,7 @@ pub struct AutonomousState {
 
 pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams, state: &mut AutonomousState, dt: Duration) -> MotorSpeeds {
     if let Err(err) = vision.imu_data(&mut state.zed_imu_data) {
-        error!(err)
+        error!("{:?}", err);
     }
 
     let left_lin_speed = state.speed.left_speed * params.wheel_radius;
