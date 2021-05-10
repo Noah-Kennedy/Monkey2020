@@ -1,8 +1,8 @@
-use std::ops::Div;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+
 use log::error;
 
-use libmonkey_sys::monkey_vision::{ZedCameraResolution, ZedDepthQuality, ZedImuData, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
+use libmonkey_sys::monkey_vision::ZedImuData;
 use monkey_api::objects::{Location, MotorSpeeds};
 use monkey_api::objects::requests::AutonomousParams;
 use monkey_pathfinding::a_star::AStar;
@@ -10,7 +10,7 @@ use monkey_pathfinding::model::{DiscreteState, MonkeyModel, RobotVector};
 use monkey_pathfinding::state_space::MonkeyStateSpace;
 use monkey_vision::core::MonkeyVision;
 
-use crate::aimbot::{Path, SteeringCommand, Vehicle};
+use crate::aimbot::{Path, Vehicle};
 use crate::math::Vec2D;
 use crate::mesh_to_grid::Grid;
 
@@ -27,7 +27,7 @@ pub struct AutonomousState {
     pub time_since_last_spatial_map_update: Duration,
     pub path: Option<Path>,
     pub grid: Grid,
-    pub zed_imu_data: ZedImuData
+    pub zed_imu_data: ZedImuData,
 }
 
 pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams, state: &mut AutonomousState, dt: Duration) -> MotorSpeeds {
@@ -79,7 +79,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
                         min_turn_rad: (params.min_turn_radius / state.grid.x_scale()).ceil() as u16, // TODO: x_scale vs z_scale?
                         max_speed: (params.max_speed / state.grid.x_scale()).floor() as u16,
                         rev_max_speed: (params.max_speed / state.grid.x_scale()).floor() as u16,
-                    }
+                    },
                 };
 
                 let mut astar = AStar::new(s);
@@ -114,7 +114,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
                 Some(path) => vehicle.follow(path, params.stopping_dist, target_location.theta.to_radians(), dt),
                 None => vehicle.stop()
             }
-        },
+        }
         None => vehicle.stop()
     };
 

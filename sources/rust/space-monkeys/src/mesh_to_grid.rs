@@ -1,17 +1,16 @@
 use std::f32::consts;
 use std::fs::File;
 use std::io;
-use std::io::{ErrorKind, BufReader, BufRead};
+use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::Path;
 
 use byteorder::{LittleEndian, ReadBytesExt};
-use crate::math::{Vec3D, Vec2D};
-use crate::math;
-use monkey_pathfinding::state_space::RewardTable;
-use monkey_pathfinding::model::DiscreteState;
 
-const INTERACTION_RADIUS: f32 = 0.2;
-const INTERACTION_RADIUS_SQR: f32 = INTERACTION_RADIUS * INTERACTION_RADIUS;
+use monkey_pathfinding::model::DiscreteState;
+use monkey_pathfinding::state_space::RewardTable;
+
+use crate::math::{Vec2D, Vec3D};
+use crate::math;
 
 #[derive(Debug)]
 struct Tri {
@@ -321,9 +320,9 @@ mod tests {
     use plotters::prelude::BitMapBackend;
     use plotters::style::{BLACK, HSLColor};
 
-    use crate::mesh_to_grid::*;
     use crate::math;
     use crate::math::{Vec2D, Vec3D};
+    use crate::mesh_to_grid::*;
 
     #[test]
     fn test_mesh() {
