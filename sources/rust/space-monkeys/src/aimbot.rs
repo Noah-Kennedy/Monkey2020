@@ -1,6 +1,7 @@
 use crate::math::Vec2D;
 use crate::math;
 use std::f32;
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub struct Path {
@@ -155,7 +156,7 @@ impl Vehicle {
     }
 
     /// Follows a path and stops at the end.
-    pub fn follow(&self, path: &Path, stopping_dist: f32, target_orientation: f32) -> SteeringCommand {
+    pub fn follow(&self, path: &Path, stopping_dist: f32, target_orientation: f32, dt: Duration) -> SteeringCommand {
         // If close enough to the end, slow down and arrive.
         if self.pos.dist(path.final_waypoint()) < stopping_dist {
             return self.arrive(path.final_waypoint(), stopping_dist, target_orientation);
@@ -163,8 +164,7 @@ impl Vehicle {
 
         // Otherwise, project the future position onto the nearest point on the path, move that
         // point forward along the path, and follow it.
-        // TODO: How far ahead to look? One second? Dependent on control loop frequency?
-        let future_pos = self.pos + self.vel();
+        let future_pos = self.pos + self.vel().scale(dt.as_secs_f32());
         let mut to_follow = path.slide(0.0, self.max_speed);
         let mut min_dist = future_pos.dist(path.waypoints[0]);
 

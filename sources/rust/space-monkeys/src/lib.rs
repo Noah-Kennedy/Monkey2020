@@ -62,7 +62,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
                         //  Currently just clearing the path regardless
                         state.path = None;
                     }
-                    Err(err) => error!(err)
+                    Err(err) => error!("{:?}", err)
                 }
                 // Note that there is no guarantee that the requested map update will happen before
                 // mesh_to_grid is called. It's just that both the request and mesh_to_grid should
@@ -111,7 +111,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
             }
 
             match state.path.as_ref() {
-                Some(path) => vehicle.follow(path, params.stopping_dist, target_location.theta.to_radians()),
+                Some(path) => vehicle.follow(path, params.stopping_dist, target_location.theta.to_radians(), dt),
                 None => vehicle.stop()
             }
         },
