@@ -13,8 +13,8 @@ use crate::aimbot::{Path, SteeringCommand, Vehicle};
 use crate::math::Vec2D;
 use crate::mesh_to_grid::Grid;
 
-mod math;
-mod mesh_to_grid;
+pub mod math;
+pub mod mesh_to_grid;
 mod aimbot;
 
 const MESH_FILE: &str = "../run-data/mesh.ply";
@@ -37,7 +37,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
 
     let vehicle = Vehicle {
         pos: Vec2D { x: state.zed_imu_data.x_pos, y: state.zed_imu_data.z_pos },
-        speed: (left_lin_speed, right_lin_speed) / 2.0,
+        speed: (left_lin_speed + right_lin_speed) / 2.0,
         orientation: state.zed_imu_data.z_rot.to_radians(),
         max_speed: params.max_speed,
         max_force: params.max_force,

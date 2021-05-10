@@ -255,16 +255,16 @@ impl Grid {
     }
 
     pub fn x_scale(&self) -> f32 {
-        (self.max_x - self.min_x) / self.res_x
+        (self.max_x - self.min_x) / self.res_x as f32
     }
 
     pub fn z_scale(&self) -> f32 {
-        (self.max_z - self.min_z) / self.res_z
+        (self.max_z - self.min_z) / self.res_z as f32
     }
 
     /// The height at a grid cell.
     pub fn get_height(&self, x: u16, z: u16) -> f32 {
-        self.height[z * self.res_x + x]
+        self.height[(z * self.res_x + x) as usize]
     }
 
     /// The height at a grid cell, normalized between 0 and 1.
@@ -272,7 +272,8 @@ impl Grid {
         if (self.min_height - self.max_height).abs() < f32::EPSILON {
             0.0
         } else {
-            (self.height[z * self.res_x + x] - self.min_height) / (self.max_height - self.min_height)
+            (self.height[(z * self.res_x + x) as usize]
+                - self.min_height) / (self.max_height - self.min_height)
         }
     }
 
