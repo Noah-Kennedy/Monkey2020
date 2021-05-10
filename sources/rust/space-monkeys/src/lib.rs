@@ -1,5 +1,6 @@
 use std::ops::Div;
 use std::time::{Duration, Instant};
+use log::error;
 
 use libmonkey_sys::monkey_vision::{ZedCameraResolution, ZedDepthQuality, ZedImuData, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
 use monkey_api::objects::{Location, MotorSpeeds};
@@ -30,7 +31,9 @@ pub struct AutonomousState {
 }
 
 pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams, state: &mut AutonomousState, dt: Duration) -> MotorSpeeds {
-    vision.imu_data(&mut state.zed_imu_data);
+    if let Err(err) = vision.imu_data(&mut state.zed_imu_data) {
+        error!(err)
+    }
 
     let left_lin_speed = state.speed.left_speed * params.wheel_radius;
     let right_lin_speed = state.speed.right_speed * params.wheel_radius;
@@ -59,9 +62,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
                         //  Currently just clearing the path regardless
                         state.path = None;
                     }
-                    Err(_) => {
-                        // TODO: log error?
-                    }
+                    Err(err) => error!(err)
                 }
                 // Note that there is no guarantee that the requested map update will happen before
                 // mesh_to_grid is called. It's just that both the request and mesh_to_grid should

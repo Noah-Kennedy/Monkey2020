@@ -2430,6 +2430,7 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "libmonkey-sys",
+ "log",
  "monkey-api",
  "monkey-pathfinding",
  "monkey-vision",

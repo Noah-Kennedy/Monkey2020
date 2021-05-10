@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 byteorder = "1.4"
 plotters = "0.3"
+log = "0.4"
 
 [dependencies.monkey-vision]
 path = "../monkey-vision"
