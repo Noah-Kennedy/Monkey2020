@@ -19,7 +19,6 @@ mod aimbot;
 
 const MESH_FILE: &str = "../run-data/mesh.ply";
 
-#[derive(Default)]
 pub struct AutonomousState {
     pub speed: MotorSpeeds,
     /// The theta component should be in degrees.
