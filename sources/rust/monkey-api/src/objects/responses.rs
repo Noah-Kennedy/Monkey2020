@@ -1,5 +1,4 @@
 pub mod flight_plan {
-    use crate::objects::responses::MotorSpeeds;
     use crate::objects::MotorSpeeds;
 
     #[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
@@ -20,7 +19,6 @@ pub mod flight_plan {
 }
 
 pub mod flight_director {
-    use crate::objects::responses::MotorSpeeds;
     use crate::objects::MotorSpeeds;
 
     #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]

@@ -1,15 +1,17 @@
-use monkey_vision::core::MonkeyVision;
-use crate::aimbot::{Path, Vehicle, SteeringCommand};
-use crate::math::Vec2D;
-use std::time::{Duration, Instant};
-use crate::mesh_to_grid::Grid;
-use monkey_api::objects::requests::AutonomousParams;
-use monkey_api::objects::{Location, MotorSpeeds};
-use libmonkey_sys::monkey_vision::{ZedCameraResolution, ZedDepthQuality, ZedMappingResolution, ZedMappingRange, ZedMeshFilter, ZedImuData};
-use monkey_pathfinding::state_space::MonkeyStateSpace;
-use monkey_pathfinding::model::{MonkeyModel, DiscreteState, RobotVector};
-use monkey_pathfinding::a_star::AStar;
 use std::ops::Div;
+use std::time::{Duration, Instant};
+
+use libmonkey_sys::monkey_vision::{ZedCameraResolution, ZedDepthQuality, ZedImuData, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
+use monkey_api::objects::{Location, MotorSpeeds};
+use monkey_api::objects::requests::AutonomousParams;
+use monkey_pathfinding::a_star::AStar;
+use monkey_pathfinding::model::{DiscreteState, MonkeyModel, RobotVector};
+use monkey_pathfinding::state_space::MonkeyStateSpace;
+use monkey_vision::core::MonkeyVision;
+
+use crate::aimbot::{Path, SteeringCommand, Vehicle};
+use crate::math::Vec2D;
+use crate::mesh_to_grid::Grid;
 
 mod math;
 mod mesh_to_grid;
@@ -50,7 +52,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, autonomous_params: &Autono
         ang_res: 64,
         min_turn_rad: (autonomous_params.min_turn_radius / grid.x_scale()).ceil() as u16, // TODO: x_scale vs z_scale?
         max_speed: (autonomous_params.max_speed / grid.x_scale()).floor() as u16,
-        rev_max_speed: (autonomous_params.max_speed / grid.x_scale()).floor() as u16
+        rev_max_speed: (autonomous_params.max_speed / grid.x_scale()).floor() as u16,
     };
 
     while unsafe { KEEP_GOING } {
@@ -60,7 +62,9 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, autonomous_params: &Autono
         last_time = now;
 
         if let Some(target_location) = unsafe { TARGET_LOCATION } {
-            if time_since_last_spatial_map_update >= autonomous_params.min_spatial_map_update_period {
+            if time_since_last_spatial_map_update.as_millis() as usize
+                >= autonomous_params.min_spatial_map_update_period
+            {
                 vision.request_map_update();
                 time_since_last_spatial_map_update = Duration::from_secs(0);
                 match mesh_to_grid::mesh_to_grid(&mut grid, MESH_FILE, autonomous_params.interaction_radius, autonomous_params.vertical_cutoff) {
@@ -68,7 +72,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, autonomous_params: &Autono
                         // TODO: If path is some, check it against the new grid to ensure that it is still safe. If not safe, clear path.
                         //  Currently just clearing the path regardless
                         unsafe { PATH = None; }
-                    },
+                    }
                     Err(_) => {
                         // TODO: log error?
                     }
@@ -83,7 +87,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, autonomous_params: &Autono
             if unsafe { PATH.is_none() } {
                 let s = MonkeyStateSpace {
                     cost: grid.clone(),
-                    model: astar_model.clone()
+                    model: astar_model.clone(),
                 };
 
                 let mut astar = AStar::new(s);
@@ -92,13 +96,13 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, autonomous_params: &Autono
                     position: RobotVector {
                         x: (zed_imu_data.x_pos / grid.x_scale()).floor() as i16,
                         y: (zed_imu_data.z_pos / grid.z_scale()).floor() as i16,
-                        r: (zed_imu_data.z_rot * 64.0 / 360.0).floor() as i16
+                        r: (zed_imu_data.z_rot * 64.0 / 360.0).floor() as i16,
                     }
                 }, &DiscreteState {
                     position: RobotVector {
                         x: (target_location.x / grid.x_scale()).floor() as i16,
                         y: (target_location.y / grid.z_scale()).floor() as i16,
-                        r: (target_location.theta * 64.0 / 360.0).floor() as i16
+                        r: (target_location.theta * 64.0 / 360.0).floor() as i16,
                     }
                 });
 
@@ -107,7 +111,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, autonomous_params: &Autono
                         let waypoints = path.iter().map(|d| -> Vec2D {
                             Vec2D {
                                 x: d.position.x as f32 * grid.x_scale(),
-                                y: d.position.y as f32 * grid.z_scale()
+                                y: d.position.y as f32 * grid.z_scale(),
                             }
                         }).collect();
 
@@ -126,7 +130,7 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, autonomous_params: &Autono
                 max_force: autonomous_params.max_force,
                 mass: autonomous_params.mass,
                 moment_of_inertia: autonomous_params.moment_of_inertia,
-                allow_backwards: autonomous_params.allow_backwards
+                allow_backwards: autonomous_params.allow_backwards,
             };
 
             let steering = match unsafe { PATH.as_ref() } {
