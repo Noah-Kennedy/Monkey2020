@@ -2429,6 +2429,10 @@ name = "space-monkeys"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+ "libmonkey-sys",
+ "monkey-api",
+ "monkey-pathfinding",
+ "monkey-vision",
  "plotters",
 ]
 

@@ -22,19 +22,19 @@ impl Vec2D {
         low.scale(1.0 - frac) + high.scale(frac)
     }
 
-    pub fn inv_lerp(lerped: Vec2D, low: Vec2D, high: Vec2D) -> f32 {
-        let frac_x = (lerped.x - low.x) / (high.x - low.x);
-        let frac_y = (lerped.y - low.y) / (high.y - low.y);
-        if high.x == low.x {
-            return frac_y;
+    pub fn inv_lerp(lerped: Vec2D, low: Vec2D, high: Vec2D) -> Result<f32, String> {
+        let frac_x = inv_lerp_f32(lerped.x, low.x, high.x);
+        let frac_y = inv_lerp_f32(lerped.y, low.y, high.y);
+
+        if frac_x.is_ok() && frac_y.is_ok() {
+            return if (frac_x.unwrap() - frac_y.unwrap()).abs() > 1e-8 {
+                Err(String::from("arguments must be collinear"))
+            } else {
+                Ok((frac_x.unwrap() + frac_y.unwrap()) / 2.0)
+            }
         }
-        if high.y == low.y {
-            return frac_x;
-        }
-        if (frac_x - frac_y).abs() > 1e-8 {
-            panic!("Arguments are not collinear")
-        }
-        (frac_x + frac_y) / 2.0
+
+        (frac_x.or(frac_y)).map_err(|_| -> String { String::from("low cannot equal high") })
     }
 
     pub fn scale(&self, factor: f32) -> Self {
@@ -207,9 +207,18 @@ pub fn lerp_f32(low: f32, high: f32, frac: f32) -> f32 {
     low * (1.0 - frac) + high * frac
 }
 
-pub fn clamp_f32(value: f32, min: f32, max: f32) -> f32 {
-    if min > max {
-        panic!("min must be less than or equal to max")
+pub fn inv_lerp_f32(lerped: f32, low: f32, high: f32) -> Result<f32, ()> {
+    if low == high {
+        Err(())
+    } else {
+        Ok((lerped - low) / (high - low))
     }
-    value.max(min).min(max)
+}
+
+pub fn clamp_f32(value: f32, min: f32, max: f32) -> Result<f32, ()> {
+    if min > max {
+        Err(())
+    } else {
+        Ok(value.max(min).min(max))
+    }
 }

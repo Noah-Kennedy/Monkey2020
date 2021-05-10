@@ -9,3 +9,15 @@ edition = "2018"
 [dependencies]
 byteorder = "1.4"
 plotters = "0.3"
+
+[dependencies.monkey-vision]
+path = "../monkey-vision"
+
+[dependencies.monkey-api]
+path = "../monkey-api"
+
+[dependencies.libmonkey-sys]
+path = "../libmonkey-sys"
+
+[dependencies.monkey-pathfinding]
+path = "../monkey-pathfinding"

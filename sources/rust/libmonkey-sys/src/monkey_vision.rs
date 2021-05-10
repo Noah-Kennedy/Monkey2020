@@ -34,7 +34,7 @@ pub struct ZedImuData {
     pub z_accel: f32,
     /// Angular velocity of the ZED around the X-axis in deg/s
     pub x_rot_vel: f32,
-    /// Angular velocity of the ZED around the Z-axis in deg/s
+    /// Angular velocity of the ZED around the Y-axis in deg/s
     pub y_rot_vel: f32,
     /// Angular velocity of the ZED around the Z-axis in deg/s
     pub z_rot_vel: f32,
