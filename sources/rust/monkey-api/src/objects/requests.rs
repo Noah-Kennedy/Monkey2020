@@ -14,8 +14,6 @@ pub struct CameraRequest {
 #[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct AutonomousParams {
-    /// In milliseconds
-    pub min_spatial_map_update_period: usize,
     pub max_speed: f32,
     pub max_force: f32,
     pub mass: f32,

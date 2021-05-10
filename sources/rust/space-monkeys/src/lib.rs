@@ -24,7 +24,6 @@ pub struct AutonomousState {
     pub speed: MotorSpeeds,
     /// The theta component should be in degrees.
     pub target_location: Option<Location>,
-    pub time_since_last_spatial_map_update: Duration,
     pub path: Option<Path>,
     pub grid: Grid,
     pub zed_imu_data: ZedImuData,
@@ -51,24 +50,6 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
 
     let steering = match state.target_location {
         Some(target_location) => {
-            if state.time_since_last_spatial_map_update.as_millis() as usize
-                >= params.min_spatial_map_update_period
-            {
-                vision.request_map_update();
-                state.time_since_last_spatial_map_update = Duration::from_secs(0);
-                match mesh_to_grid::mesh_to_grid(&mut state.grid, MESH_FILE, params.interaction_radius, params.vertical_cutoff) {
-                    Ok(_) => {
-                        // TODO: If path is some, check it against the new grid to ensure that it is still safe. If not safe, clear path.
-                        //  Currently just clearing the path regardless
-                        state.path = None;
-                    }
-                    Err(err) => error!("{:?}", err)
-                }
-                // Note that there is no guarantee that the requested map update will happen before
-                // mesh_to_grid is called. It's just that both the request and mesh_to_grid should
-                // only be ran periodically as they are computationally expensive.
-            }
-
             if state.path.is_none() {
                 let s = MonkeyStateSpace {
                     cost: state.grid.clone(),
@@ -126,4 +107,19 @@ pub fn zhu_li_do_the_thing(vision: &mut MonkeyVision, params: &AutonomousParams,
     let right_speed = (right_lin_speed + right_accel * dt.as_secs_f32()) / params.wheel_radius;
 
     MotorSpeeds { right_speed, left_speed }
+}
+
+pub fn visual_processing(vision: &mut MonkeyVision, params: &AutonomousParams, state: &mut AutonomousState) {
+    // Note that there is no guarantee that the requested map update will happen before
+    // mesh_to_grid is called. It's just that both the request and mesh_to_grid should
+    // only be ran periodically as they are computationally expensive.
+    vision.request_map_update();
+    match mesh_to_grid::mesh_to_grid(&mut state.grid, MESH_FILE, params.interaction_radius, params.vertical_cutoff) {
+        Ok(_) => {
+            // TODO: If path is some, check it against the new grid to ensure that it is still safe. If not safe, clear path.
+            //  Currently just clearing the path regardless
+            state.path = None;
+        }
+        Err(err) => error!("{:?}", err)
+    }
 }
