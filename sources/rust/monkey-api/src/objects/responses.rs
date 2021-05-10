@@ -1,5 +1,6 @@
 pub mod flight_plan {
-    use crate::objects::responses::TurningArc;
+    use crate::objects::responses::MotorSpeeds;
+    use crate::objects::MotorSpeeds;
 
     #[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -10,16 +11,17 @@ pub mod flight_plan {
     #[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct PlannedTurningArc {
-        /// Arc to turn along
+        /// Arc to turn along, defined by motor speeds
         #[cfg_attr(feature = "serde", serde(flatten))]
-        pub arc: TurningArc,
+        pub arc: MotorSpeeds,
         /// Length of time to turn along art
         pub time: f32,
     }
 }
 
 pub mod flight_director {
-    use crate::objects::responses::TurningArc;
+    use crate::objects::responses::MotorSpeeds;
+    use crate::objects::MotorSpeeds;
 
     #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -27,16 +29,7 @@ pub mod flight_director {
         HoldCalculatingRoute,
         HoldAbortRecalculatingRoute,
         HoldAbortDriverControl,
-        Turn(TurningArc),
+        Turn(MotorSpeeds),
         Complete,
     }
-}
-
-#[derive(Default, Debug, PartialOrd, PartialEq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct TurningArc {
-    /// The speed for the right motor, in radians per second
-    pub right_speed: f32,
-    /// The speed for the left motor, in radians per second
-    pub left_speed: f32,
 }
