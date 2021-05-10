@@ -120,7 +120,7 @@ impl Vehicle {
     }
 
     pub fn stop(&self) -> SteeringCommand {
-        self.arrive(self.pos, 1.0, None)
+        self.arrive(self.pos, 1.0, self.orientation)
     }
 
     pub fn seek(&self, target: Vec2D) -> SteeringCommand {
@@ -128,36 +128,34 @@ impl Vehicle {
         self.calc_thrust_and_torque(desired_vel - self.vel())
     }
 
-    pub fn arrive(&self, dest: Vec2D, stopping_dist: f32, target_orientation: Option<f32>) -> SteeringCommand {
+    pub fn arrive(&self, dest: Vec2D, stopping_dist: f32, target_orientation: f32) -> SteeringCommand {
         let disp = dest - self.pos;
         let dist = disp.l2();
 
         let desired_vel = disp.norm().scale(self.max_speed * dist / stopping_dist);
         let mut steering = self.calc_thrust_and_torque(desired_vel - self.vel());
 
-        if let Some(target_orientation) = target_orientation {
-            let disp_rot = disp.rot(-target_orientation);
-            let desired_orientation = Vec2D {
-                x: disp_rot.x * disp_rot.x - disp_rot.y * disp_rot.y + self.max_speed,
-                y: 2.0 * disp_rot.x * disp_rot.y
-            }.rot(target_orientation).angle();
+        let disp_rot = disp.rot(-target_orientation);
+        let desired_orientation = Vec2D {
+            x: disp_rot.x * disp_rot.x - disp_rot.y * disp_rot.y + self.max_speed,
+            y: 2.0 * disp_rot.x * disp_rot.y
+        }.rot(target_orientation).angle();
 
-            let mut orientation_diff = desired_orientation - self.orientation;
-            while orientation_diff > f32::consts::PI {
-                orientation_diff -= 2.0 * f32::consts::PI;
-            }
-            while orientation_diff < -f32::consts::PI {
-                orientation_diff += 2.0 * f32::consts::PI;
-            }
-
-            steering.torque += self.max_speed * (1.0 - dist / stopping_dist) * orientation_diff
+        let mut orientation_diff = desired_orientation - self.orientation;
+        while orientation_diff > f32::consts::PI {
+            orientation_diff -= 2.0 * f32::consts::PI;
         }
+        while orientation_diff < -f32::consts::PI {
+            orientation_diff += 2.0 * f32::consts::PI;
+        }
+
+        steering.torque += self.max_speed * (1.0 - dist / stopping_dist) * orientation_diff;
 
         steering
     }
 
     /// Follows a path and stops at the end.
-    pub fn follow(&self, path: &Path, stopping_dist: f32, target_orientation: Option<f32>) -> SteeringCommand {
+    pub fn follow(&self, path: &Path, stopping_dist: f32, target_orientation: f32) -> SteeringCommand {
         // If close enough to the end, slow down and arrive.
         if self.pos.dist(path.final_waypoint()) < stopping_dist {
             return self.arrive(path.final_waypoint(), stopping_dist, target_orientation);

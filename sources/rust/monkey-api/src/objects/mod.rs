@@ -7,7 +7,7 @@ pub mod requests;
 pub struct Location {
     pub x: f32,
     pub y: f32,
-    pub theta: Option<f32>,
+    pub theta: f32,
 }
 
 #[derive(Default, Debug, PartialOrd, PartialEq, Clone, Copy)]
