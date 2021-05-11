@@ -72,6 +72,9 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
 {
     this->imu_valid = false;
 
+    Resolution image_size = this->cameraInfo.camera_resolution;
+    Mat image_zed(image_size, MAT_TYPE::U8_C4);
+    cv::Mat image_ocv = cv::Mat(image_zed.getHeight(), image_zed.getWidth(), CV_8UC4, image_zed.getPtr<sl::uchar1>(MEM::CPU));
     cv::Mat image_ocv_rgb;
 
     auto calibInfo = this->camera_info.calibration_parameters.left_cam;
@@ -90,7 +93,9 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
     auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
 
     // Capture a camera frame
-    if (zed_grab)
+    auto returned_state = this->zed.grab();
+    error_codes->camera_status_code = wrap_error_code(returned_state);
+    if (returned_state == sl::ERROR_CODE::SUCCESS)
     {
         // Reset data for new frame
         this->detected_ids.clear();
@@ -98,7 +103,7 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
         this->zed_imu_data = {0,0,0,0,0,0};
 
         // Convert to RGB
-        cvtColor(this->image_ocv, image_ocv_rgb, cv::COLOR_RGBA2RGB);
+        cvtColor(image_ocv, image_ocv_rgb, cv::COLOR_RGBA2RGB);
         // Detect markers
         cv::aruco::detectMarkers(image_ocv_rgb, dictionary, corners, this->detected_ids);
         // If at least one marker detected
@@ -131,7 +136,7 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
 
         // Read IMU data
         sl::SensorsData sensor_data;
-        auto returned_state = this->zed.getSensorsData(sensor_data, sl::TIME_REFERENCE::IMAGE);
+        returned_state = this->zed.getSensorsData(sensor_data, sl::TIME_REFERENCE::IMAGE);
         error_codes->imu_status_code = wrap_error_code(returned_state);
         this->imu_valid = (returned_state == sl::ERROR_CODE::SUCCESS);
         sl::float3 linear_accel = sensor_data.imu.linear_acceleration;
@@ -228,9 +233,6 @@ void MonkeyVision::update_map() noexcept
 
 ReadStatus MonkeyVision::read_frame(cv::Mat &frame, TimerData &td) noexcept
 {
-
-    this->zed_grab = true;
-
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::duration;
@@ -243,7 +245,6 @@ ReadStatus MonkeyVision::read_frame(cv::Mat &frame, TimerData &td) noexcept
 
     if (this->zed.grab() != sl::ERROR_CODE::SUCCESS) {
         status = ReadStatus::ReadFailed;
-        this->zed_grab = false;
         return status;
     }
 

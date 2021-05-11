@@ -188,6 +188,7 @@ extern "C" struct InitErrorFlags
 
 extern "C" struct RuntimeErrorFlags
 {
+    ZedStatusCode camera_status_code;
     ZedStatusCode imu_status_code;
     ZedSpatialMappingState map_status_code;
 };
@@ -225,10 +226,9 @@ namespace visual_processing {
         sl::Camera zed;
         sl::CameraInformation camera_info;
         bool is_open = false;
-        bool zed_grab = false;
 
-        sl::Mat image_zed;
-        cv::Mat image_ocv;
+        sl::Mat frame_zed;
+        cv::Mat frame_ocv;
         std::vector<uchar> image_buffer;
 
         //ZED spatial mapping mesh

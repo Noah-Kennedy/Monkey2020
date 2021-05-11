@@ -28,7 +28,6 @@ int main(int argc, char **argv)
         auto frame_count = get_frame_count(vision);
         ZedStatusCode camera_code, imu_code;
         ZedSpatialMappingState map_state;
-        abstract_camera_feed_read(vision, 640, 480, "zed", timer, camera_buffer);
         run_visual_processing(0.04, true, &loop_flags, vision);
         if (frame_count % 60 == 0 && frame_count > 0) {
             std::cout << "Frame #" << frame_count << ", updating mesh..." << std::endl;
