@@ -8,7 +8,8 @@ using namespace visual_processing;
  * C++
  *************************************************************************************************/
 
-MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, sl::RESOLUTION camera_res, uint8_t fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range, sl::MeshFilterParameters::MESH_FILTER filter) noexcept
+MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, sl::RESOLUTION camera_res, uint8_t fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range,
+                           sl::MeshFilterParameters::MESH_FILTER filter) noexcept
 {
     this->mapping_resolution = map_res;
     this->mapping_range = map_range;
@@ -26,23 +27,21 @@ MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, s
     // Initialize camera using given parameters
     auto returned_state = this->zed.open(init_params);
     error_codes->camera_status_code = wrap_error_code(returned_state);
-    if (returned_state != sl::ERROR_CODE::SUCCESS)
-    {
+    if (returned_state != sl::ERROR_CODE::SUCCESS) {
         std::cout << "Error " << returned_state << ". Camera could not be initialized." << std::endl;
         error_codes->imu_status_code = ZedErrorCameraNotInitialized;
         error_codes->map_status_code = ZedErrorCameraNotInitialized;
         return;
     }
     this->camera_info = this->zed.getCameraInformation();
-    this->image_zed = sl::Mat(this->camera_info.camera_resolution, sl::MAT_TYPE::U8_C4);
-    this->image_ocv = cv::Mat(this->image_zed.getHeight(), this->image_zed.getWidth(), CV_8UC4, this->image_zed.getPtr<sl::uchar1>(sl::MEM::CPU));
+    this->frame_zed = sl::Mat(this->camera_info.camera_resolution, sl::MAT_TYPE::U8_C4);
+    this->frame_ocv = cv::Mat(this->frame_zed.getHeight(), this->frame_zed.getWidth(), CV_8UC4, this->frame_zed.getPtr<sl::uchar1>(sl::MEM::CPU));
     this->is_open = true;
     // Enable IMU position tracking
     sl::PositionalTrackingParameters tracking_params;
     returned_state = this->zed.enablePositionalTracking(tracking_params);
     error_codes->imu_status_code = wrap_error_code(returned_state);
-    if (returned_state != sl::ERROR_CODE::SUCCESS)
-    {
+    if (returned_state != sl::ERROR_CODE::SUCCESS) {
         this->zed.close();
         error_codes->map_status_code = ZedErrorFailure;
         return;
@@ -54,8 +53,7 @@ MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, s
     mapping_params.range_meter = this->mapping_range;
     returned_state = this->zed.enableSpatialMapping(mapping_params);
     error_codes->map_status_code = wrap_error_code(returned_state);
-    if (returned_state != sl::ERROR_CODE::SUCCESS)
-    {
+    if (returned_state != sl::ERROR_CODE::SUCCESS) {
         this->zed.disablePositionalTracking();
         this->zed.close();
     }
@@ -72,9 +70,9 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
 {
     this->imu_valid = false;
 
-    Resolution image_size = this->cameraInfo.camera_resolution;
-    Mat image_zed(image_size, MAT_TYPE::U8_C4);
-    cv::Mat image_ocv = cv::Mat(image_zed.getHeight(), image_zed.getWidth(), CV_8UC4, image_zed.getPtr<sl::uchar1>(MEM::CPU));
+    sl::Resolution image_size = this->camera_info.camera_resolution;
+    sl::Mat image_zed(image_size, sl::MAT_TYPE::U8_C4);
+    cv::Mat image_ocv = cv::Mat(image_zed.getHeight(), image_zed.getWidth(), CV_8UC4, image_zed.getPtr<sl::uchar1>(sl::MEM::CPU));
     cv::Mat image_ocv_rgb;
 
     auto calibInfo = this->camera_info.calibration_parameters.left_cam;
@@ -95,25 +93,22 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
     // Capture a camera frame
     auto returned_state = this->zed.grab();
     error_codes->camera_status_code = wrap_error_code(returned_state);
-    if (returned_state == sl::ERROR_CODE::SUCCESS)
-    {
+    if (returned_state == sl::ERROR_CODE::SUCCESS) {
         // Reset data for new frame
         this->detected_ids.clear();
         this->detected_markers.clear();
-        this->zed_imu_data = {0,0,0,0,0,0};
+        this->zed_imu_data = {0, 0, 0, 0, 0, 0};
 
         // Convert to RGB
         cvtColor(image_ocv, image_ocv_rgb, cv::COLOR_RGBA2RGB);
         // Detect markers
         cv::aruco::detectMarkers(image_ocv_rgb, dictionary, corners, this->detected_ids);
         // If at least one marker detected
-        if (this->detected_ids.size() > 0)
-        {
+        if (this->detected_ids.size() > 0) {
             //calculate pose for all detected markers
             cv::aruco::estimatePoseSingleMarkers(corners, marker_size, camera_matrix, dist_coeffs, rvecs, tvecs);
             //Save pose data into struct wrapper
-            for (auto it = this->detected_ids.begin(); it != this->detected_ids.end(); ++it)
-            {
+            for (auto it = this->detected_ids.begin(); it != this->detected_ids.end(); ++it) {
                 uint16_t index = it - this->detected_ids.begin();
                 ArucoData marker_data;
                 marker_data.x_dist = tvecs[index](0);
@@ -129,8 +124,7 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
             cv::aruco::drawAxis(image_ocv_rgb, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 1.5f);
         }
         // Display image
-        if (display)
-        {
+        if (display) {
             imshow("ZED Camera Feed", image_ocv_rgb);
         }
 
@@ -159,8 +153,7 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
 
         // Update spatial map mesh every 30 frames (only done periodically because resource-intensive)
         auto map_status = this->zed.getSpatialMappingState();
-        switch (map_status)
-        {
+        switch (map_status) {
             case sl::SPATIAL_MAPPING_STATE::INITIALIZING:
                 error_codes->map_status_code = ZedMapInitializing;
                 break;
@@ -179,14 +172,12 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
             default:
                 NULL;
         }
-        if (this->update_map_mesh && map_status == sl::SPATIAL_MAPPING_STATE::OK)
-        {
+        if (this->update_map_mesh && map_status == sl::SPATIAL_MAPPING_STATE::OK) {
             this->zed.requestSpatialMapAsync();
             this->update_map_mesh = false;
         }
         // Retrieve, filter, and save updated map when ready
-        if (this->zed.getSpatialMapRequestStatusAsync() == sl::ERROR_CODE::SUCCESS)
-        {
+        if (this->zed.getSpatialMapRequestStatusAsync() == sl::ERROR_CODE::SUCCESS) {
             this->zed.retrieveSpatialMapAsync(this->map_mesh);
             this->map_mesh.filter(this->mesh_filter);
             this->map_mesh.save(this->mesh_file_path.c_str(), sl::MESH_FILE_FORMAT::PLY);
@@ -198,14 +189,12 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
 
 bool MonkeyVision::get_aruco(uint16_t id, ArucoData *data) noexcept
 {
-    *data = {0,0,0,0,0,0};
+    *data = {0, 0, 0, 0, 0, 0};
     // Check if any markers were detected
-    if (this->detected_ids.size() > 0)
-    {
+    if (this->detected_ids.size() > 0) {
         // Determine if the selected marker ID was detected
         auto iterator = find(this->detected_ids.begin(), this->detected_ids.end(), id);
-        if (iterator != this->detected_ids.end())
-        {
+        if (iterator != this->detected_ids.end()) {
             // Return data for the Aruco marker which encodes the given ID
             uint16_t index = iterator - this->detected_ids.begin();
             *data = this->detected_markers[index];
@@ -256,10 +245,10 @@ ReadStatus MonkeyVision::read_frame(cv::Mat &frame, TimerData &td) noexcept
     t1 = high_resolution_clock::now();
 
     // Retrieve the left image
-    if (status == ReadStatus::Success && this->zed.retrieveImage(this->image_zed, sl::VIEW::LEFT, sl::MEM::CPU, this->camera_info.camera_resolution) != sl::ERROR_CODE::SUCCESS) {
+    if (status == ReadStatus::Success && this->zed.retrieveImage(this->frame_zed, sl::VIEW::LEFT, sl::MEM::CPU, this->camera_info.camera_resolution) != sl::ERROR_CODE::SUCCESS) {
         status = ReadStatus::RetrieveFailed;
     }
-    frame = this->image_ocv;
+    frame = this->frame_ocv;
 
     // record retrieve time
     t2 = high_resolution_clock::now();
@@ -370,7 +359,9 @@ uint32_t get_frame_count(MonkeyVision *vision)
     return vision->frame_count();
 }
 
-MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init_flags, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappingRange range, ZedMeshFilter mesh_filter)
+MonkeyVision *
+visual_processing_init(const char *mesh_path, InitErrorFlags *init_flags, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappingRange range,
+                       ZedMeshFilter mesh_filter)
 {
     sl::RESOLUTION zed_resolution;
     uint8_t zed_fps;
@@ -378,8 +369,7 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
     float mapping_resolution, mapping_range;
     sl::MeshFilterParameters::MESH_FILTER mesh_filter_level;
 
-    switch(camera_res)
-    {
+    switch (camera_res) {
         case Res2K15:
             zed_resolution = sl::RESOLUTION::HD2K;
             zed_fps = 15;
@@ -397,8 +387,7 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
             zed_fps = 60;
     }
 
-    switch(depth_quality)
-    {
+    switch (depth_quality) {
         case DepthPerformance:
             zed_depth_quality = sl::DEPTH_MODE::PERFORMANCE;
             break;
@@ -409,8 +398,7 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
             zed_depth_quality = sl::DEPTH_MODE::ULTRA;
     }
 
-    switch(map_res)
-    {
+    switch (map_res) {
         case MapLowRes:
             mapping_resolution = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RESOLUTION::LOW);
             break;
@@ -421,8 +409,7 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
             mapping_resolution = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RESOLUTION::MEDIUM);
     }
 
-    switch(range)
-    {
+    switch (range) {
         case MapNear:
             mapping_range = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RANGE::SHORT);
             break;
@@ -433,8 +420,7 @@ MonkeyVision* visual_processing_init(const char *mesh_path, InitErrorFlags *init
             mapping_range = sl::SpatialMappingParameters::get(sl::SpatialMappingParameters::MAPPING_RANGE::MEDIUM);
     }
 
-    switch(mesh_filter)
-    {
+    switch (mesh_filter) {
         case FilterLow:
             mesh_filter_level = sl::MeshFilterParameters::MESH_FILTER::LOW;
             break;
@@ -455,7 +441,7 @@ void run_visual_processing(float marker_size, bool display, RuntimeErrorFlags *r
     vision->run(marker_size, display, runtime_flags);
 }
 
-void visual_processing_dealloc(MonkeyVision* vision)
+void visual_processing_dealloc(MonkeyVision *vision)
 {
-    delete(vision);
+    delete (vision);
 }
