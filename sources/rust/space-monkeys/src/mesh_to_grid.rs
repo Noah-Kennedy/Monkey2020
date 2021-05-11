@@ -22,7 +22,7 @@ struct Tri {
 /// Read mesh data from a binary PLY file.
 ///
 /// Expected file format:
-/// ```
+/// ```ply
 /// ----Header----
 /// "ply\n" - ASCII
 /// "format binary_little_endian 1.0\n" - ASCII
