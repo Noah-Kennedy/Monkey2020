@@ -64,7 +64,6 @@ pub async fn ws_camera(
     req: HttpRequest,
     path: web::Path<(usize, )>,
     manager: web::Data<CameraManager>,
-    mut stream: web::Payload,
 ) -> actix_web::Result<HttpResponse> {
     let id = path.into_inner().0;
 
