@@ -34,8 +34,9 @@ impl ResponseError for CameraFeedError {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct CameraManager {
-    feeds: Vec<watch::Receiver<Bytes>>,
+    pub feeds: Vec<watch::Receiver<Bytes>>,
 }
 
 #[actix_web::get("/cameras/{id}/static")]
@@ -55,7 +56,7 @@ pub async fn static_image(
     Ok(HttpResponse::Ok().body(payload))
 }
 
-#[actix_web::get("/cameras/{id}/ws-feed")]
+#[actix_web::get("/{id}/ws-feed")]
 pub async fn ws_camera(
     req: HttpRequest,
     web::Path((id, )): web::Path<(usize, )>,
@@ -79,4 +80,59 @@ pub async fn ws_camera(
     });
 
     Ok(res.streaming(ReceiverStream::new(rx)))
+}
+
+#[cfg(test)]
+mod tests {
+    use actix_web::{App, HttpServer, web};
+    use actix_web::web::Bytes;
+    use futures_util::stream::StreamExt;
+    use tokio::sync::watch;
+
+    use crate::camera;
+    use crate::camera::CameraManager;
+
+    #[tokio::test]
+    async fn test_ws() {
+        let (tx, rx) = watch::channel(Bytes::from("invisible"));
+        let manager = CameraManager {
+            feeds: vec![rx]
+        };
+
+        let server = HttpServer::new(|| {
+            App::new()
+                .service(web::scope("/cameras")
+                    .service(camera::ws_camera)
+                    .data(manager))
+        })
+            .bind("127.0.0.1:8080").unwrap();
+
+
+        tokio::spawn(server.run());
+
+        let (stream, _) = tokio_tungstenite::connect_async(
+            "127.0.0.1:8080/cameras/0/ws-feed"
+        )
+            .await
+            .unwrap();
+
+        let (_, mut read) = stream.split();
+
+        tx.send(Bytes::from("hello"));
+        let msg = read.next().await.unwrap().unwrap();
+
+        assert_eq!(
+            tokio_tungstenite::tungstenite::Message::Binary("hello".as_bytes().to_owned()),
+            msg
+        );
+
+        tx.send(Bytes::from("world"));
+
+        let msg = read.next().await.unwrap().unwrap();
+
+        assert_eq!(
+            tokio_tungstenite::tungstenite::Message::Binary("world".as_bytes().to_owned()),
+            msg
+        );
+    }
 }
