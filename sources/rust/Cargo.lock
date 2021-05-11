@@ -1660,6 +1660,7 @@ dependencies = [
  "openssl",
  "space-monkeys",
  "tokio 1.5.0",
+ "tokio-stream",
 ]
 
 [[package]]
@@ -2727,6 +2728,17 @@ checksum = "3c4b08c5f4208e699ede3df2520aca2e82401b2de33f45e96696a074480be594"
 dependencies = [
  "openssl",
  "tokio 0.2.25",
+]
+
+[[package]]
+name = "tokio-stream"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e177a5d8c3bf36de9ebe6d58537d8879e964332f93fb3339e43f618c81361af0"
+dependencies = [
+ "futures-core",
+ "pin-project-lite 0.2.6",
+ "tokio 1.5.0",
 ]
 
 [[package]]

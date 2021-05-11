@@ -11,6 +11,9 @@ crossbeam = "0.8"
 version = "1.5"
 features = ["rt-multi-thread", "sync", "rt", "macros"]
 
+[dependencies.tokio-stream]
+version = "0.1.5"
+
 [dependencies.actix-web]
 version = "3.3"
 features = ["openssl"]

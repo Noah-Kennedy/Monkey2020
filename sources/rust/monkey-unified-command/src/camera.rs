@@ -4,9 +4,10 @@ use std::fmt;
 
 use actix_web::{HttpRequest, HttpResponse, ResponseError, web};
 use actix_web::http::StatusCode;
-use actix_web::web::{Bytes, BytesMut};
+use actix_web::web::Bytes;
 use actix_web_actors::ws;
 use tokio::sync::{mpsc, watch};
+use tokio_stream::wrappers::ReceiverStream;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum CameraFeedError {
@@ -59,26 +60,23 @@ pub async fn ws_camera(
     req: HttpRequest,
     web::Path((id, )): web::Path<(usize, )>,
     manager: web::Data<CameraManager>,
-    mut stream: web::Payload,
 ) -> actix_web::Result<HttpResponse> {
-    let mut res = ws::handshake(&req)?;
-    // tokio::task::spawn_local(async move {
-    //     while let Some(chunk) = stream.next().await {
-    //         let chunk = chunk.unwrap();
-    //         let mut codec = Codec::new();
-    //         let mut buf = BytesMut::new();
-    //         buf.extend_from_slice(&chunk[..]);
-    //
-    //         let frame = codec.decode(&mut buf).unwrap();
-    //         let frame_str = format!("frame: {:?}", frame);
-    //
-    //         let message = ws::Message::Text(frame_str);
-    //         let mut output_buffer = BytesMut::new();
-    //         codec.encode(message, &mut output_buffer).unwrap();
-    //         let b = output_buffer.split().freeze();
-    //         tx.send(Ok(b)).unwrap();
-    //     }
-    // });
+    let mut feed = manager.feeds.get(id)
+        .ok_or(CameraFeedError::CameraDoesNotExist(id))?.clone();
 
-    Ok(res.streaming(manager.feeds[i]))
+    let mut res = ws::handshake(&req)?;
+    let (tx, rx) =
+        mpsc::channel::<Result<Bytes, actix_web::Error>>(8);
+
+    tokio::task::spawn_local(async move {
+        while feed.changed().await.is_ok() {
+            let frame = {
+                feed.borrow().clone()
+            };
+
+            tx.send(Ok(frame)).await.unwrap();
+        }
+    });
+
+    Ok(res.streaming(ReceiverStream::new(rx)))
 }
