@@ -5,6 +5,7 @@ authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+crossbeam = "0.8"
 
 [dependencies.tokio]
 version = "1.5"
@@ -32,3 +33,6 @@ path = "../monkey-vision"
 
 [dependencies.space-monkeys]
 path = "../space-monkeys"
+
+[dependencies.monkey-api]
+path = "../monkey-api"
