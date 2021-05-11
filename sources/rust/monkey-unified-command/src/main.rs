@@ -8,6 +8,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(camera::static_image)
+            .service(camera::ws_camera)
             .service(command::get_speed)
             .service(command::set_speed)
             .service(command::set_target)
