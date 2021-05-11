@@ -33,6 +33,9 @@ MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, s
         error_codes->map_status_code = ZedErrorCameraNotInitialized;
         return;
     }
+    this->camera_info = this->zed.getCameraInformation();
+    this->image_zed = sl::Mat(this->camera_info.camera_resolution, sl::MAT_TYPE::U8_C4);
+    this->image_ocv = cv::Mat(this->image_zed.getHeight(), this->image_zed.getWidth(), CV_8UC4, this->image_zed.getPtr<sl::uchar1>(sl::MEM::CPU));
     this->is_open = true;
     // Enable IMU position tracking
     sl::PositionalTrackingParameters tracking_params;
@@ -68,13 +71,10 @@ MonkeyVision::~MonkeyVision()
 void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error_codes) noexcept
 {
     this->imu_valid = false;
-    //Setup camera frame capture
-    auto cameraInfo = this->zed.getCameraInformation();
-    sl::Resolution image_size = cameraInfo.camera_resolution;
-    sl::Mat image_zed(image_size, sl::MAT_TYPE::U8_C4);
-    cv::Mat image_ocv(image_zed.getHeight(), image_zed.getWidth(), CV_8UC4, image_zed.getPtr<sl::uchar1>(sl::MEM::CPU));
 
-    auto calibInfo = cameraInfo.calibration_parameters.left_cam;
+    cv::Mat image_ocv_rgb;
+
+    auto calibInfo = this->camera_info.calibration_parameters.left_cam;
     cv::Matx33d camera_matrix = cv::Matx33d::eye();
     camera_matrix(0, 0) = calibInfo.fx;
     camera_matrix(1, 1) = calibInfo.fy;
@@ -90,21 +90,17 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
     auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL);
 
     // Capture a camera frame
-    auto returned_state = this->zed.grab();
-    error_codes->camera_status_code = wrap_error_code(returned_state);
-    if (returned_state == sl::ERROR_CODE::SUCCESS)
+    if (zed_grab)
     {
         // Reset data for new frame
         this->detected_ids.clear();
         this->detected_markers.clear();
         this->zed_imu_data = {0,0,0,0,0,0};
 
-        // Retrieve the left image
-        this->zed.retrieveImage(image_zed, sl::VIEW::LEFT, sl::MEM::CPU, image_size);
         // Convert to RGB
-        cvtColor(image_ocv, this->image_capture, cv::COLOR_RGBA2RGB);
+        cvtColor(this->image_ocv, image_ocv_rgb, cv::COLOR_RGBA2RGB);
         // Detect markers
-        cv::aruco::detectMarkers(this->image_capture, dictionary, corners, this->detected_ids);
+        cv::aruco::detectMarkers(image_ocv_rgb, dictionary, corners, this->detected_ids);
         // If at least one marker detected
         if (this->detected_ids.size() > 0)
         {
@@ -124,18 +120,18 @@ void MonkeyVision::run(float marker_size, bool display, RuntimeErrorFlags *error
                 this->detected_markers.push_back(marker_data);
             }
             // Draw on image to highlight detected markers
-            cv::aruco::drawDetectedMarkers(this->image_capture, corners, this->detected_ids);
-            cv::aruco::drawAxis(this->image_capture, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 1.5f);
+            cv::aruco::drawDetectedMarkers(image_ocv_rgb, corners, this->detected_ids);
+            cv::aruco::drawAxis(image_ocv_rgb, camera_matrix, dist_coeffs, rvecs[0], tvecs[0], marker_size * 1.5f);
         }
         // Display image
         if (display)
         {
-            imshow("ZED Camera Feed", this->image_capture);
+            imshow("ZED Camera Feed", image_ocv_rgb);
         }
 
         // Read IMU data
         sl::SensorsData sensor_data;
-        returned_state = this->zed.getSensorsData(sensor_data, sl::TIME_REFERENCE::IMAGE);
+        auto returned_state = this->zed.getSensorsData(sensor_data, sl::TIME_REFERENCE::IMAGE);
         error_codes->imu_status_code = wrap_error_code(returned_state);
         this->imu_valid = (returned_state == sl::ERROR_CODE::SUCCESS);
         sl::float3 linear_accel = sensor_data.imu.linear_acceleration;
@@ -230,49 +226,43 @@ void MonkeyVision::update_map() noexcept
     this->update_map_mesh = true;
 }
 
-bool MonkeyVision::is_opened() const noexcept
+ReadStatus MonkeyVision::read_frame(cv::Mat &frame, TimerData &td) noexcept
 {
-    return this->is_open;
-}
 
-ReadStatus MonkeyVision::read(uint32_t width, uint32_t height, const char *ext, TimerData &td, ByteBufferShare *buffer) noexcept
-{
+    this->zed_grab = true;
+
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::duration;
     using std::chrono::milliseconds;
 
-    this->image_buffer.clear();
-
     ReadStatus status = ReadStatus::Success;
 
-    if (!this->is_opened()) {
-        status = ReadStatus::NotOpen;
+    // start timer for grab
+    auto t1 = high_resolution_clock::now();
+
+    if (this->zed.grab() != sl::ERROR_CODE::SUCCESS) {
+        status = ReadStatus::ReadFailed;
+        this->zed_grab = false;
+        return status;
     }
 
-    if (status == ReadStatus::Success && this->image_capture.empty()) {
-        status = ReadStatus::EmptyFrame;
+    // record grab time
+    auto t2 = high_resolution_clock::now();
+    td.grab_millis = duration_cast<milliseconds>(t2 - t1).count();
+
+    // start timer for retrieve
+    t1 = high_resolution_clock::now();
+
+    // Retrieve the left image
+    if (status == ReadStatus::Success && this->zed.retrieveImage(this->image_zed, sl::VIEW::LEFT, sl::MEM::CPU, this->camera_info.camera_resolution) != sl::ERROR_CODE::SUCCESS) {
+        status = ReadStatus::RetrieveFailed;
     }
+    frame = this->image_ocv;
 
-    if (status == ReadStatus::Success) {
-        auto s = cv::Size(width, height);
-
-        auto t1 = high_resolution_clock::now();
-        cv::resize(this->image_capture, this->image_output, s);
-        auto t2 = high_resolution_clock::now();
-        td.resize_millis = duration_cast<milliseconds>(t2 - t1).count();
-
-        t1 = high_resolution_clock::now();
-        if (cv::imencode(cv::String(ext), this->image_output, this->image_buffer)) {
-            buffer->buffer = &this->image_buffer[0];
-            buffer->length = this->image_buffer.size();
-        } else {
-            status = ReadStatus::EncodingFailed;
-        }
-
-        t2 = high_resolution_clock::now();
-        td.encode_millis = duration_cast<milliseconds>(t2 - t1).count();
-    }
+    // record retrieve time
+    t2 = high_resolution_clock::now();
+    td.retrieve_millis = duration_cast<milliseconds>(t2 - t1).count();
 
     return status;
 }

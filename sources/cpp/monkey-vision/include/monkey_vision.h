@@ -188,7 +188,6 @@ extern "C" struct InitErrorFlags
 
 extern "C" struct RuntimeErrorFlags
 {
-    ZedStatusCode camera_status_code;
     ZedStatusCode imu_status_code;
     ZedSpatialMappingState map_status_code;
 };
@@ -197,7 +196,7 @@ extern "C" struct RuntimeErrorFlags
  * C++
  *************************************************************************************************/
 namespace visual_processing {
-    class MonkeyVision : public cameralot::AbstractCameraFeed
+    class MonkeyVision : public cameralot::CameraFeed
     {
     public:
         MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, sl::RESOLUTION camera_res, uint8_t fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range,
@@ -215,23 +214,19 @@ namespace visual_processing {
 
         void update_map() noexcept;
 
-        bool is_opened() const noexcept final;
-
-        ReadStatus read(uint32_t width, uint32_t height, const char *ext, TimerData &td, ByteBufferShare *buffer) noexcept final;
+        ReadStatus read_frame(cv::Mat &frame, TimerData &td) noexcept final;
 
     private:
         static ZedStatusCode wrap_error_code(sl::ERROR_CODE error_code);
 
         // ZED camera handler
         sl::Camera zed;
-
+        sl::CameraInformation camera_info;
         bool is_open = false;
+        bool zed_grab = false;
 
-        //
-        cv::Mat image_capture;
-
-        cv::Mat image_output;
-
+        sl::Mat image_zed;
+        cv::Mat image_ocv;
         std::vector<uchar> image_buffer;
 
         //ZED spatial mapping mesh
