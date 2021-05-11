@@ -5,3 +5,30 @@ authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+
+[dependencies.tokio]
+version = "1.5"
+features = ["rt-multi-thread", "sync", "rt", "macros"]
+
+[dependencies.actix-web]
+version = "3.3"
+features = ["openssl"]
+
+[dependencies.env_logger]
+version = "0.8.3"
+
+[dependencies.actix-web-actors]
+version = "3.0.0"
+
+[dependencies.openssl]
+version = "0.10.30"
+features = ["v110"]
+
+[dependencies.cameralot]
+path = "../cameralot"
+
+[dependencies.monkey-vision]
+path = "../monkey-vision"
+
+[dependencies.space-monkeys]
+path = "../space-monkeys"

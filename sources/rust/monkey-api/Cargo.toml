@@ -5,9 +5,6 @@ authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
 [features]
-default = ["server"]
-server = ["actix-web", "serde", "objects", "image", "openssl"]
-objects = []
 
 [dependencies]
 
@@ -16,26 +13,5 @@ version = "1.0"
 features = ["derive"]
 optional = true
 
-[dependencies.actix-web]
-version = "3.3"
-optional = true
-features = ["openssl"]
-
-[dependencies.image]
-version = "0.23.13"
-optional = true
-
-[dependencies.actix-files]
-version = "0.5.0"
-optional = true
-
-[dependencies.env_logger]
-version = "0.8.3"
-
 [dependencies.log]
 version = "0.4.14"
-
-[dependencies.openssl]
-version = "0.10.30"
-features = ["v110"]
-optional = true

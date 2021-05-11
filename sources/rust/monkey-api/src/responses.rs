@@ -1,5 +1,5 @@
 pub mod flight_plan {
-    use crate::objects::MotorSpeeds;
+    use crate::MotorSpeeds;
 
     #[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -7,7 +7,7 @@ pub mod flight_plan {
         pub turning_arcs: Vec<PlannedTurningArc>
     }
 
-    #[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
+    #[derive(Debug, PartialOrd, PartialEq, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct PlannedTurningArc {
         /// Arc to turn along, defined by motor speeds
@@ -19,7 +19,7 @@ pub mod flight_plan {
 }
 
 pub mod flight_director {
-    use crate::objects::MotorSpeeds;
+    use crate::MotorSpeeds;
 
     #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

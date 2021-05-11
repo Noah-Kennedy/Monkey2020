@@ -1,16 +1,24 @@
-#[cfg_attr(feature = "actix-web", macro_use)]
-#[cfg(feature = "actix-web")]
-extern crate actix_web;
 #[cfg_attr(feature = "serde", macro_use)]
 #[cfg(feature = "serde")]
 extern crate serde;
 
+pub mod responses;
 
-#[cfg(feature = "objects")]
-pub mod objects;
+pub mod requests;
 
-#[cfg(feature = "server")]
-pub mod error;
+#[derive(Default, Debug, PartialOrd, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Location {
+    pub x: f32,
+    pub y: f32,
+    pub theta: f32,
+}
 
-#[cfg(feature = "server")]
-pub mod routes;
+#[derive(Default, Debug, PartialOrd, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MotorSpeeds {
+    /// The speed for the right motor, in radians per second
+    pub right_speed: f32,
+    /// The speed for the left motor, in radians per second
+    pub left_speed: f32,
+}

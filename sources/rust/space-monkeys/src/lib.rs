@@ -1,11 +1,11 @@
 use std::time::{Duration, Instant};
-use std::{thread, panic};
 
+use crossbeam::channel::{Receiver, Sender};
 use log::error;
 
 use libmonkey_sys::monkey_vision::ZedImuData;
-use monkey_api::objects::{Location, MotorSpeeds};
-use monkey_api::objects::requests::AutonomousParams;
+use monkey_api::{Location, MotorSpeeds};
+use monkey_api::requests::AutonomousParams;
 use monkey_pathfinding::a_star::AStar;
 use monkey_pathfinding::model::{DiscreteState, MonkeyModel, RobotVector};
 use monkey_pathfinding::state_space::MonkeyStateSpace;
@@ -13,7 +13,6 @@ use monkey_pathfinding::state_space::MonkeyStateSpace;
 use crate::aimbot::{Path, Vehicle};
 use crate::math::Vec2D;
 use crate::mesh_to_grid::Grid;
-use crossbeam::channel::{Receiver, Sender};
 
 pub mod math;
 pub mod mesh_to_grid;
@@ -26,7 +25,7 @@ pub enum Command {
     SetSpeed(MotorSpeeds),
     /// The theta component should be in degrees.
     SetTarget(Option<Location>),
-    EndAutonomous
+    EndAutonomous,
 }
 
 struct AutonomousState {
@@ -37,7 +36,7 @@ struct AutonomousState {
     path: Option<Path>,
     grid: Grid,
     time_since_last_spatial_map_update: Duration,
-    last_time: Instant
+    last_time: Instant,
 }
 
 impl AutonomousState {
@@ -58,60 +57,54 @@ impl AutonomousState {
 pub struct ZhuLi {
     pub imu_data_rec: Receiver<ZedImuData>,
     pub command_rec: Receiver<Command>,
-    pub speed_send: Sender<MotorSpeeds>
+    pub speed_send: Sender<MotorSpeeds>,
 }
 
 impl ZhuLi {
     /// Starts the autonomous control loop in a newly spawned thread.
     pub fn do_the_thing(&mut self, params: &AutonomousParams) {
-        let join_handle = thread::spawn(|| {
-            let mut state = AutonomousState {
-                speed: Default::default(),
-                target: None,
-                keep_going: true,
-                imu_data: Default::default(),
-                path: None,
-                grid: Grid::new(params.min_x, params.max_x, params.min_z, params.max_z, params.res_x, params.res_z),
-                time_since_last_spatial_map_update: Duration::from_secs(0),
-                last_time: Instant::now()
-            };
+        let mut state = AutonomousState {
+            speed: Default::default(),
+            target: None,
+            keep_going: true,
+            imu_data: Default::default(),
+            path: None,
+            grid: Grid::new(params.min_x, params.max_x, params.min_z, params.max_z, params.res_x, params.res_z),
+            time_since_last_spatial_map_update: Duration::from_secs(0),
+            last_time: Instant::now(),
+        };
 
-            while state.keep_going {
-                let now = Instant::now();
-                let dt = now.duration_since(last_time);
-                state.last_time = now;
+        while state.keep_going {
+            let now = Instant::now();
+            let dt = now.duration_since(state.last_time);
+            state.last_time = now;
 
-                state.time_since_last_spatial_map_update += dt;
-                if state.time_since_last_spatial_map_update >= params.min_mesh_to_grid_period {
-                    match mesh_to_grid::mesh_to_grid(&mut state.grid, MESH_FILE, params.interaction_radius, params.vertical_cutoff) {
-                        Ok(_) => {
-                            // TODO: If path is some, check it against the new grid to ensure that it is still safe. If not safe, clear path.
-                            //  Currently just clearing the path regardless
-                            state.path = None;
-                        }
-                        Err(err) => error!("{:?}", err)
+            state.time_since_last_spatial_map_update += dt;
+            if state.time_since_last_spatial_map_update >= params.min_mesh_to_grid_period {
+                match mesh_to_grid::mesh_to_grid(&mut state.grid, MESH_FILE, params.interaction_radius, params.vertical_cutoff) {
+                    Ok(_) => {
+                        // TODO: If path is some, check it against the new grid to ensure that it is still safe. If not safe, clear path.
+                        //  Currently just clearing the path regardless
+                        state.path = None;
                     }
-                    state.time_since_last_spatial_map_update = Duration::from_secs(0);
-                }
-
-                match self.imu_data_rec.try_recv() {
-                    Ok(ok) => state.imu_data = ok,
                     Err(err) => error!("{:?}", err)
                 }
-
-                let new_speeds = ZhuLi::the_thing(&mut state, params, dt);
-                if let Err(err) = self.speed_send.try_send(new_speeds) {
-                    error!("{:?}", err);
-                }
-
-                while !self.command_rec.is_empty() {
-                    state.apply_command(self.command_rec.try_recv().unwrap());
-                }
+                state.time_since_last_spatial_map_update = Duration::from_secs(0);
             }
-        });
 
-        if let Err(err) = join_handle.join() {
-            panic::resume_unwind(err);
+            match self.imu_data_rec.try_recv() {
+                Ok(ok) => state.imu_data = ok,
+                Err(err) => error!("{:?}", err)
+            }
+
+            let new_speeds = ZhuLi::the_thing(&mut state, params, dt);
+            if let Err(err) = self.speed_send.try_send(new_speeds) {
+                error!("{:?}", err);
+            }
+
+            while !self.command_rec.is_empty() {
+                state.apply_command(self.command_rec.try_recv().unwrap());
+            }
         }
     }
 
@@ -132,7 +125,7 @@ impl ZhuLi {
 
         let steering = match state.target.as_ref() {
             Some(target) => {
-                if path.is_none() {
+                if state.path.is_none() {
                     let s = MonkeyStateSpace {
                         cost: state.grid.clone(),
                         model: MonkeyModel {
@@ -149,14 +142,14 @@ impl ZhuLi {
 
                     let discrete_path = astar.find_path(&DiscreteState {
                         position: RobotVector {
-                            x: (state.imu_data.x_pos / grid.x_scale()).floor() as i16,
-                            y: (state.imu_data.z_pos / grid.z_scale()).floor() as i16,
+                            x: (state.imu_data.x_pos / state.grid.x_scale()).floor() as i16,
+                            y: (state.imu_data.z_pos / state.grid.z_scale()).floor() as i16,
                             r: (state.imu_data.z_rot * 64.0 / 360.0).floor() as i16,
                         }
                     }, &DiscreteState {
                         position: RobotVector {
-                            x: (target.x / grid.x_scale()).floor() as i16,
-                            y: (target.y / grid.z_scale()).floor() as i16,
+                            x: (target.x / state.grid.x_scale()).floor() as i16,
+                            y: (target.y / state.grid.z_scale()).floor() as i16,
                             r: (target.theta * 64.0 / 360.0).floor() as i16,
                         }
                     });
@@ -164,8 +157,8 @@ impl ZhuLi {
                     state.path = discrete_path.map(|path| -> Path {
                         let waypoints = path.iter().map(|d| -> Vec2D {
                             Vec2D {
-                                x: d.position.x as f32 * grid.x_scale(),
-                                y: d.position.y as f32 * grid.z_scale(),
+                                x: d.position.x as f32 * state.grid.x_scale(),
+                                y: d.position.y as f32 * state.grid.z_scale(),
                             }
                         }).collect();
 
@@ -174,7 +167,7 @@ impl ZhuLi {
                 }
 
                 match state.path.as_ref() {
-                    Some(path) => vehicle.follow(path, params.stopping_dist, state.target.theta.to_radians(), dt),
+                    Some(path) => vehicle.follow(path, params.stopping_dist, target.theta.to_radians(), dt),
                     None => vehicle.stop()
                 }
             }
