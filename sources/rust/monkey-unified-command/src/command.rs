@@ -8,7 +8,7 @@ use std::fmt;
 use actix_web::http::StatusCode;
 use std::error::Error;
 
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum CommandError {
     TryRecv(TryRecvError),
     TrySend(TrySendError<Command>)
