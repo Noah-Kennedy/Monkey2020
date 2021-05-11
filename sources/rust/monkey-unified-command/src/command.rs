@@ -36,7 +36,7 @@ pub struct CommandManager {
 
 #[actix_web::get("/get_speed")]
 pub async fn get_speed(
-    Path(()): Path<()>, manager: Data<CommandManager>
+    manager: Data<CommandManager>
 ) -> Result<web::Json<MotorSpeeds>, CommandError> {
     match manager.speed_rec.try_recv() {
         Ok(speed) => Ok(web::Json(speed)),

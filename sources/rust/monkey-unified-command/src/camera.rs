@@ -4,10 +4,12 @@ use std::fmt;
 
 use actix_web::{HttpRequest, HttpResponse, ResponseError, web};
 use actix_web::http::StatusCode;
-use actix_web::web::Bytes;
+use actix_web::web::{Bytes, BytesMut, Buf};
 use actix_web_actors::ws;
 use tokio::sync::{mpsc, watch};
 use tokio_stream::wrappers::ReceiverStream;
+use tokio_stream::StreamExt;
+use tokio_util::codec::Encoder;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum CameraFeedError {
@@ -41,10 +43,11 @@ pub struct CameraManager {
 
 #[actix_web::get("/cameras/{id}/static")]
 pub async fn static_image(
-    web::Path((id, )): web::Path<(usize, )>,
+    path: web::Path<(usize, )>,
     manager: web::Data<CameraManager>,
 ) -> Result<HttpResponse, CameraFeedError>
 {
+    let id = path.into_inner().0;
     let feed = manager.feeds.get(id)
         .ok_or(CameraFeedError::CameraDoesNotExist(id))?;
 
@@ -59,9 +62,12 @@ pub async fn static_image(
 #[actix_web::get("/{id}/ws-feed")]
 pub async fn ws_camera(
     req: HttpRequest,
-    web::Path((id, )): web::Path<(usize, )>,
+    path: web::Path<(usize, )>,
     manager: web::Data<CameraManager>,
+    mut stream: web::Payload,
 ) -> actix_web::Result<HttpResponse> {
+    let id = path.into_inner().0;
+
     let mut feed = manager.feeds.get(id)
         .ok_or(CameraFeedError::CameraDoesNotExist(id))?.clone();
 
@@ -69,13 +75,19 @@ pub async fn ws_camera(
     let (tx, rx) =
         mpsc::channel::<Result<Bytes, actix_web::Error>>(8);
 
-    tokio::task::spawn_local(async move {
+    let mut codec = actix_http::ws::Codec::new();
+
+    actix_web::rt::spawn(async move {
         while feed.changed().await.is_ok() {
             let frame = {
                 feed.borrow().clone()
             };
 
-            tx.send(Ok(frame)).await.unwrap();
+            let msg = ws::Message::Binary(frame);
+            let mut output = BytesMut::new();
+            codec.encode(msg, &mut output);
+
+            tx.send(Ok(output.to_bytes())).await.unwrap();
         }
     });
 
@@ -91,48 +103,50 @@ mod tests {
 
     use crate::camera;
     use crate::camera::CameraManager;
+    use futures_util::SinkExt;
 
-    #[tokio::test]
+    #[actix_rt::test]
     async fn test_ws() {
         let (tx, rx) = watch::channel(Bytes::from("invisible"));
         let manager = CameraManager {
             feeds: vec![rx]
         };
 
-        let server = HttpServer::new(|| {
+        let server = HttpServer::new(move || {
             App::new()
                 .service(web::scope("/cameras")
                     .service(camera::ws_camera)
-                    .data(manager))
+                    .data(manager.clone()))
         })
             .bind("127.0.0.1:8080").unwrap();
 
 
-        tokio::spawn(server.run());
+        let server = server.run();
 
         let (stream, _) = tokio_tungstenite::connect_async(
-            "127.0.0.1:8080/cameras/0/ws-feed"
+            "ws://127.0.0.1:8080/cameras/0/ws-feed"
         )
             .await
             .unwrap();
 
-        let (_, mut read) = stream.split();
+        let (mut write, mut read) = stream.split();
 
-        tx.send(Bytes::from("hello"));
-        let msg = read.next().await.unwrap().unwrap();
+        write.send(tokio_tungstenite::tungstenite::Message::Binary(b"^^^^".to_vec())).await.unwrap();
+
+        tx.send(Bytes::from("hello")).unwrap();
 
         assert_eq!(
             tokio_tungstenite::tungstenite::Message::Binary("hello".as_bytes().to_owned()),
-            msg
+            read.next().await.unwrap().unwrap()
         );
 
-        tx.send(Bytes::from("world"));
-
-        let msg = read.next().await.unwrap().unwrap();
+        tx.send(Bytes::from("world")).unwrap();
 
         assert_eq!(
             tokio_tungstenite::tungstenite::Message::Binary("world".as_bytes().to_owned()),
-            msg
+            read.next().await.unwrap().unwrap()
         );
+
+        server.stop(false).await;
     }
 }
