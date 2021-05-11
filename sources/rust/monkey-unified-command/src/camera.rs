@@ -130,8 +130,6 @@ mod tests {
 
         let (mut write, mut read) = stream.split();
 
-        write.send(tokio_tungstenite::tungstenite::Message::Binary(b"^^^^".to_vec())).await.unwrap();
-
         tx.send(Bytes::from("hello")).unwrap();
 
         assert_eq!(
