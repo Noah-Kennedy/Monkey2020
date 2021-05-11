@@ -1,5 +1,6 @@
 use actix_web::{App, HttpServer};
 
+mod util;
 mod camera;
 mod command;
 

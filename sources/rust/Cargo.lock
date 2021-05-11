@@ -1696,6 +1696,8 @@ dependencies = [
  "monkey-api",
  "monkey-vision",
  "openssl",
+ "serde",
+ "serde_json",
  "space-monkeys",
  "tokio 1.5.0",
  "tokio-stream",

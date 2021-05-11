@@ -4,12 +4,10 @@ use std::fmt;
 
 use actix_web::{HttpRequest, HttpResponse, ResponseError, web};
 use actix_web::http::StatusCode;
-use actix_web::web::{Bytes, BytesMut, Buf};
-use actix_web_actors::ws;
-use tokio::sync::{mpsc, watch};
-use tokio_stream::wrappers::ReceiverStream;
-use tokio_stream::StreamExt;
-use tokio_util::codec::Encoder;
+use actix_web::web::Bytes;
+use tokio::sync::watch;
+
+use crate::util::throw_bytes_at_wall;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum CameraFeedError {
@@ -67,42 +65,22 @@ pub async fn ws_camera(
 ) -> actix_web::Result<HttpResponse> {
     let id = path.into_inner().0;
 
-    let mut feed = manager.feeds.get(id)
+    let feed = manager.feeds.get(id)
         .ok_or(CameraFeedError::CameraDoesNotExist(id))?.clone();
 
-    let mut res = ws::handshake(&req)?;
-    let (tx, rx) =
-        mpsc::channel::<Result<Bytes, actix_web::Error>>(8);
-
-    let mut codec = actix_http::ws::Codec::new();
-
-    actix_web::rt::spawn(async move {
-        while feed.changed().await.is_ok() {
-            let frame = {
-                feed.borrow().clone()
-            };
-
-            let msg = ws::Message::Binary(frame);
-            let mut output = BytesMut::new();
-            codec.encode(msg, &mut output);
-
-            tx.send(Ok(output.to_bytes())).await.unwrap();
-        }
-    });
-
-    Ok(res.streaming(ReceiverStream::new(rx)))
+    throw_bytes_at_wall(req, feed)
 }
 
 #[cfg(test)]
 mod tests {
     use actix_web::{App, HttpServer, web};
     use actix_web::web::Bytes;
+    use futures_util::SinkExt;
     use futures_util::stream::StreamExt;
     use tokio::sync::watch;
 
     use crate::camera;
     use crate::camera::CameraManager;
-    use futures_util::SinkExt;
 
     #[actix_rt::test]
     async fn test_ws() {
