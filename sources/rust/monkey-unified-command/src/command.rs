@@ -8,7 +8,7 @@ use std::fmt;
 use actix_web::http::StatusCode;
 use std::error::Error;
 
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug)]
 pub enum CommandError {
     TryRecv(TryRecvError),
     TrySend(TrySendError<Command>)
@@ -17,7 +17,8 @@ pub enum CommandError {
 impl Display for CommandError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            CommandError::CameraDoesNotExist(id) => writeln!(f, "Camera {} does not exist", id)?,
+            CommandError::TryRecv(err) => writeln!(f, "{:?}", err),
+            CommandError::TrySend(err) => writeln!(f, "{:?}", err)
         }
 
         Ok(())
@@ -29,7 +30,8 @@ impl Error for CommandError {}
 impl ResponseError for CommandError {
     fn status_code(&self) -> StatusCode {
         match self {
-            CommandError::CameraDoesNotExist(_) => StatusCode::BAD_REQUEST,
+            CommandError::TryRecv(_) => StatusCode::BAD_REQUEST,
+            CommandError::TrySend(_) => StatusCode::BAD_REQUEST
         }
     }
 }

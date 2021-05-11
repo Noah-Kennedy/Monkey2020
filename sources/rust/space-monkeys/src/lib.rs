@@ -21,6 +21,7 @@ mod aimbot;
 const MESH_FILE: &str = "../run-data/mesh.ply";
 
 /// Commands for modifying the autonomous behavior.
+#[derive(Default, Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum Command {
     SetSpeed(MotorSpeeds),
     /// The theta component should be in degrees.
