@@ -2,10 +2,11 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fmt;
 
-use actix_web::{HttpResponse, ResponseError, web};
+use actix_web::{HttpRequest, HttpResponse, ResponseError, web};
 use actix_web::http::StatusCode;
-use actix_web::web::Bytes;
-use tokio::sync::watch;
+use actix_web::web::{Bytes, BytesMut};
+use actix_web_actors::ws;
+use tokio::sync::{mpsc, watch};
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum CameraFeedError {
@@ -51,4 +52,33 @@ pub async fn static_image(
     };
 
     Ok(HttpResponse::Ok().body(payload))
+}
+
+#[actix_web::get("/cameras/{id}/ws-feed")]
+pub async fn ws_camera(
+    req: HttpRequest,
+    web::Path((id, )): web::Path<(usize, )>,
+    manager: web::Data<CameraManager>,
+    mut stream: web::Payload,
+) -> actix_web::Result<HttpResponse> {
+    let mut res = ws::handshake(&req)?;
+    // tokio::task::spawn_local(async move {
+    //     while let Some(chunk) = stream.next().await {
+    //         let chunk = chunk.unwrap();
+    //         let mut codec = Codec::new();
+    //         let mut buf = BytesMut::new();
+    //         buf.extend_from_slice(&chunk[..]);
+    //
+    //         let frame = codec.decode(&mut buf).unwrap();
+    //         let frame_str = format!("frame: {:?}", frame);
+    //
+    //         let message = ws::Message::Text(frame_str);
+    //         let mut output_buffer = BytesMut::new();
+    //         codec.encode(message, &mut output_buffer).unwrap();
+    //         let b = output_buffer.split().freeze();
+    //         tx.send(Ok(b)).unwrap();
+    //     }
+    // });
+
+    Ok(res.streaming(manager.feeds[i]))
 }
