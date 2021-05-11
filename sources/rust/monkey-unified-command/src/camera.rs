@@ -110,7 +110,11 @@ mod tests {
 
         tokio::spawn(server.run());
 
-        let (stream, _) = tokio_tungstenite::connect_async("127.0.0.1:8080").await.unwrap();
+        let (stream, _) = tokio_tungstenite::connect_async(
+            "127.0.0.1:8080/cameras/0/ws-feed"
+        )
+            .await
+            .unwrap();
 
         let (_, mut read) = stream.split();
 
