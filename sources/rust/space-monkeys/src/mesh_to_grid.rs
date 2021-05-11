@@ -325,6 +325,7 @@ mod tests {
     use crate::mesh_to_grid::*;
 
     #[test]
+    #[ignore]
     fn test_mesh() {
         let mut grid = Grid::new(-5.0, 1.0, -7.0, 0.0, 128, 128);
         let interaction_radius = 0.2;
