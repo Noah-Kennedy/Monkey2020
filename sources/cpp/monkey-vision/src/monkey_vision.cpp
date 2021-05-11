@@ -267,6 +267,11 @@ ReadStatus MonkeyVision::read_frame(cv::Mat &frame, TimerData &td) noexcept
     return status;
 }
 
+bool MonkeyVision::is_opened() const noexcept
+{
+    return this->is_open;
+}
+
 ZedStatusCode MonkeyVision::wrap_error_code(sl::ERROR_CODE error_code)
 {
     switch (error_code) {

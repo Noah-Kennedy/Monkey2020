@@ -216,6 +216,8 @@ namespace visual_processing {
 
         ReadStatus read_frame(cv::Mat &frame, TimerData &td) noexcept final;
 
+        bool is_opened() const noexcept final;
+
     private:
         static ZedStatusCode wrap_error_code(sl::ERROR_CODE error_code);
 
