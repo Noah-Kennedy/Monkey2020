@@ -33,5 +33,10 @@ pub struct AutonomousParams {
     pub vertical_cutoff: f32,
     pub min_turn_radius: f32,
     pub drive_width: f32,
-    pub wheel_radius: f32
+    pub wheel_radius: f32,
+    pub camera_res: ZedCameraResolution,
+    pub depth_quality: ZedDepthQuality,
+    pub map_res: ZedMappingResolution,
+    pub range: ZedMappingRange,
+    pub mesh_filter: ZedMeshFilter
 }

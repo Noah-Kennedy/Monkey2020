@@ -9,6 +9,7 @@ use monkey_api::requests::AutonomousParams;
 use monkey_pathfinding::a_star::AStar;
 use monkey_pathfinding::model::{DiscreteState, MonkeyModel, RobotVector};
 use monkey_pathfinding::state_space::MonkeyStateSpace;
+use monkey_vision::core::MonkeyVision;
 
 use crate::aimbot::{Path, Vehicle};
 use crate::math::Vec2D;
@@ -56,14 +57,22 @@ impl AutonomousState {
 
 /// Channels for communicating with the autonomous mode controller.
 pub struct ZhuLi {
-    pub imu_data_rec: crossbeam::channel::Receiver<ZedImuData>,
     pub command_rec: crossbeam::channel::Receiver<Command>,
-    pub speed_send: watch::Sender<MotorSpeeds>,
+    pub speed_send: crossbeam::channel::Sender<MotorSpeeds>,
 }
 
 impl ZhuLi {
-    /// Starts the autonomous control loop in a newly spawned thread.
+    /// Starts the autonomous control loop. This blocks until Command::EndAutonomous is sent.
     pub fn do_the_thing(&mut self, params: &AutonomousParams) {
+        let mut vision = MonkeyVision::create(
+            MESH_FILE,
+            params.camera_res,
+            params.depth_quality,
+            params.map_res,
+            params.range,
+            params.mesh_filter
+        );
+
         let mut state = AutonomousState {
             speed: Default::default(),
             target: None,
@@ -93,12 +102,12 @@ impl ZhuLi {
                 state.time_since_last_spatial_map_update = Duration::from_secs(0);
             }
 
-            while !self.imu_data_rec.is_empty() {
-                state.imu_data = self.imu_data_rec.try_recv().unwrap();
+            if let Err(err) = vision.imu_data(&mut state.imu_data) {
+                error!("{:?}", err);
             }
 
             let new_speeds = ZhuLi::the_thing(&mut state, params, dt);
-            if let Err(err) = self.speed_send.send(new_speeds) {
+            if let Err(err) = self.speed_send.try_send(new_speeds) {
                 error!("{:?}", err);
             }
 

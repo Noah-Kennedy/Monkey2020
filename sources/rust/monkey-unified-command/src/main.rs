@@ -4,7 +4,7 @@ use std::fs;
 
 mod util;
 mod camera;
-mod command;
+pub mod command;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
