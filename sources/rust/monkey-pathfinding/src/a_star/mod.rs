@@ -28,10 +28,10 @@ impl<S> PartialOrd for Task<S> {
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, target_arch = "x86_64"))]
 type Hasher = fasthash::RandomState<fasthash::sea::Hash64>;
 
-#[cfg(windows)]
+#[cfg(not(all(unix, target_arch = "x86_64")))]
 type Hasher = std::collections::hash_map::RandomState;
 
 pub struct AStar<G, S> {
