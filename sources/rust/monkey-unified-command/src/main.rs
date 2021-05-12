@@ -5,6 +5,10 @@ use cameralot::prelude::*;
 
 use crate::camera::CameraManager;
 
+use actix_web::middleware::Logger;
+use log::LevelFilter;
+use env_logger::WriteStyle;
+
 mod util;
 mod camera;
 mod command;
@@ -15,6 +19,12 @@ const HEIGHT: u32 = 720;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::builder()
+        .filter_level(LevelFilter::Info)
+        .default_format()
+        .write_style(WriteStyle::Always)
+        .init();
+
     let mut instagram_thot = OpenCVCameraFeed::new();
     instagram_thot.open(0);
 
@@ -28,10 +38,12 @@ async fn main() -> std::io::Result<()> {
 
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .service(web::scope("cameras")
                 .data(camera_man.clone())
-                .service(camera::static_image))
-            .service(camera::ws_camera)
+                .service(camera::static_image)
+                .service(camera::ws_camera)
+            )
             .service(command::get_speed)
             .service(command::set_speed)
             .service(command::set_target)
@@ -56,14 +68,16 @@ async fn main() -> std::io::Result<()> {
 
         let time = timer.elapsed().as_millis();
 
-        println!("{}:\t{} millis", i, time);
-        println!("\tGrab: {} millis", td.grab_millis);
-        println!("\tRetrieve: {} millis", td.retrieve_millis);
-        println!("\tResize: {} millis", td.resize_millis);
-        println!("\tEncode: {} millis", td.encode_millis);
+        log::trace!("{}:\t{} millis", i, time);
+        log::trace!("\tGrab: {} millis", td.grab_millis);
+        log::trace!("\tRetrieve: {} millis", td.retrieve_millis);
+        log::trace!("\tResize: {} millis", td.resize_millis);
+        log::trace!("\tEncode: {} millis", td.encode_millis);
 
         tx.send(Bytes::from(buf.to_vec())).unwrap();
     }
 
-    server.await
+    server.stop(false).await;
+
+    Ok(())
 }
