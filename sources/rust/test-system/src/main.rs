@@ -5,7 +5,7 @@ use monkey_api::{MotorSpeeds, Location};
 use monkey_api::requests::AutonomousParams;
 use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
 use space_monkeys::{Command, ZhuLi};
-use monkey_unified_command::command::NavManager;
+use monkey_unified_command::nav::NavManager;
 use monkey_vision::core::MonkeyVision;
 use tokio::sync::watch;
 use crossbeam::channel;
@@ -49,7 +49,7 @@ fn main() {
 
     let nav_manager = NavManager { command_send, speed_rec };
     let mut zhu_li = ZhuLi { command_rec, speed_send };
-    let join_handle = thread::spawn(move || zhu_li.do_the_thing(&mut vision, mesh_file, &AUTO_PARAMS));
+    let join_handle = thread::spawn(move || zhu_li.do_the_thing(&mut vision, mesh_file, AUTO_PARAMS));
 
     nav_manager.command_send.send(Command::SetTarget(Some(Location {
         x: 2.0,
@@ -64,6 +64,6 @@ fn main() {
         thread::sleep(Duration::from_millis(10));
     }
 
-    nav_manager.command_send.send(Command::EndAutonomous).unwrap();
+    nav_manager.command_send.send(Command::EndNav).unwrap();
     join_handle.join().unwrap();
 }

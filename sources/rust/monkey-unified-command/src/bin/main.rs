@@ -3,11 +3,16 @@ use actix_web::middleware::Logger;
 use actix_web::web::Bytes;
 use env_logger::WriteStyle;
 use log::LevelFilter;
+use std::thread;
 
 use cameralot::prelude::*;
-use monkey_unified_command::{camera, command};
+use monkey_unified_command::{camera, nav};
 use monkey_unified_command::camera::CameraManager;
 use monkey_vision::prelude::*;
+use monkey_unified_command::nav::NavManager;
+use monkey_api::MotorSpeeds;
+use space_monkeys::{ZhuLi, Command};
+use monkey_api::requests::AutonomousParams;
 
 const FILE_FORMAT: &str = ".jpg";
 const WIDTH: u32 = 1280;
@@ -34,13 +39,18 @@ async fn main() -> std::io::Result<()> {
     let mut instagram_thot = OpenCVCameraFeed::new();
     instagram_thot.open(0);
 
-    let (tx, rx) = tokio::sync::watch::channel(
+    let (cam_tx, cam_rx) = tokio::sync::watch::channel(
         actix_web::web::Bytes::from(vec![0])
     );
 
+    let (speed_send, speed_rec) = tokio::sync::watch::channel(MotorSpeeds::default());
+    let (command_send, command_rec) = crossbeam::channel::unbounded();
+
     let camera_man = CameraManager {
-        feeds: vec![rx]
+        feeds: vec![cam_rx]
     };
+
+    let nav_manager = NavManager { command_send, speed_rec };
 
     let server = HttpServer::new(move || {
         App::new()
@@ -50,10 +60,14 @@ async fn main() -> std::io::Result<()> {
                 .service(camera::static_image)
                 .service(camera::ws_camera)
             )
-            .service(command::get_speed)
-            .service(command::set_speed)
-            .service(command::set_target)
-            .service(command::end_autonomous)
+            .service(web::scope("nav")
+                .data(nav_manager)
+                .service(nav::start)
+                .service(nav::get_speed)
+                .service(nav::set_speed)
+                .service(nav::set_target)
+                .service(nav::end)
+            )
     })
         .bind(("0.0.0.0", 8080))?
         .run();
@@ -63,6 +77,13 @@ async fn main() -> std::io::Result<()> {
         retrieve_millis: 0,
         resize_millis: 0,
         encode_millis: 0,
+    };
+
+    let mut zhu_li = ZhuLi {
+        command_rec,
+        speed_send,
+        params: AutonomousParams::default(),
+        state: None
     };
 
     for i in 0..1_000_000 {
@@ -80,8 +101,13 @@ async fn main() -> std::io::Result<()> {
         log::trace!("\tResize: {} millis", td.resize_millis);
         log::trace!("\tEncode: {} millis", td.encode_millis);
 
-        tx.send(Bytes::from(buf.to_vec())).unwrap();
+        cam_tx.send(Bytes::from(buf.to_vec())).unwrap();
+
+        zhu_li.poll_commands();
+        zhu_li.do_the_thing(&mut vision, mesh_file);
     }
+
+    nav_manager.command_send.send(Command::EndNav);
 
     server.stop(false).await;
 
