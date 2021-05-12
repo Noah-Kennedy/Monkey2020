@@ -44,7 +44,10 @@ impl AutonomousState {
     fn apply_command(&mut self, command: Command) {
         match command {
             Command::SetSpeed(speed) => self.speed = speed,
-            Command::SetTarget(target) => self.target = target,
+            Command::SetTarget(target) => {
+                self.target = target;
+                self.path = None;
+            },
             Command::EndAutonomous => {
                 self.path = None;
                 self.target = None;
@@ -62,16 +65,7 @@ pub struct ZhuLi {
 
 impl ZhuLi {
     /// Starts the autonomous control loop. This blocks until `Command::EndAutonomous` is sent.
-    pub fn do_the_thing(&mut self, params: &AutonomousParams) {
-        let mut vision = MonkeyVision::create(
-            MESH_FILE,
-            params.camera_res,
-            params.depth_quality,
-            params.map_res,
-            params.range,
-            params.mesh_filter,
-        ).unwrap();
-
+    pub fn do_the_thing(&mut self, vision: &mut MonkeyVision, mesh_file: &str, params: &AutonomousParams) {
         let mut state = AutonomousState {
             speed: Default::default(),
             target: None,
@@ -90,7 +84,7 @@ impl ZhuLi {
 
             state.time_since_last_spatial_map_update += dt;
             if state.time_since_last_spatial_map_update >= params.min_mesh_to_grid_period {
-                match mesh_to_grid::mesh_to_grid(&mut state.grid, MESH_FILE, params.interaction_radius, params.vertical_cutoff) {
+                match mesh_to_grid::mesh_to_grid(&mut state.grid, mesh_file, params.interaction_radius, params.vertical_cutoff) {
                     Ok(_) => {
                         // TODO: If path is some, check it against the new grid to ensure that it is still safe. If not safe, clear path.
                         //  Currently just clearing the path regardless
@@ -134,6 +128,7 @@ impl ZhuLi {
         let steering = match state.target.as_ref() {
             Some(target) => {
                 if state.path.is_none() {
+                    // TODO: Have path computation on a separate thread?
                     let s = MonkeyStateSpace {
                         cost: state.grid.clone(),
                         model: MonkeyModel {

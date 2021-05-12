@@ -1,11 +1,12 @@
 use std::thread;
 use std::time::Duration;
 
-use monkey_api::MotorSpeeds;
+use monkey_api::{MotorSpeeds, Location};
 use monkey_api::requests::AutonomousParams;
 use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
 use space_monkeys::{Command, ZhuLi};
 use monkey_unified_command::command::CommandManager;
+use monkey_vision::core::MonkeyVision;
 
 const AUTO_PARAMS: AutonomousParams = AutonomousParams {
     max_speed: 100.0,
@@ -26,14 +27,19 @@ const AUTO_PARAMS: AutonomousParams = AutonomousParams {
     min_turn_radius: 5.0,
     drive_width: 0.8,
     wheel_radius: 0.1,
-    camera_res: ZedCameraResolution::Res720HD60,
-    depth_quality: ZedDepthQuality::DepthPerformance,
-    map_res: ZedMappingResolution::MapMediumRes,
-    range: ZedMappingRange::MapMedium,
-    mesh_filter: ZedMeshFilter::FilterMedium,
 };
 
 fn main() {
+    let mesh_file = "mesh.ply";
+    let mut vision = MonkeyVision::create(
+        mesh_file,
+        ZedCameraResolution::Res720HD60,
+        ZedDepthQuality::DepthPerformance,
+        ZedMappingResolution::MapMediumRes,
+        ZedMappingRange::MapMedium,
+        ZedMeshFilter::FilterMedium,
+    ).unwrap();
+
     let mut speed = MotorSpeeds::default();
 
     let (command_send, command_rec) = crossbeam::channel::unbounded();
@@ -41,7 +47,13 @@ fn main() {
 
     let command_manager = CommandManager { command_send, speed_rec };
     let mut zhu_li = ZhuLi { command_rec, speed_send };
-    let join_handle = thread::spawn(move || zhu_li.do_the_thing(&AUTO_PARAMS));
+    let join_handle = thread::spawn(move || zhu_li.do_the_thing(&mut vision, mesh_file, &AUTO_PARAMS));
+
+    command_manager.command_send.send(Command::SetTarget(Some(Location {
+        x: 2.0,
+        y: 3.0,
+        theta: 90.0
+    })));
 
     for i in 0..1000 {
         println!("{:?}: {:?}", i, speed);
@@ -49,6 +61,7 @@ fn main() {
         if let Ok(s) = command_manager.speed_rec.try_recv() {
             speed = s;
         }
+        thread::sleep(Duration::from_millis(10));
     }
 
     command_manager.command_send.send(Command::EndAutonomous).unwrap();
