@@ -1,4 +1,5 @@
 use std::ffi;
+use std::sync::Arc;
 
 use cameralot::core::{AbstractCameraFeed, CameraFeedError};
 use cameralot::extend::abstract_camera_read_from_ffi;
@@ -18,11 +19,21 @@ const RUNTIME_SUCCESS: RuntimeErrorFlags = RuntimeErrorFlags {
     map_status_code: ZedSpatialMappingState::ZedMapOk,
 };
 
-pub struct MonkeyVision {
+struct RawMonkey {
     internal: *mut ffi::c_void,
 }
 
+pub struct MonkeyVision {
+    raw: Arc<RawMonkey>,
+}
+
+pub struct MonkeyCam {
+    raw: Arc<RawMonkey>,
+}
+
 unsafe impl Send for MonkeyVision {}
+
+unsafe impl Send for MonkeyCam {}
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum MonkeyVisionError {
@@ -32,51 +43,59 @@ pub enum MonkeyVisionError {
     ZedArucoData,
 }
 
-impl MonkeyVision {
-    /// Initialize camera
-    /// # Arguments
-    /// `mesh_path` path to save the stereo-scanned 3D environment mesh to.
-    pub fn create(
-        mesh_path: &str,
-        camera_res: ZedCameraResolution,
-        depth_quality: ZedDepthQuality,
-        map_res: ZedMappingResolution,
-        range: ZedMappingRange,
-        mesh_filter: ZedMeshFilter,
-    )
-        -> Result<MonkeyVision, MonkeyVisionError>
-    {
-        let path = ffi::CString::new(mesh_path).unwrap();
-        let mut error = InitErrorFlags {
-            camera_status_code: ZedStatusCode::ZedErrorSuccess,
-            imu_status_code: ZedStatusCode::ZedErrorSuccess,
-            map_status_code: ZedStatusCode::ZedErrorSuccess,
+/// Initialize camera
+/// # Arguments
+/// `mesh_path` path to save the stereo-scanned 3D environment mesh to.
+pub fn create(
+    mesh_path: &str,
+    camera_res: ZedCameraResolution,
+    depth_quality: ZedDepthQuality,
+    map_res: ZedMappingResolution,
+    range: ZedMappingRange,
+    mesh_filter: ZedMeshFilter,
+)
+    -> Result<(MonkeyVision, MonkeyCam), MonkeyVisionError>
+{
+    let path = ffi::CString::new(mesh_path).unwrap();
+    let mut error = InitErrorFlags {
+        camera_status_code: ZedStatusCode::ZedErrorSuccess,
+        imu_status_code: ZedStatusCode::ZedErrorSuccess,
+        map_status_code: ZedStatusCode::ZedErrorSuccess,
+    };
+
+    let ret = unsafe {
+        visual_processing_init(
+            path.as_ptr(),
+            &mut error as *mut InitErrorFlags,
+            camera_res,
+            depth_quality,
+            map_res,
+            range,
+            mesh_filter,
+        )
+    };
+
+    if error == INIT_SUCCESS {
+        let raw = Arc::new(RawMonkey { internal: ret });
+
+        let vision = MonkeyVision {
+            raw: raw.clone(),
         };
 
-        let ret = unsafe {
-            visual_processing_init(
-                path.as_ptr(),
-                &mut error as *mut InitErrorFlags,
-                camera_res,
-                depth_quality,
-                map_res,
-                range,
-                mesh_filter,
-            )
+        let cam = MonkeyCam {
+            raw: raw.clone(),
         };
 
-        if error == INIT_SUCCESS {
-            Ok(Self {
-                internal: ret
-            })
-        } else {
-            Err(MonkeyVisionError::Init(error))
-        }
+        Ok((vision, cam))
+    } else {
+        Err(MonkeyVisionError::Init(error))
     }
+}
 
+impl MonkeyVision {
     pub fn aruco_data(&mut self, aruco_id: u16, data: &mut ArucoData) -> Result<(), MonkeyVisionError> {
         let status = unsafe {
-            get_aruco_data(aruco_id, data as *mut ArucoData, self.internal)
+            get_aruco_data(aruco_id, data as *mut ArucoData, self.raw.internal)
         };
 
         if status {
@@ -91,7 +110,7 @@ impl MonkeyVision {
     /// Returns structure containing data from the ZED IMU.
     pub fn imu_data(&mut self, data: &mut ZedImuData) -> Result<(), MonkeyVisionError> {
         let status = unsafe {
-            get_zed_imu_data(data as *mut ZedImuData, self.internal)
+            get_zed_imu_data(data as *mut ZedImuData, self.raw.internal)
         };
 
         if status {
@@ -105,7 +124,7 @@ impl MonkeyVision {
     /// NOTE: only update the mesh periodically as it is resource-intensive to do so.
     pub fn request_map_update(&mut self) {
         unsafe {
-            request_map_update(self.internal);
+            request_map_update(self.raw.internal);
         }
     }
 
@@ -131,7 +150,7 @@ impl MonkeyVision {
                 marker_size,
                 display,
                 (&mut status) as *mut RuntimeErrorFlags,
-                self.internal,
+                self.raw.internal,
             )
         }
 
@@ -146,13 +165,13 @@ impl MonkeyVision {
     // TODO frame API when cody finishes it
 }
 
-impl AbstractCameraFeed for MonkeyVision {
+impl AbstractCameraFeed for MonkeyCam {
     unsafe fn read(&mut self, width: u32, height: u32, ext: &str, td: &mut TimerData) -> Result<&[u8], CameraFeedError> {
-        abstract_camera_read_from_ffi(self.internal, width, height, ext, td)
+        abstract_camera_read_from_ffi(self.raw.internal, width, height, ext, td)
     }
 }
 
-impl Drop for MonkeyVision {
+impl Drop for RawMonkey {
     fn drop(&mut self) {
         unsafe {
             visual_processing_dealloc(self.internal);
