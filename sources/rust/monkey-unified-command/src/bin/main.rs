@@ -21,14 +21,15 @@ const HEIGHT: u32 = 720;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let mesh_file = "mesh.ply";
-    let mut vision = monkey_vision::core::create(
+
+    let (mut vision, mut thot) = monkey_vision::core::create(
         mesh_file,
         ZedCameraResolution::Res720HD60,
         ZedDepthQuality::DepthPerformance,
         ZedMappingResolution::MapMediumRes,
         ZedMappingRange::MapMedium,
         ZedMeshFilter::FilterMedium,
-    ).unwrap().0;
+    ).unwrap();
 
     env_logger::builder()
         .filter_level(LevelFilter::Info)
@@ -90,7 +91,7 @@ async fn main() -> std::io::Result<()> {
         let timer = std::time::Instant::now();
 
         let buf = unsafe {
-            instagram_thot.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap()
+            thot.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap()
         };
 
         let time = timer.elapsed().as_millis();
