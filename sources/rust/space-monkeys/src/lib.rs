@@ -23,7 +23,7 @@ mod aimbot;
 const MESH_FILE: &str = "mesh.ply";
 
 /// Commands for interacting with the navigation system.
-#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub enum Command {
     StartNav(AutonomousParams),
     SetSpeed(MotorSpeeds),
@@ -54,22 +54,6 @@ impl NavState {
             grid: Grid::new(params.min_x, params.max_x, params.min_z, params.max_z, params.res_x, params.res_z),
             time_since_last_spatial_map_update: Duration::from_secs(0),
             last_time: Instant::now(),
-        }
-    }
-
-    fn apply_command(&mut self, command: Command) {
-        match command {
-            Command::StartNav(params) => self.params = params,
-            Command::SetSpeed(speed) => self.speed = speed,
-            Command::SetTarget(target) => {
-                self.target = target;
-                self.path = None;
-            },
-            Command::EndNav => {
-                self.path = None;
-                self.target = None;
-                self.keep_going = false;
-            }
         }
     }
 }
