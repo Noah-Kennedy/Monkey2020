@@ -4,12 +4,8 @@ pub mod command;
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
     use std::thread;
     use std::time::Duration;
-
-    use actix_web::{App, HttpServer};
-    use tokio::sync::watch;
 
     use cameralot::prelude::*;
     use monkey_api::MotorSpeeds;
@@ -18,8 +14,6 @@ mod tests {
     use space_monkeys::{Command, ZhuLi};
 
     use crate::command::CommandManager;
-
-    use super::*;
 
     const AUTO_PARAMS: AutonomousParams = AutonomousParams {
         max_speed: 100.0,
@@ -63,13 +57,13 @@ mod tests {
 
         for i in 0..1000 {
             println!("{:?}: {:?}", i, speed);
-            command_manager.command_send.send(Command::SetSpeed(speed));
+            command_manager.command_send.send(Command::SetSpeed(speed)).unwrap();
             if let Ok(s) = command_manager.speed_rec.try_recv() {
                 speed = s;
             }
         }
 
-        command_manager.command_send.send(Command::EndAutonomous);
-        join_handle.join();
+        command_manager.command_send.send(Command::EndAutonomous).unwrap();
+        join_handle.join().unwrap();
     }
 }

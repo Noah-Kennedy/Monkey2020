@@ -75,7 +75,6 @@ pub async fn ws_camera(
 mod tests {
     use actix_web::{App, HttpServer, web};
     use actix_web::web::Bytes;
-    use futures_util::SinkExt;
     use futures_util::stream::StreamExt;
     use tokio::sync::watch;
 
