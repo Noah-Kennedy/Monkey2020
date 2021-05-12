@@ -18,7 +18,7 @@ pub mod math;
 pub mod mesh_to_grid;
 mod aimbot;
 
-const MESH_FILE: &str = "../run-data/mesh.ply";
+const MESH_FILE: &str = "mesh.ply";
 
 /// Commands for modifying the autonomous state.
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
