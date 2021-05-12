@@ -1516,6 +1516,7 @@ name = "libmonkey-sys"
 version = "0.1.0"
 dependencies = [
  "cmake",
+ "serde",
 ]
 
 [[package]]
@@ -1662,6 +1663,7 @@ name = "monkey-api"
 version = "0.1.0"
 dependencies = [
  "log",
+ "monkey-vision",
  "serde",
 ]
 

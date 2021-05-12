@@ -1,4 +1,5 @@
 use std::time::Duration;
+use monkey_vision::prelude::*;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -13,7 +14,7 @@ pub struct CameraRequest {
     pub id: u64,
 }
 
-#[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
+#[derive(Debug, PartialOrd, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct AutonomousParams {
     pub max_speed: f32,

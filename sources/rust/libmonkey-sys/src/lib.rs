@@ -1,3 +1,7 @@
+#[cfg_attr(feature = "serde", macro_use)]
+#[cfg(feature = "serde")]
+extern crate serde;
+
 #[cfg(feature = "cameralot")]
 pub mod cameralot;
 

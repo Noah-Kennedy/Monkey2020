@@ -71,7 +71,7 @@ impl ZhuLi {
             params.map_res,
             params.range,
             params.mesh_filter
-        );
+        ).unwrap();
 
         let mut state = AutonomousState {
             speed: Default::default(),

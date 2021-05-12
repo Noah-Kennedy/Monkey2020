@@ -1,13 +1,15 @@
-use actix_web::{App, HttpServer};
-use cameralot::prelude::*;
 use std::fs;
-use std::time::Duration;
-use monkey_api::requests::AutonomousParams;
-use space_monkeys::{ZhuLi, Command};
 use std::thread;
-use monkey_api::MotorSpeeds;
+use std::time::Duration;
+
+use actix_web::{App, HttpServer};
 use tokio::sync::watch;
-use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingResolution, ZedMappingRange, ZedMeshFilter};
+
+use cameralot::prelude::*;
+use monkey_api::MotorSpeeds;
+use monkey_api::requests::AutonomousParams;
+use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
+use space_monkeys::{Command, ZhuLi};
 
 const AUTO_PARAMS: AutonomousParams = AutonomousParams {
     max_speed: 100.0,
@@ -32,7 +34,7 @@ const AUTO_PARAMS: AutonomousParams = AutonomousParams {
     depth_quality: ZedDepthQuality::DepthPerformance,
     map_res: ZedMappingResolution::MapMediumRes,
     range: ZedMappingRange::MapMedium,
-    mesh_filter: ZedMeshFilter::FilterMedium
+    mesh_filter: ZedMeshFilter::FilterMedium,
 };
 
 fn main() {

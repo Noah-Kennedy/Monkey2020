@@ -152,6 +152,7 @@ pub enum ZedStatusCode {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ZedCameraResolution {
     Res2K15,
     Res1080HD30,
@@ -161,6 +162,7 @@ pub enum ZedCameraResolution {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ZedDepthQuality {
     DepthPerformance,
     DepthQuality,
@@ -169,6 +171,7 @@ pub enum ZedDepthQuality {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ZedMappingResolution {
     MapLowRes,
     MapMediumRes,
@@ -177,6 +180,7 @@ pub enum ZedMappingResolution {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ZedMappingRange {
     MapNear,
     MapMedium,
@@ -185,6 +189,7 @@ pub enum ZedMappingRange {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ZedMeshFilter {
     FilterLow,
     FilterMedium,
@@ -193,6 +198,7 @@ pub enum ZedMeshFilter {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ZedSpatialMappingState {
     ZedMapInitializing,
     ZedMapOk,
