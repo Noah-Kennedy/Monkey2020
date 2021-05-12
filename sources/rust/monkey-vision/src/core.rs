@@ -22,6 +22,8 @@ pub struct MonkeyVision {
     internal: *mut ffi::c_void,
 }
 
+unsafe impl Send for MonkeyVision {}
+
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum MonkeyVisionError {
     Init(InitErrorFlags),
