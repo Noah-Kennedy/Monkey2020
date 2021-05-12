@@ -45,7 +45,7 @@ pub struct NavManager {
 }
 
 #[actix_web::get("/nav/start")]
-pub async fn start(params: Json<AutonomousParams>) -> actix_web::Result<HttpResponse> {
+pub async fn start(params: Json<AutonomousParams>) -> actix_web::Result<HttpResponse, CommandError> {
     let state = AutonomousState {
         speed: Default::default(),
         target: None,
