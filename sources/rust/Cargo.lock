@@ -2616,6 +2616,7 @@ name = "test-system"
 version = "0.1.0"
 dependencies = [
  "cameralot",
+ "crossbeam",
  "monkey-api",
  "monkey-unified-command",
  "monkey-vision",

@@ -11,7 +11,7 @@ fn invoke_cmake() {
         &mut cfg
     } else {
         cfg.generator("Ninja")
-    }.build().join("lib");
+    }.define("LINK_SHARED_ZED", "OFF").build().join("lib");
 
     // only see this if run with -vv
     println!("Path is {}\n", dst.to_str().unwrap());
@@ -44,7 +44,7 @@ fn link_static_libs() {
 
 fn link_dynamic_libs() {
     if cfg!(feature = "link_zed") {
-        // println!("cargo:rustc-link-lib=dylib=libsl_zed");
+        println!("cargo:rustc-link-lib=dylib=sl_zed");
     }
 
     if cfg!(feature = "link_opencv_aruco") {
