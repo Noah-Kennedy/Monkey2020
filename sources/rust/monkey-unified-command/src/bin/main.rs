@@ -13,6 +13,7 @@ use monkey_unified_command::nav::NavManager;
 use monkey_api::MotorSpeeds;
 use space_monkeys::{ZhuLi, Command};
 use monkey_api::requests::AutonomousParams;
+use std::time::Instant;
 
 const FILE_FORMAT: &str = ".jpg";
 const WIDTH: u32 = 1280;
@@ -84,7 +85,8 @@ async fn main() -> std::io::Result<()> {
         command_rec,
         speed_send,
         params: AutonomousParams::default(),
-        state: None
+        state: None,
+        last_time: Instant::now()
     };
 
     for i in 0..1_000_000 {
@@ -104,7 +106,6 @@ async fn main() -> std::io::Result<()> {
 
         cam_tx.send(Bytes::from(buf.to_vec())).unwrap();
 
-        zhu_li.poll_commands();
         zhu_li.do_the_thing(&mut vision, mesh_file);
     }
 

@@ -63,11 +63,12 @@ pub struct ZhuLi {
     pub command_rec: channel::Receiver<Command>,
     pub speed_send: watch::Sender<MotorSpeeds>,
     pub params: AutonomousParams,
-    pub state: Option<NavState>
+    pub state: Option<NavState>,
+    pub last_time: Instant
 }
 
 impl ZhuLi {
-    pub fn poll_commands(&mut self) {
+    fn poll_commands(&mut self) {
         while !self.command_rec.is_empty() {
             match self.command_rec.try_recv().unwrap() {
                 Command::StartNav(params) => {
@@ -89,13 +90,15 @@ impl ZhuLi {
         }
     }
 
-    /// Starts the autonomous control loop. This blocks until `Command::EndAutonomous` is sent.
+    /// Do an iteration of the autonomous control loop.
     pub fn do_the_thing(&mut self, vision: &mut MonkeyVision, mesh_file: &str) {
-        if let Some(state) = self.state.as_mut() {
-            let now = Instant::now();
-            let dt = now.duration_since(state.last_time);
-            state.last_time = now;
+        self.poll_commands();
 
+        let now = Instant::now();
+        let dt = now.duration_since(self.last_time);
+        self.last_time = now;
+
+        if let Some(state) = self.state.as_mut() {
             state.time_since_last_spatial_map_update += dt;
             if state.time_since_last_spatial_map_update >= self.params.min_mesh_to_grid_period {
                 match mesh_to_grid::mesh_to_grid(&mut state.grid, mesh_file, self.params.interaction_radius, self.params.vertical_cutoff) {
