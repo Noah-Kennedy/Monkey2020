@@ -33,14 +33,14 @@ const AUTO_PARAMS: AutonomousParams = AutonomousParams {
 
 fn main() {
     let mesh_file = "mesh.ply";
-    let mut vision = MonkeyVision::create(
+    let mut vision = monkey_vision::core::create(
         mesh_file,
         ZedCameraResolution::Res720HD60,
         ZedDepthQuality::DepthPerformance,
         ZedMappingResolution::MapMediumRes,
         ZedMappingRange::MapMedium,
         ZedMeshFilter::FilterMedium,
-    ).unwrap();
+    ).unwrap().0;
 
     let mut speed = MotorSpeeds::default();
 
