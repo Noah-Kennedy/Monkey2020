@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use tokio::sync::watch::{Receiver, Sender};
+use tokio::sync::watch;
 use log::error;
 
 use libmonkey_sys::monkey_vision::ZedImuData;
@@ -56,9 +56,9 @@ impl AutonomousState {
 
 /// Channels for communicating with the autonomous mode controller.
 pub struct ZhuLi {
-    pub imu_data_rec: Receiver<ZedImuData>,
-    pub command_rec: Receiver<Command>,
-    pub speed_send: Sender<MotorSpeeds>,
+    pub imu_data_rec: crossbeam::channel::Receiver<ZedImuData>,
+    pub command_rec: crossbeam::channel::Receiver<Command>,
+    pub speed_send: watch::Sender<MotorSpeeds>,
 }
 
 impl ZhuLi {
@@ -98,7 +98,7 @@ impl ZhuLi {
             }
 
             let new_speeds = ZhuLi::the_thing(&mut state, params, dt);
-            if let Err(err) = self.speed_send.try_send(new_speeds) {
+            if let Err(err) = self.speed_send.send(new_speeds) {
                 error!("{:?}", err);
             }
 

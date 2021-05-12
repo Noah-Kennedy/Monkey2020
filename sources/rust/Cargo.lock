@@ -2511,6 +2511,7 @@ name = "space-monkeys"
 version = "0.1.0"
 dependencies = [
  "byteorder",
+ "crossbeam",
  "libmonkey-sys",
  "log",
  "monkey-api",
