@@ -17,14 +17,14 @@ const HEIGHT: u32 = 720;
 async fn main() -> std::io::Result<()> {
     let mesh_file = "mesh.ply";
 
-    let (vision, thot) = monkey_vision::core::create(
+    let (vision, mut thot) = monkey_vision::core::create(
         mesh_file,
         ZedCameraResolution::Res720HD60,
         ZedDepthQuality::DepthPerformance,
         ZedMappingResolution::MapMediumRes,
         ZedMappingRange::MapMedium,
         ZedMeshFilter::FilterMedium,
-    ).unwrap().0;
+    ).unwrap();
 
     env_logger::builder()
         .filter_level(LevelFilter::Info)
