@@ -16,7 +16,8 @@ const HEIGHT: u32 = 720;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let mesh_file = "mesh.ply";
-    let mut vision = monkey_vision::core::create(
+
+    let (vision, thot) = monkey_vision::core::create(
         mesh_file,
         ZedCameraResolution::Res720HD60,
         ZedDepthQuality::DepthPerformance,
@@ -30,9 +31,6 @@ async fn main() -> std::io::Result<()> {
         .default_format()
         .write_style(WriteStyle::Always)
         .init();
-
-    let mut instagram_thot = OpenCVCameraFeed::new();
-    instagram_thot.open(0);
 
     let (tx, rx) = tokio::sync::watch::channel(
         actix_web::web::Bytes::from(vec![0])
@@ -69,7 +67,7 @@ async fn main() -> std::io::Result<()> {
         let timer = std::time::Instant::now();
 
         let buf = unsafe {
-            instagram_thot.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap()
+            thot.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap()
         };
 
         let time = timer.elapsed().as_millis();
