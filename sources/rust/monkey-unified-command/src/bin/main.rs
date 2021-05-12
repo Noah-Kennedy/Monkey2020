@@ -108,8 +108,6 @@ async fn main() -> std::io::Result<()> {
         zhu_li.do_the_thing(&mut vision, mesh_file);
     }
 
-    nav_manager.command_send.send(Command::EndNav);
-
     server.stop(false).await;
 
     Ok(())
