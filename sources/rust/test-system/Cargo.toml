@@ -13,9 +13,6 @@ crossbeam = "0.8"
 ###############################################################################
 # Internal
 ###############################################################################
-[dependencies.cameralot]
-path = "../cameralot"
-
 [dependencies.monkey-vision]
 path = "../monkey-vision"
 

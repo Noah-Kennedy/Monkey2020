@@ -1,7 +1,6 @@
 use std::thread;
 use std::time::Duration;
 
-use cameralot::prelude::*;
 use monkey_api::MotorSpeeds;
 use monkey_api::requests::AutonomousParams;
 use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
@@ -36,9 +35,6 @@ const AUTO_PARAMS: AutonomousParams = AutonomousParams {
 
 fn main() {
     let mut speed = MotorSpeeds::default();
-
-    let mut instagram_hoe = OpenCVCameraFeed::new();
-    instagram_hoe.open(0);
 
     let (command_send, command_rec) = crossbeam::channel::unbounded();
     let (speed_send, speed_rec) = crossbeam::channel::unbounded();
