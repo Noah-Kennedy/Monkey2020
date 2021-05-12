@@ -2,33 +2,12 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fmt;
 
-use actix_web::{HttpResponse, ResponseError, web};
+use actix_web::{HttpResponse, ResponseError, HttpRequest, Result};
 use actix_web::web::{Data, Json};
-use crossbeam::channel::{Receiver, Sender, TryRecvError, TrySendError};
+use tokio::sync::watch::{Receiver, Sender};
 
 use monkey_api::{Location, MotorSpeeds};
 use space_monkeys::Command;
-
-#[derive(Debug)]
-pub enum CommandError {
-    TryRecv(TryRecvError),
-    TrySend(TrySendError<Command>),
-}
-
-impl Display for CommandError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            CommandError::TryRecv(err) => writeln!(f, "{:?}", err),
-            CommandError::TrySend(err) => writeln!(f, "{:?}", err)
-        }?;
-
-        Ok(())
-    }
-}
-
-impl Error for CommandError {}
-
-impl ResponseError for CommandError {}
 
 pub struct CommandManager {
     pub command_send: Sender<Command>,
@@ -36,11 +15,9 @@ pub struct CommandManager {
 }
 
 #[actix_web::get("/get_speed")]
-pub async fn get_speed(
-    manager: Data<CommandManager>
-) -> Result<web::Json<MotorSpeeds>, CommandError> {
+pub async fn get_speed(manager: Data<CommandManager>) -> Result<Json<MotorSpeeds>, CommandError> {
     match manager.speed_rec.try_recv() {
-        Ok(speed) => Ok(web::Json(speed)),
+        Ok(speed) => Ok(Json(speed)),
         Err(err) => Err(CommandError::TryRecv(err))
     }
 }

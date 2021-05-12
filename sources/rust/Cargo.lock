@@ -2511,13 +2511,13 @@ name = "space-monkeys"
 version = "0.1.0"
 dependencies = [
  "byteorder",
- "crossbeam",
  "libmonkey-sys",
  "log",
  "monkey-api",
  "monkey-pathfinding",
  "monkey-vision",
  "plotters",
+ "tokio 1.5.0",
 ]
 
 [[package]]

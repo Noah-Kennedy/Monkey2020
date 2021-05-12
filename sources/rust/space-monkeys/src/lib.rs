@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use crossbeam::channel::{Receiver, Sender};
+use tokio::sync::watch::{Receiver, Sender};
 use log::error;
 
 use libmonkey_sys::monkey_vision::ZedImuData;
@@ -93,9 +93,8 @@ impl ZhuLi {
                 state.time_since_last_spatial_map_update = Duration::from_secs(0);
             }
 
-            match self.imu_data_rec.try_recv() {
-                Ok(ok) => state.imu_data = ok,
-                Err(err) => error!("{:?}", err)
+            while !self.imu_data_rec.is_empty() {
+                state.imu_data = self.imu_data_rec.try_recv().unwrap();
             }
 
             let new_speeds = ZhuLi::the_thing(&mut state, params, dt);
