@@ -7,6 +7,7 @@ use log::LevelFilter;
 use cameralot::prelude::*;
 use monkey_unified_command::{camera, command};
 use monkey_unified_command::camera::CameraManager;
+use monkey_vision::prelude::*;
 
 const FILE_FORMAT: &str = ".jpg";
 const WIDTH: u32 = 1280;
@@ -14,6 +15,16 @@ const HEIGHT: u32 = 720;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let mesh_file = "mesh.ply";
+    let mut vision = monkey_vision::core::create(
+        mesh_file,
+        ZedCameraResolution::Res720HD60,
+        ZedDepthQuality::DepthPerformance,
+        ZedMappingResolution::MapMediumRes,
+        ZedMappingRange::MapMedium,
+        ZedMeshFilter::FilterMedium,
+    ).unwrap().0;
+
     env_logger::builder()
         .filter_level(LevelFilter::Info)
         .default_format()
