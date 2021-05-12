@@ -2,16 +2,16 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fmt;
 
-use actix_web::{HttpResponse, ResponseError, HttpRequest, Result};
+use actix_web::{HttpResponse, ResponseError, Result};
 use actix_web::web::{Data, Json};
-use tokio::sync::watch::{Receiver, Sender, error::SendError};
+use tokio::sync::watch::{Sender, error::SendError};
 use crossbeam::channel::TryRecvError;
 
 use monkey_api::{Location, MotorSpeeds};
 use space_monkeys::Command;
 use actix_web::http::StatusCode;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum CommandError {
     Send(SendError<Command>),
     TryRecv(TryRecvError)
@@ -40,7 +40,7 @@ impl ResponseError for CommandError {
 
 pub struct CommandManager {
     pub command_send: Sender<Command>,
-    pub speed_rec: Receiver<MotorSpeeds>,
+    pub speed_rec: crossbeam::channel::Receiver<MotorSpeeds>,
 }
 
 #[actix_web::get("/get_speed")]
