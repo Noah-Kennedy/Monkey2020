@@ -25,3 +25,10 @@ features = ["serialization"]
 
 [dependencies.monkey-unified-command]
 path = "../monkey-unified-command"
+
+###############################################################################
+# Async
+###############################################################################
+[dependencies.tokio]
+version = "1.5.0"
+features = ["rt-multi-thread", "sync", "rt", "macros"]

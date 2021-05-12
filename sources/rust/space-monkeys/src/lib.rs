@@ -1,6 +1,8 @@
 use std::time::{Duration, Instant};
 
 use log::error;
+use tokio::sync::watch;
+use crossbeam::channel;
 
 use libmonkey_sys::monkey_vision::ZedImuData;
 use monkey_api::{Location, MotorSpeeds};
@@ -20,7 +22,7 @@ mod aimbot;
 
 const MESH_FILE: &str = "mesh.ply";
 
-/// Commands for modifying the autonomous state.
+/// Commands for interacting with the navigation system.
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum Command {
     SetSpeed(MotorSpeeds),
@@ -29,15 +31,15 @@ pub enum Command {
     EndAutonomous,
 }
 
-struct AutonomousState {
-    speed: MotorSpeeds,
-    target: Option<Location>,
-    keep_going: bool,
-    imu_data: ZedImuData,
-    path: Option<Path>,
-    grid: Grid,
-    time_since_last_spatial_map_update: Duration,
-    last_time: Instant,
+pub struct AutonomousState {
+    pub speed: MotorSpeeds,
+    pub target: Option<Location>,
+    pub keep_going: bool,
+    pub imu_data: ZedImuData,
+    pub path: Option<Path>,
+    pub grid: Grid,
+    pub time_since_last_spatial_map_update: Duration,
+    pub last_time: Instant,
 }
 
 impl AutonomousState {
@@ -59,8 +61,8 @@ impl AutonomousState {
 
 /// Channels for communicating with the autonomous mode controller.
 pub struct ZhuLi {
-    pub command_rec: crossbeam::channel::Receiver<Command>,
-    pub speed_send: crossbeam::channel::Sender<MotorSpeeds>,
+    pub command_rec: channel::Receiver<Command>,
+    pub speed_send: watch::Sender<MotorSpeeds>,
 }
 
 impl ZhuLi {
@@ -100,7 +102,7 @@ impl ZhuLi {
             }
 
             let new_speeds = ZhuLi::the_thing(&mut state, params, dt);
-            if let Err(err) = self.speed_send.try_send(new_speeds) {
+            if let Err(err) = self.speed_send.send(new_speeds) {
                 error!("{:?}", err);
             }
 

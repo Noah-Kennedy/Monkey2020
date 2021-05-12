@@ -2620,6 +2620,7 @@ dependencies = [
  "monkey-unified-command",
  "monkey-vision",
  "space-monkeys",
+ "tokio 1.5.0",
 ]
 
 [[package]]

@@ -5,8 +5,10 @@ use monkey_api::{MotorSpeeds, Location};
 use monkey_api::requests::AutonomousParams;
 use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
 use space_monkeys::{Command, ZhuLi};
-use monkey_unified_command::command::CommandManager;
+use monkey_unified_command::command::NavManager;
 use monkey_vision::core::MonkeyVision;
+use tokio::sync::watch;
+use crossbeam::channel;
 
 const AUTO_PARAMS: AutonomousParams = AutonomousParams {
     max_speed: 100.0,
@@ -42,14 +44,14 @@ fn main() {
 
     let mut speed = MotorSpeeds::default();
 
-    let (command_send, command_rec) = crossbeam::channel::unbounded();
-    let (speed_send, speed_rec) = crossbeam::channel::unbounded();
+    let (command_send, command_rec) = channel::unbounded();
+    let (speed_send, speed_rec) = watch::channel(MotorSpeeds::default());
 
-    let command_manager = CommandManager { command_send, speed_rec };
+    let nav_manager = NavManager { command_send, speed_rec };
     let mut zhu_li = ZhuLi { command_rec, speed_send };
     let join_handle = thread::spawn(move || zhu_li.do_the_thing(&mut vision, mesh_file, &AUTO_PARAMS));
 
-    command_manager.command_send.send(Command::SetTarget(Some(Location {
+    nav_manager.command_send.send(Command::SetTarget(Some(Location {
         x: 2.0,
         y: 3.0,
         theta: 90.0
@@ -57,13 +59,13 @@ fn main() {
 
     for i in 0..1000 {
         println!("{:?}: {:?}", i, speed);
-        command_manager.command_send.send(Command::SetSpeed(speed)).unwrap();
-        if let Ok(s) = command_manager.speed_rec.try_recv() {
+        nav_manager.command_send.send(Command::SetSpeed(speed)).unwrap();
+        if let Ok(s) = nav_manager.speed_rec.try_recv() {
             speed = s;
         }
         thread::sleep(Duration::from_millis(10));
     }
 
-    command_manager.command_send.send(Command::EndAutonomous).unwrap();
+    nav_manager.command_send.send(Command::EndAutonomous).unwrap();
     join_handle.join().unwrap();
 }
