@@ -44,9 +44,8 @@ pub struct NavManager {
     pub speed_rec: watch::Receiver<MotorSpeeds>
 }
 
-#[actix_web::get("/nav/start/{params}")]
-pub async fn start(req: HttpRequest, path: Path<(AutonomousParams)>, manager: Data<NavManager>) -> actix_web::Result<HttpResponse> {
-    let params = path.0;
+#[actix_web::get("/nav/start")]
+pub async fn start(params: Json<AutonomousParams>) -> actix_web::Result<HttpResponse> {
     let state = AutonomousState {
         speed: Default::default(),
         target: None,
@@ -57,6 +56,7 @@ pub async fn start(req: HttpRequest, path: Path<(AutonomousParams)>, manager: Da
         time_since_last_spatial_map_update: Duration::from_secs(0),
         last_time: Instant::now(),
     };
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[actix_web::get("/nav/get_speed")]
