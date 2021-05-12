@@ -1,5 +1,5 @@
-use std::mem::swap;
 use std::collections::LinkedList;
+use std::mem::swap;
 
 type PairingHeapNode<T> = Option<PairingTree<T>>;
 
@@ -125,5 +125,4 @@ mod tests {
             assert_eq!(*x, v.unwrap())
         }
     }
-
 }

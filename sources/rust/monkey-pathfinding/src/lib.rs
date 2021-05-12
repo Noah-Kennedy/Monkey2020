@@ -11,4 +11,5 @@ pub mod state_space;
 pub mod demo_info;
 
 pub type Discrete = i16;
+
 const LIVING_COST: f32 = 0.000_000_1;

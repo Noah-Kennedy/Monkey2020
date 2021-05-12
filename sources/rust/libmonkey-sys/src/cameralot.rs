@@ -38,6 +38,6 @@ extern {
         height: u32,
         ext: *const raw::c_char,
         td: *mut TimerData,
-        buf: *mut ByteBufferShare
+        buf: *mut ByteBufferShare,
     ) -> ReadStatus;
 }

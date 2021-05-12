@@ -3,17 +3,17 @@ use std::fmt::{Display, Formatter};
 use std::fmt;
 
 use actix_web::{HttpResponse, ResponseError, Result};
+use actix_web::http::StatusCode;
 use actix_web::web::{Data, Json};
-use crossbeam::channel::{Sender, Receiver, SendError, TryRecvError};
+use crossbeam::channel::{Receiver, Sender, SendError, TryRecvError};
 
 use monkey_api::{Location, MotorSpeeds};
 use space_monkeys::Command;
-use actix_web::http::StatusCode;
 
 #[derive(Debug)]
 pub enum CommandError {
     Send(SendError<Command>),
-    TryRecv(TryRecvError)
+    TryRecv(TryRecvError),
 }
 
 impl Display for CommandError {

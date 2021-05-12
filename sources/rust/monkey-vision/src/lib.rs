@@ -4,12 +4,12 @@ pub mod prelude {
     pub use crate::core::*;
     pub use crate::raw::{
         ArucoData,
-        ZedImuData,
         ZedCameraResolution,
         ZedDepthQuality,
-        ZedMappingResolution,
+        ZedImuData,
         ZedMappingRange,
-        ZedMeshFilter
+        ZedMappingResolution,
+        ZedMeshFilter,
     };
 }
 

@@ -1,11 +1,12 @@
 use std::time::Duration;
+
 use monkey_vision::prelude::*;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LocationClass {
     CollectionBin,
-    DiggingSite
+    DiggingSite,
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
@@ -39,5 +40,5 @@ pub struct AutonomousParams {
     pub depth_quality: ZedDepthQuality,
     pub map_res: ZedMappingResolution,
     pub range: ZedMappingRange,
-    pub mesh_filter: ZedMeshFilter
+    pub mesh_filter: ZedMeshFilter,
 }

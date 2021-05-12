@@ -4,8 +4,6 @@ pub mod command;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use std::fs;
     use std::thread;
     use std::time::Duration;
@@ -18,7 +16,10 @@ mod tests {
     use monkey_api::requests::AutonomousParams;
     use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
     use space_monkeys::{Command, ZhuLi};
+
     use crate::command::CommandManager;
+
+    use super::*;
 
     const AUTO_PARAMS: AutonomousParams = AutonomousParams {
         max_speed: 100.0,

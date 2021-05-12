@@ -1,7 +1,8 @@
-use crate::math::Vec2D;
-use crate::math;
 use std::f32;
 use std::time::Duration;
+
+use crate::math;
+use crate::math::Vec2D;
 
 #[derive(Debug, Clone)]
 pub struct Path {
@@ -12,14 +13,14 @@ pub struct Path {
 impl Path {
     pub fn new(waypoints: Vec<Vec2D>) -> Result<Path, String> {
         if waypoints.len() == 0 {
-            return Err(String::from("at least one waypoint must be provided"))
+            return Err(String::from("at least one waypoint must be provided"));
         }
 
         let mut wp_dists = Vec::with_capacity(waypoints.len() - 1);
         for i in 0..(waypoints.len() - 1) {
             let dist = waypoints[i].dist(waypoints[i + 1]);
             if dist == 0.0 {
-                return Err(String::from("consecutive waypoints must have non-zero distance"))
+                return Err(String::from("consecutive waypoints must have non-zero distance"));
             }
             wp_dists.push(dist);
         }
@@ -86,7 +87,7 @@ impl Path {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct SteeringCommand {
     pub thrust: f32,
-    pub torque: f32
+    pub torque: f32,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -98,7 +99,7 @@ pub struct Vehicle {
     pub max_force: f32,
     pub mass: f32,
     pub moment_of_inertia: f32,
-    pub allow_backwards: bool
+    pub allow_backwards: bool,
 }
 
 impl Vehicle {
@@ -116,7 +117,7 @@ impl Vehicle {
 
         SteeringCommand {
             thrust: force.scal_proj(orientation_vec),
-            torque
+            torque,
         }
     }
 
@@ -139,7 +140,7 @@ impl Vehicle {
         let disp_rot = disp.rot(-target_orientation);
         let desired_orientation = Vec2D {
             x: disp_rot.x * disp_rot.x - disp_rot.y * disp_rot.y + self.max_speed,
-            y: 2.0 * disp_rot.x * disp_rot.y
+            y: 2.0 * disp_rot.x * disp_rot.y,
         }.rot(target_orientation).angle();
 
         let mut orientation_diff = desired_orientation - self.orientation;

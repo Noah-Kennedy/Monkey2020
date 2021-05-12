@@ -4,10 +4,10 @@ extern crate criterion;
 use criterion::{AxisScale, BatchSize, BenchmarkId, black_box, Criterion, PlotConfiguration, Throughput};
 
 use monkey_pathfinding::a_star::AStar;
+use monkey_pathfinding::Discrete;
 use monkey_pathfinding::model::{DiscreteState, MonkeyModel, RobotVector};
 use monkey_pathfinding::perlin::PerlinTable;
 use monkey_pathfinding::state_space::MonkeyStateSpace;
-use monkey_pathfinding::Discrete;
 
 pub const MODEL: MonkeyModel = MonkeyModel {
     length: 160,

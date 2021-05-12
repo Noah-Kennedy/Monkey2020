@@ -9,7 +9,7 @@ struct TestState {
 }
 
 struct TestSpace {
-    terminal: fn(TestState) -> bool
+    terminal: fn(TestState) -> bool,
 }
 
 fn small_grid(state: TestState) -> bool {

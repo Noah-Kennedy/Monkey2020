@@ -1,6 +1,5 @@
 use std::time::{Duration, Instant};
 
-use tokio::sync::watch;
 use log::error;
 
 use libmonkey_sys::monkey_vision::ZedImuData;
@@ -70,7 +69,7 @@ impl ZhuLi {
             params.depth_quality,
             params.map_res,
             params.range,
-            params.mesh_filter
+            params.mesh_filter,
         ).unwrap();
 
         let mut state = AutonomousState {

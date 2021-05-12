@@ -1,12 +1,11 @@
 use actix_web::{App, HttpServer, web};
+use actix_web::middleware::Logger;
 use actix_web::web::Bytes;
+use env_logger::WriteStyle;
+use log::LevelFilter;
 
 use cameralot::prelude::*;
-
-use actix_web::middleware::Logger;
-use log::LevelFilter;
-use env_logger::WriteStyle;
-use monkey_unified_command::{command, camera};
+use monkey_unified_command::{camera, command};
 use monkey_unified_command::camera::CameraManager;
 
 const FILE_FORMAT: &str = ".jpg";

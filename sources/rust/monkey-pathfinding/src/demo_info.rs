@@ -1,5 +1,5 @@
-use crate::model::{MonkeyModel, DiscreteState, RobotVector};
 use crate::Discrete;
+use crate::model::{DiscreteState, MonkeyModel, RobotVector};
 
 pub const LENGTH: u16 = 160;
 pub const WIDTH: u16 = 80;

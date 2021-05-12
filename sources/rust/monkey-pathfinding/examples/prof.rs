@@ -1,13 +1,13 @@
 use std::time::Instant;
 
+use criterion::black_box;
+#[cfg(not(target_env = "msvc"))]
+use jemallocator::Jemalloc;
+
 use monkey_pathfinding::a_star::AStar;
 use monkey_pathfinding::demo_info::{GOAL, MODEL, START};
 use monkey_pathfinding::perlin::PerlinTable;
 use monkey_pathfinding::state_space::MonkeyStateSpace;
-use criterion::black_box;
-
-#[cfg(not(target_env = "msvc"))]
-use jemallocator::Jemalloc;
 
 #[cfg(not(target_env = "msvc"))]
 #[global_allocator]

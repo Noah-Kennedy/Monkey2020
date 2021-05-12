@@ -1,9 +1,10 @@
 use std::ffi;
 
-use crate::raw::*;
 use cameralot::core::{AbstractCameraFeed, CameraFeedError};
-use cameralot::prelude::TimerData;
 use cameralot::extend::abstract_camera_read_from_ffi;
+use cameralot::prelude::TimerData;
+
+use crate::raw::*;
 
 const INIT_SUCCESS: InitErrorFlags = InitErrorFlags {
     camera_status_code: ZedStatusCode::ZedErrorSuccess,
@@ -120,7 +121,7 @@ impl MonkeyVision {
         let mut status = RuntimeErrorFlags {
             camera_status_code: ZedStatusCode::ZedErrorSuccess,
             imu_status_code: ZedStatusCode::ZedErrorSuccess,
-            map_status_code: ZedSpatialMappingState::ZedMapInitializing
+            map_status_code: ZedSpatialMappingState::ZedMapInitializing,
         };
 
         unsafe {

@@ -20,7 +20,7 @@ fn main() {
         grab_millis: 0,
         retrieve_millis: 0,
         resize_millis: 0,
-        encode_millis: 0
+        encode_millis: 0,
     };
 
     for i in 0..100 {

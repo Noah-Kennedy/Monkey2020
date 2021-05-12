@@ -20,6 +20,7 @@
 //! of the state and action space, and allows for more error-free and readable code.
 
 use std::f32::consts::TAU;
+
 use crate::Discrete;
 
 /// Vector container for robot state.

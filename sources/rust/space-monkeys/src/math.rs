@@ -31,7 +31,7 @@ impl Vec2D {
                 Err(String::from("arguments must be collinear"))
             } else {
                 Ok((frac_x.unwrap() + frac_y.unwrap()) / 2.0)
-            }
+            };
         }
 
         (frac_x.or(frac_y)).map_err(|_| -> String { String::from("low cannot equal high") })
@@ -90,7 +90,7 @@ impl Vec2D {
     pub fn perp(self) -> Vec2D {
         Vec2D {
             x: self.y,
-            y: -self.x
+            y: -self.x,
         }
     }
 

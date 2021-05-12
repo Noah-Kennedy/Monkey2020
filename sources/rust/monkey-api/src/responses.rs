@@ -4,7 +4,7 @@ pub mod flight_plan {
     #[derive(Default, Debug, PartialOrd, PartialEq, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct FlightPlan {
-        pub turning_arcs: Vec<PlannedTurningArc>
+        pub turning_arcs: Vec<PlannedTurningArc>,
     }
 
     #[derive(Debug, PartialOrd, PartialEq, Clone)]

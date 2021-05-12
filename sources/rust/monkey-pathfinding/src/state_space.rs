@@ -1,6 +1,6 @@
-use crate::model::{MonkeyModel, DiscreteState};
 use crate::a_star::StateSpace;
 use crate::LIVING_COST;
+use crate::model::{DiscreteState, MonkeyModel};
 
 pub trait RewardTable {
     fn reward(&self, state: DiscreteState) -> f32;

@@ -3,9 +3,10 @@ use std::f32::consts::TAU;
 use plotters::drawing::IntoDrawingArea;
 use plotters::prelude::BitMapBackend;
 use plotters::style::{BLACK, HSLColor, WHITE};
-use crate::model::{MonkeyModel, DiscreteState, RobotVector};
-use crate::state_space::RewardTable;
+
 use crate::Discrete;
+use crate::model::{DiscreteState, MonkeyModel, RobotVector};
+use crate::state_space::RewardTable;
 
 const PERLIN: usize = 8;
 
@@ -126,7 +127,7 @@ impl PerlinTable {
             let x = s.position.x;
             let y = s.position.y;
 
-            root.draw_pixel((x as i32, y as i32),&BLACK).unwrap();
+            root.draw_pixel((x as i32, y as i32), &BLACK).unwrap();
         }
     }
 }
