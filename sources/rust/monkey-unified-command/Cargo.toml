@@ -58,7 +58,7 @@ path = "../space-monkeys"
 
 [dependencies.monkey-api]
 path = "../monkey-api"
-features = ["serde"]
+features = ["serialization"]
 
 ###################################################################################################
 # Dev-Dependencies

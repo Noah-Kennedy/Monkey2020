@@ -5,8 +5,7 @@ authors = ["noah <nomaxx117@gmail.com>"]
 edition = "2018"
 
 [features]
-
-[dependencies]
+serialization = ["serde", "libmonkey-sys/serde"]
 
 [dependencies.serde]
 version = "1.0"
@@ -18,3 +17,6 @@ version = "0.4.14"
 
 [dependencies.monkey-vision]
 path = "../monkey-vision"
+
+[dependencies.libmonkey-sys]
+path = "../libmonkey-sys"
