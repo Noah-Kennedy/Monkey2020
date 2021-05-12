@@ -3,15 +3,11 @@ use actix_web::web::Bytes;
 
 use cameralot::prelude::*;
 
-use crate::camera::CameraManager;
-
 use actix_web::middleware::Logger;
 use log::LevelFilter;
 use env_logger::WriteStyle;
-
-mod util;
-mod camera;
-pub mod command;
+use monkey_unified_command::{command, camera};
+use monkey_unified_command::camera::CameraManager;
 
 const FILE_FORMAT: &str = ".jpg";
 const WIDTH: u32 = 1280;

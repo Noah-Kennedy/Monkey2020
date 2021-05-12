@@ -21,7 +21,7 @@ mod aimbot;
 
 const MESH_FILE: &str = "../run-data/mesh.ply";
 
-/// Commands for modifying the autonomous behavior.
+/// Commands for modifying the autonomous state.
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum Command {
     SetSpeed(MotorSpeeds),
@@ -62,7 +62,7 @@ pub struct ZhuLi {
 }
 
 impl ZhuLi {
-    /// Starts the autonomous control loop. This blocks until Command::EndAutonomous is sent.
+    /// Starts the autonomous control loop. This blocks until `Command::EndAutonomous` is sent.
     pub fn do_the_thing(&mut self, params: &AutonomousParams) {
         let mut vision = MonkeyVision::create(
             MESH_FILE,

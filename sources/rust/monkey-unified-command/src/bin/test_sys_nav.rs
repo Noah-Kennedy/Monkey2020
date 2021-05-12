@@ -10,6 +10,7 @@ use monkey_api::MotorSpeeds;
 use monkey_api::requests::AutonomousParams;
 use monkey_vision::prelude::{ZedCameraResolution, ZedDepthQuality, ZedMappingRange, ZedMappingResolution, ZedMeshFilter};
 use space_monkeys::{Command, ZhuLi};
+use monkey_unified_command::command::CommandManager;
 
 const AUTO_PARAMS: AutonomousParams = AutonomousParams {
     max_speed: 100.0,

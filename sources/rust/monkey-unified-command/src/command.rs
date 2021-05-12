@@ -4,8 +4,7 @@ use std::fmt;
 
 use actix_web::{HttpResponse, ResponseError, Result};
 use actix_web::web::{Data, Json};
-use tokio::sync::watch::{Sender, error::SendError};
-use crossbeam::channel::TryRecvError;
+use crossbeam::channel::{Sender, Receiver, SendError, TryRecvError};
 
 use monkey_api::{Location, MotorSpeeds};
 use space_monkeys::Command;
@@ -33,14 +32,14 @@ impl ResponseError for CommandError {
     fn status_code(&self) -> StatusCode {
         match self {
             CommandError::Send(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            CommandError::TryRecv(_) => StatusCode::NOT_FOUND
+            CommandError::TryRecv(_) => StatusCode::SERVICE_UNAVAILABLE
         }
     }
 }
 
 pub struct CommandManager {
     pub command_send: Sender<Command>,
-    pub speed_rec: crossbeam::channel::Receiver<MotorSpeeds>,
+    pub speed_rec: Receiver<MotorSpeeds>,
 }
 
 #[actix_web::get("/get_speed")]
