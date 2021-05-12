@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
                 .service(camera::ws_camera)
             )
             .service(web::scope("nav")
-                .data(nav_manager)
+                .data(nav_manager.clone())
                 .service(nav::start)
                 .service(nav::get_speed)
                 .service(nav::set_speed)

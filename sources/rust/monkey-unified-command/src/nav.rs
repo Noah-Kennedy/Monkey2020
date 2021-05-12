@@ -39,6 +39,7 @@ impl ResponseError for NavError {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct NavManager {
     pub command_send: channel::Sender<Command>,
     pub speed_rec: watch::Receiver<MotorSpeeds>
