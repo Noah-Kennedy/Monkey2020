@@ -26,6 +26,7 @@ pub fn throw_bytes_at_wall(
             codec.encode(msg, &mut output).unwrap();
 
             if tx.send(Ok(output.to_bytes())).await.is_err() {
+                log::info!("Exiting wall");
                 break;
             }
         }
