@@ -17,7 +17,6 @@ pub struct CameraRequest {
 #[derive(Debug, Default, PartialOrd, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct AutonomousParams {
-    pub target: Option<Location>,
     pub max_speed: f32,
     pub max_force: f32,
     pub mass: f32,

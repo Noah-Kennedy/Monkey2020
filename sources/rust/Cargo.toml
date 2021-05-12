@@ -8,8 +8,7 @@ members = [
     "libmonkey-sys",
     "monkey-vision",
     "cameralot",
-    "cameralot-demo",
-    "test-system"
+    "cameralot-demo"
 ]
 
 [profile.release]
