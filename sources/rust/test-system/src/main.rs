@@ -60,9 +60,7 @@ fn main() {
     for i in 0..1000 {
         println!("{:?}: {:?}", i, speed);
         nav_manager.command_send.send(Command::SetSpeed(speed)).unwrap();
-        if let Ok(s) = nav_manager.speed_rec.try_recv() {
-            speed = s;
-        }
+        speed = *nav_manager.speed_rec.borrow();
         thread::sleep(Duration::from_millis(10));
     }
 
