@@ -4,7 +4,7 @@
  * @author Cody Nettesheim
  * @file visual_processing_c.h
  *
- * @brief Implement visual processing for Aruco fiducial marker detection 
+ * @brief Implement visual processing for Aruco fiducial marker detection
  * using OpenCV and the ZED2 stereo camera system from Stereolabs as well as
  * provide a C-style wrapper for Rust interoperability.
  */
@@ -197,7 +197,7 @@ extern "C" struct RuntimeErrorFlags
  * C++
  *************************************************************************************************/
 namespace visual_processing {
-    class MonkeyVision : public cameralot::CameraFeed
+    class MonkeyVision: public cameralot::CameraFeed
     {
     public:
         MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, sl::RESOLUTION camera_res, uint8_t fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range,
@@ -215,21 +215,16 @@ namespace visual_processing {
 
         void update_map() noexcept;
 
-        ReadStatus read_frame(cv::Mat &frame, TimerData &td) noexcept final;
-
         bool is_opened() const noexcept final;
+
+        ReadStatus read_frame(cv::Mat &frame, TimerData &td) noexcept;
 
     private:
         static ZedStatusCode wrap_error_code(sl::ERROR_CODE error_code);
 
         // ZED camera handler
         sl::Camera zed;
-        sl::CameraInformation camera_info;
         bool is_open = false;
-
-        sl::Mat frame_zed;
-        cv::Mat frame_ocv;
-        std::vector<uchar> image_buffer;
 
         //ZED spatial mapping mesh
         std::string mesh_file_path;
@@ -250,9 +245,6 @@ namespace visual_processing {
 
         bool imu_valid = false;
 
-        // Struct for storing the latest camera capture
-        ByteBufferShare camera_buffer;
-
         // Frame counter for periodic tasks
         uint32_t frame_counter = 0;
 
@@ -272,10 +264,7 @@ namespace visual_processing {
  * @param aruco_id ID value encoded by a detected Aruco marker.
  * @return Structure containing position data for the Aruco marker with the given ID.
  */
-extern "C" bool get_aruco_data(
-        uint16_t aruco_id, ArucoData *data,
-        visual_processing::MonkeyVision *vision
-);
+extern "C" bool get_aruco_data(uint16_t aruco_id, ArucoData *data, visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Get acceleration, orientation, and position data from the ZED IMU sensor.
@@ -285,13 +274,9 @@ extern "C" bool get_zed_imu_data(ZedImuData *data, visual_processing::MonkeyVisi
 
 /**
  * @brief Get the frame buffer from the last camera capture.
- * @return Structure containing a byte array of the image pixels and integers for the image
- * dimensions, which will default to 0 if the camera image could not be captured.
+ * @return Structure containing a byte array of the image pixels and integers for the image dimensions, which will default to 0 if the camera image could not be captured.
  */
-extern "C" bool get_camera_frame(
-        visual_processing::MonkeyVision *vision,
-        ByteBufferShare *image_buffer
-);
+extern "C" bool get_camera_frame(visual_processing::MonkeyVision *vision, ByteBufferShare *image_buffer);
 
 /**
  * @brief Set a flag to update the map mesh file the next time run_visual_processing() is called.
@@ -311,29 +296,16 @@ extern "C" uint32_t get_frame_count(visual_processing::MonkeyVision *vision);
  * @return Boolean value indicating whether the ZED camera was successfully initialized.
  */
 extern "C" visual_processing::MonkeyVision *
-visual_processing_init(
-        const char *mesh_path,
-        InitErrorFlags *init_flags,
-        ZedCameraResolution camera_res,
-        ZedDepthQuality depth_quality,
-        ZedMappingResolution map_res,
-        ZedMappingRange range,
-        ZedMeshFilter mesh_filter
-);
+visual_processing_init(const char *mesh_path, InitErrorFlags *init_flags, ZedCameraResolution camera_res, ZedDepthQuality depth_quality, ZedMappingResolution map_res, ZedMappingRange range,
+                       ZedMeshFilter mesh_filter);
 
 /**
  * @brief Run visual processing on a single video frame from the ZED camera.
  * @param marker_size Width of the Aruco marker in meters.
- * @param display Boolean value indicating if the function should display the camera view in a GUI
- * window.
- * @return Boolean value indicating whether a camera frame could be successfully captured. 
+ * @param display Boolean value indicating if the function should display the camera view in a GUI window.
+ * @return Boolean value indicating whether a camera frame could be successfully captured.
  */
-extern "C" void run_visual_processing(
-        float marker_size,
-        bool display,
-        RuntimeErrorFlags *runtime_flags,
-        visual_processing::MonkeyVision *vision
-);
+extern "C" void run_visual_processing(float marker_size, bool display, RuntimeErrorFlags *runtime_flags, visual_processing::MonkeyVision *vision);
 
 /**
  * @brief Deallocate all dynamic memory and close ZED camera.
