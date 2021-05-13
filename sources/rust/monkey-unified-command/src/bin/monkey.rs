@@ -28,6 +28,8 @@ async fn main() -> std::io::Result<()> {
         .write_style(WriteStyle::Always)
         .init();
 
+    log::warn!("Hold my beer, this initialization subroutine may crash!");
+
     let (mut vision, mut thot) = monkey_vision::core::create(
         mesh_file,
         ZedCameraResolution::Res720HD60,
@@ -36,6 +38,8 @@ async fn main() -> std::io::Result<()> {
         ZedMappingRange::MapMedium,
         ZedMeshFilter::FilterMedium,
     ).unwrap();
+
+    log::info!("Initialized the vision");
 
     let (cam_tx, cam_rx) = tokio::sync::watch::channel(
         actix_web::web::Bytes::from(vec![0])
@@ -54,9 +58,9 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .service(web::scope("cameras")
-                // .data(camera_man.clone())
-                // .service(camera::static_image)
-                // .service(camera::ws_camera)
+                .data(camera_man.clone())
+                .service(camera::static_image)
+                .service(camera::ws_camera)
             )
             .service(web::scope("nav")
                 .data(nav_manager.clone())
@@ -88,21 +92,21 @@ async fn main() -> std::io::Result<()> {
     let mut i = 0;
 
     loop {
-        // let timer = std::time::Instant::now();
-        //
-        // let buf = unsafe {
-        //     thot.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap()
-        // };
-        //
-        // let time = timer.elapsed().as_millis();
-        //
-        // log::trace!("{}:\t{} millis", i, time);
-        // log::trace!("\tGrab: {} millis", td.grab_millis);
-        // log::trace!("\tRetrieve: {} millis", td.retrieve_millis);
-        // log::trace!("\tResize: {} millis", td.resize_millis);
-        // log::trace!("\tEncode: {} millis", td.encode_millis);
-        //
-        // cam_tx.send(Bytes::from(buf.to_vec())).unwrap();
+        let timer = std::time::Instant::now();
+
+        let buf = unsafe {
+            thot.read(WIDTH, HEIGHT, FILE_FORMAT, &mut td).unwrap()
+        };
+
+        let time = timer.elapsed().as_millis();
+
+        log::trace!("{}:\t{} millis", i, time);
+        log::trace!("\tGrab: {} millis", td.grab_millis);
+        log::trace!("\tRetrieve: {} millis", td.retrieve_millis);
+        log::trace!("\tResize: {} millis", td.resize_millis);
+        log::trace!("\tEncode: {} millis", td.encode_millis);
+
+        cam_tx.send(Bytes::from(buf.to_vec())).unwrap();
 
         zhu_li.do_the_thing(&mut vision, mesh_file);
 
