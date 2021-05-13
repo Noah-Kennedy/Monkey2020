@@ -2,7 +2,7 @@
 mesh_to_grid_option1:
 - Julia version: 1.4.2
 - Author: Wallace Watler <watlerathome@gmail.com>
-- Date: 2021-02-16
+- Date: 2021-05-13
 =#
 
 include("mesh_to_grid_common.jl")
@@ -55,7 +55,7 @@ function terrain_gradient(particles::Vector{SmoothedParticle}, p::Vec2D)
 end
 
 function main()
-    result = read_mesh_from_file("test_mesh.ply")
+    result = read_mesh_from_file("../rust/test-data/test_mesh.ply")
     if result == nothing
         return
     end
@@ -66,8 +66,8 @@ function main()
     particles = to_particles(vertices, tris)
 
     println("Generating plot...")
-    grid_x = range(-5, 0, length = 100)
-    grid_z = range(1, 6, length = 100)
+    grid_x = range(-10, 10, length = 100)
+    grid_z = range(10, 10, length = 100)
     #grid_y = [terrain_height(particles, Vec2D(x, -z)) for z in grid_z, x in grid_x]
     grid_y = [terrain_gradient(particles, Vec2D(x, -z)) for z in grid_z, x in grid_x]
 

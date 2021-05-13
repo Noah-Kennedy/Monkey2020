@@ -2,7 +2,7 @@
 mesh_to_grid_common:
 - Julia version: 1.4.2
 - Author: Wallace Watler <watlerathome@gmail.com>
-- Date: 2021-02-16
+- Date: 2021-05-13
 =#
 
 #=
@@ -53,12 +53,12 @@ struct Tri
 end
 
 #=
-Read mesh data from a binary PLY file.
+Read mesh data from a PLY file.
 
 Expected file format:
 ----Header----
 "ply\n" - ASCII
-"format binary_little_endian 1.0\n" - ASCII
+"format binary_little_endian 1.0\n" or "format ascii 1.0\n" - ASCII
 "element vertex ####\n" - ASCII
 "property float32 x\n" - ASCII
 "property float32 y\n" - ASCII
@@ -67,7 +67,7 @@ Expected file format:
 "property list uchar int vertex_indices\n" - ASCII
 "end_header\n" - ASCII
 ----Data (variable size)----
-Formatted according to header - binary
+Formatted according to header - either binary or ASCII
 =#
 function read_mesh_from_file(filename)
     println("Reading mesh from $filename...")
@@ -82,8 +82,13 @@ function read_mesh_from_file(filename)
             return
         end
 
-        if readline(io) != "format binary_little_endian 1.0"
-            println("Error: not formatted in binary little-endian 1.0")
+        format = readline(io)
+        if format == "format binary_little_endian 1.0"
+            read_data = read_binary_data
+        elseif format == "format ascii 1.0"
+            read_data = read_ascii_data
+        else
+            println("Error: format not supported")
             return
         end
 
@@ -129,24 +134,65 @@ function read_mesh_from_file(filename)
             return
         end
 
-        # Read binary data
-        for _ in 1:num_vertices
-            x = ltoh(read(io, Float32))
-            y = ltoh(read(io, Float32))
-            z = ltoh(read(io, Float32))
-            push!(vertices, Vertex(x, y, z))
+        vertices, tris = read_data(io, num_vertices, num_tris)
+    end
+
+    return vertices, tris
+end
+
+#=
+Read binary vertex and tri data from a PLY file.
+=#
+function read_binary_data(io, num_vertices, num_tris)
+    vertices = Vector{Vertex}(undef, 0)
+    tris = Vector{Tri}(undef, 0)
+
+    for _ in 1:num_vertices
+        x = ltoh(read(io, Float32))
+        y = ltoh(read(io, Float32))
+        z = ltoh(read(io, Float32))
+        push!(vertices, Vertex(x, y, z))
+    end
+    for _ in 1:num_tris
+        if ltoh(read(io, UInt8)) != 3
+            println("Error: Found a non-tri polygon")
+            return
         end
-        for _ in 1:num_tris
-            if ltoh(read(io, UInt8)) != 3
-                println("Error: Found a non-tri polygon")
-                return
-            end
-            # 1 is added since Julia uses 1-based indexing
-            v1 = ltoh(read(io, Int32)) + 1
-            v2 = ltoh(read(io, Int32)) + 1
-            v3 = ltoh(read(io, Int32)) + 1
-            push!(tris, Tri(v1, v2, v3))
+        # 1 is added since Julia uses 1-based indexing
+        v1 = ltoh(read(io, Int32)) + 1
+        v2 = ltoh(read(io, Int32)) + 1
+        v3 = ltoh(read(io, Int32)) + 1
+        push!(tris, Tri(v1, v2, v3))
+    end
+
+    return vertices, tris
+end
+
+#=
+Read ASCII vertex and tri data from a PLY file.
+=#
+function read_ascii_data(io, num_vertices, num_tris)
+    vertices = Vector{Vertex}(undef, 0)
+    tris = Vector{Tri}(undef, 0)
+
+    for _ in 1:num_vertices
+        vertex = split(readline(io))
+        x = parse(Float32, vertex[1])
+        y = parse(Float32, vertex[2])
+        z = parse(Float32, vertex[3])
+        push!(vertices, Vertex(x, y, z))
+    end
+    for _ in 1:num_tris
+        tri = split(readline(io))
+        if parse(UInt8, tri[1]) != 3
+            println("Error: Found a non-tri polygon")
+            return
         end
+        # 1 is added since Julia uses 1-based indexing
+        v1 = parse(Int32, tri[2]) + 1
+        v2 = parse(Int32, tri[3]) + 1
+        v3 = parse(Int32, tri[4]) + 1
+        push!(tris, Tri(v1, v2, v3))
     end
 
     return vertices, tris
