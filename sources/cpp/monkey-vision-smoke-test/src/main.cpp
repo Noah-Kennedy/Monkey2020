@@ -12,8 +12,11 @@ int main(int argc, char **argv)
     std::string path = "./mesh";
     InitErrorFlags init_flags;
     RuntimeErrorFlags loop_flags;
+
     visual_processing::MonkeyVision *vision = visual_processing_init(path.c_str(), &init_flags, ZedCameraResolution::ResVGA60, ZedDepthQuality::DepthQuality, ZedMappingResolution::MapMediumRes,
                                                                      ZedMappingRange::MapNear, ZedMeshFilter::FilterMedium);
+
+    printf("Init\n");
 
     TimerData cameralot_timer;
     ByteBufferShare *cameralot_buffer;
@@ -26,20 +29,11 @@ int main(int argc, char **argv)
     }
     std::cout << "Loaded dictionary: Aruco Original." << std::endl;
     // Loop until 'q' is pressed
-    char key = '.';
-    while (key != 'q') {
-        ReadStatus cameralot_status = vision->read(640, 480, "", cameralot_timer, cameralot_buffer);
-        std::vector<uchar> decode_buffer;
-        for (int i = 0; i < cameralot_buffer->length; ++i) {
-            decode_buffer.push_back(cameralot_buffer->buffer[i]);
-        }
-        cv::Mat decoded_cameralot_frame = cv::imdecode(decode_buffer, cv::IMREAD_COLOR);
-        cv::imshow("ZED Cameralot", decoded_cameralot_frame);
-
+    for (int j = 0; j < 10; ++j) {
         auto frame_count = get_frame_count(vision);
         ZedStatusCode camera_code, imu_code;
         ZedSpatialMappingState map_state;
-        run_visual_processing(0.04, false, &loop_flags, vision);
+        run_visual_processing(0.04, true, &loop_flags, vision);
         if (frame_count % 60 == 0 && frame_count > 0) {
             std::cout << "Frame #" << frame_count << ", updating mesh..." << std::endl;
             if (loop_flags.map_status_code == ZedSpatialMappingState::ZedMapOk) {
@@ -64,7 +58,7 @@ int main(int argc, char **argv)
 #endif
         }
 
-        key = cv::waitKey(10);
+        cv::waitKey(10);
     }
     visual_processing_dealloc(vision);
     return 0;

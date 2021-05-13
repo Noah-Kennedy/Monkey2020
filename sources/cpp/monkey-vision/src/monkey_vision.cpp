@@ -9,7 +9,7 @@ using namespace visual_processing;
  *************************************************************************************************/
 
 MonkeyVision::MonkeyVision(std::string mesh_path, InitErrorFlags *error_codes, sl::RESOLUTION camera_res, uint8_t fps, sl::DEPTH_MODE depth_quality, float map_res, float map_range,
-                           sl::MeshFilterParameters::MESH_FILTER filter) noexcept
+                           sl::MeshFilterParameters::MESH_FILTER filter) noexcept : zed()
 {
     this->mapping_resolution = map_res;
     this->mapping_range = map_range;
